@@ -21,6 +21,7 @@ from pypco.pco import PCO
 from content_parser import extract_items_from_pypco
 from slide_utils import slice_into_slides
 from ppt_generator_services import create_pptx_for_items
+import requests
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
 
@@ -36,6 +37,44 @@ def load_config(path: str) -> dict:
         raise FileNotFoundError(f"Config file not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+    
+import os, json, requests
+from requests.auth import HTTPBasicAuth
+import config  # contains client_id & secret (or PAT)
+
+def upload_pptx_to_media(file_path: str) -> str:
+    """
+    Uploads a PPTX into the org‐wide Media library.
+    Returns the new Media ID as a string.
+    """
+    url = "https://api.planningcenteronline.com/services/v2/media"
+    filename = os.path.basename(file_path)
+    content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+
+    # JSON:API “data” wrapper
+    metadata = {
+        "data": {
+            "type": "Media",
+            "attributes": {
+                "title": os.path.splitext(filename)[0],
+                "media_type": "Powerpoint"
+            }
+        }
+    }
+
+    auth = HTTPBasicAuth(config.client_id, config.secret)
+    with open(file_path, "rb") as fp:
+        resp = requests.post(
+            url,
+            auth=auth,
+            files={
+                "file":    (filename, fp, content_type),
+                "data":    (None, json.dumps(metadata), "application/vnd.api+json")
+            }
+        )
+    resp.raise_for_status()
+    return resp.json()["data"]["id"]
+
 
 
 def main() -> None:
@@ -85,32 +124,57 @@ def main() -> None:
             create_pptx_for_items(slides, filename)
             print(f"  → Generated {filename}")
 
-            # 4b) Upload binary via pco.upload()
-            upload_resp = pco.upload(filename)
-            upload_id = upload_resp["data"][0]["id"]
-            print(f"  → Uploaded file; upload_id={upload_id}")
+            # media_id = upload_pptx_to_media(filename)
+            # print(f"Uploaded Media → ID {media_id}")
 
-            # resp = pco.get(f'/services/v2/media/1477044')
-            # print(resp)
-            # 4c) Create a Media record using the upload ID
-            media_payload = pco.template(
-                'Media',
-                {
+            # 4b) Create a Media record using the upload ID
+            media_payload = {
+                'data': {
+                    'type': 'Media',
+                    'attributes':{
                     'title': parsed['title'],
-                    'media_type': 'powerpoint',
+                    'media_type': 'Powerpoint',
+                    }
+                }
+            }
+            with open(filename, 'rb') as f:
+                media_resp = request.post('/services/v2/media', 
+                             files = {
+                                    'file': (os.path.basename(filename), f, 'application/vnd.openxmlformats-officedocument.presentationml.presentation'),
+                                    'data': (None, json.dumps(media_payload), 'application/vnd.api+json')
                 }
             )
-            media_resp = pco.post('/services/v2/media', payload=media_payload)
+
             media_id = media_resp['data']['id']
             print(f"  → Created Media id={media_id}")
 
-            # 4d) Link the Media to the plan item
-            link_payload = {'data': [{'type': 'Media', 'id': media_id}]}
-            pco.post(
-                f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/relationships/media",
-                json=link_payload
-            )
-            print(f"  → Linked Media to item {parsed['item_id']}")
+            # # 4c) Upload binary via pco.upload()
+            # upload_resp = pco.upload(filename)
+            # upload_id = upload_resp["data"][0]["id"]
+            # print(f"  → Uploaded file; upload_id={upload_id}")
+
+            # # 4d) Link the Media to the plan item
+            # link_payload = {'data': 
+            #                     {'type': 'Attachment',
+            #                      'attributes': 
+            #                         {'content_type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            #                          'filename': filename
+            #                          }
+            #                     }
+            # }
+
+            # with open(filename, 'rb') as f:
+            #     files = {'file': (os.path.basename(filename), f, link_payload["data"]["attributes"]["content_type"]),
+            #              'data': (None, json.dumps(link_payload), "aplication/vnd.api+json")
+            #     }
+            #     print(parsed['item_id'])
+            #     resp = pco.patch(
+            #         f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+            #         files=files
+            #     )
+
+            # print(f"  → Created attachment:", resp['data'][0]['id'])
+            break  # Break after first item for demo purposes
 
     print("All done.")
 
