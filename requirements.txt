@@ -1,0 +1,11 @@
+# Gmail integration
+pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+
+# HTML parsing
+pip install beautifulsoup4
+
+# PowerPoint generation
+pip install python-pptx qrcode[pil] pillow requests
+
+# LLM summaries via Vertex AI
+pip install google-genai
