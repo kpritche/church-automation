@@ -94,4 +94,4 @@ def create_pptx_for_items(
         add_text_slide(text, current_color)
 
     # Save the .pptx
-    prs.save(filename)
+    prs.save('pptxs/'+filename)
