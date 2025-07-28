@@ -19,7 +19,7 @@ def _split_long_word(word: str, max_chars: int) -> List[str]:
 
 def slice_into_slides(
     text_chunks: List[str],
-    max_chars: int = 35,
+    max_chars: int = 33,
     max_lines: int = 2
 ) -> List[Dict[str, str]]:
     """
@@ -63,7 +63,7 @@ def slice_into_slides(
         # Group lines into slides of up to max_lines
         for i in range(0, len(lines), max_lines):
             slide_lines = lines[i:i + max_lines]
-            slide_text = "\n".join(slide_lines)
+            slide_text = "\n ".join(slide_lines)
             slides.append({"text": slide_text, "style": "content"})
 
     return slides
