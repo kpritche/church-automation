@@ -33,7 +33,9 @@ SCRIPTURE_TITLES = {
     "The Gospel Lesson",
     "The New Testament Lesson",
     "The Old Testament Lesson",
-    "The Epistle Lesson"
+    "The Epistle Lesson",
+    "The First Gospel Lesson",
+    "The Second Gospel Lesson"
 }
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}
@@ -86,7 +88,7 @@ def extract_items_from_pypco(
     description = attrs.get('description') or ''
 
     # Skip unwanted items
-    if title in SKIP_TITLES:
+    if title.strip() in SKIP_TITLES:
         return {
             'item_id': item_id,
             'title': title,
@@ -100,7 +102,7 @@ def extract_items_from_pypco(
         }
 
     # Identify type flags
-    is_scripture = title in SCRIPTURE_TITLES
+    is_scripture = title.strip() in SCRIPTURE_TITLES
     is_song = title.strip() in SONG_TITLES
     scripture_reference: Optional[str] = None
     text_chunks: List[str] = []

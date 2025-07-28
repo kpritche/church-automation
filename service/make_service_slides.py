@@ -23,31 +23,31 @@ from slide_utils import slice_into_slides
 from ppt_generator_services import create_pptx_for_items
 import requests
 
-from pro_generator import (
-    load_template, reset_presentation,
-    add_cue_group, add_text_cue,
-    save_pro, make_probundle
-)
+# from deprecated.pro_generator import (
+#     load_template, reset_presentation,
+#     add_cue_group, add_text_cue,
+#     save_pro, make_probundle
+# )
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
 
-with open("pro_templates.json", "r") as f:
-    TEMPLATE_MAP = json.load(f)
+# with open("pro_templates.json", "r") as f:
+#     TEMPLATE_MAP = json.load(f)
 
-def choose_template_key(parsed: dict) -> str:
+# def choose_template_key(parsed: dict) -> str:
 
-    # 1) Scripture readings
-    if parsed.get("is_scripture"):
-        return "Scripture Reading"
-    # 2) Any manually-named items (e.g. Centering Words, Lord's Prayer)
-    title = parsed.get("title", "").strip()
-    if title in TEMPLATE_MAP:
-        return title
-    # 3) Songs (if you ever wanted a song-specific .pro template)
-    if parsed.get("is_song"):
-        return "My Song Template"    # add if you have one
-    # 4) Everything else → either skip or use a generic template
-    return "Default Item Template"  # or raise/skip
+#     # 1) Scripture readings
+#     if parsed.get("is_scripture"):
+#         return "Scripture Reading"
+#     # 2) Any manually-named items (e.g. Centering Words, Lord's Prayer)
+#     title = parsed.get("title", "").strip()
+#     if title in TEMPLATE_MAP:
+#         return title
+#     # 3) Songs (if you ever wanted a song-specific .pro template)
+#     if parsed.get("is_song"):
+#         return "My Song Template"    # add if you have one
+#     # 4) Everything else → either skip or use a generic template
+#     return "Default Item Template"  # or raise/skip
 
 def get_upcoming_sunday() -> str:
     today = date.today()
@@ -61,9 +61,7 @@ def load_config(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
     
-import os, json, requests
 from requests.auth import HTTPBasicAuth
-import config  # contains client_id & secret (or PAT)
 
 def upload_pptx_to_media(file_path: str) -> str:
     """
@@ -97,7 +95,6 @@ def upload_pptx_to_media(file_path: str) -> str:
         )
     resp.raise_for_status()
     return resp.json()["data"]["id"]
-
 
 
 def main() -> None:
@@ -136,15 +133,17 @@ def main() -> None:
         # 4) Process each item
         for item_obj in items:
             parsed = extract_items_from_pypco(item_obj, included, pco)
+            
             if not parsed["html_present"]:
                 continue
             
-            template_key  = choose_template_key(parsed)
-            template_path = TEMPLATE_MAP[template_key]
-            pres = load_template(template_path)
-            reset_presentation(pres, app_version=(7,16,1))
+            # template_key  = choose_template_key(parsed)
+            # template_path = TEMPLATE_MAP[template_key]
+            # pres = load_template(template_path)
+            # reset_presentation(pres, app_version=(7,16,1))
 
             # 4a) Build slides and write PPTX
+            print(parsed)
             slides = slice_into_slides(parsed["text_chunks"])
             slides.append({"text": "", "style": "blank"})
             safe_title = parsed["title"].replace(" ", "_").replace("/", "_")
@@ -171,33 +170,33 @@ def main() -> None:
             #     }
             # }
 
-            # 5) Create .pro file
-            template_key  = choose_template_key(parsed)
-            template_path = TEMPLATE_MAP[template_key]
-            pres = load_template(template_path)
-            reset_presentation(pres, app_version=(7,16,1))
-            group_uuid = add_cue_group(pres, parsed["title"])
+            # # 5) Create .pro file
+            # template_key  = choose_template_key(parsed)
+            # template_path = TEMPLATE_MAP[template_key]
+            # pres = load_template(template_path)
+            # reset_presentation(pres, app_version=(7,16,1))
+            # group_uuid = add_cue_group(pres, parsed["title"])
 
-            for slide in slides:
-                # e.g. first line as the cue label
-                label = slide["text"].split("\n",1)[0]  
+            # for slide in slides:
+            #     # e.g. first line as the cue label
+            #     label = slide["text"].split("\n",1)[0]  
                 
-                # wrap the text in whatever RTF your template expects:
-                # here’s a simple example using Arial 60pt
-                rtf_payload = (
-                    r'{\rtf1\ansi\deff0'
-                    r'{\fonttbl{\f0 Arial;}}'
-                    r'\f0\fs60 '
-                    + slide["text"].replace("\n", r'\line ')
-                    + r'}'
-                ).encode("utf-8")
+            #     # wrap the text in whatever RTF your template expects:
+            #     # here’s a simple example using Arial 60pt
+            #     rtf_payload = (
+            #         r'{\rtf1\ansi\deff0'
+            #         r'{\fonttbl{\f0 Arial;}}'
+            #         r'\f0\fs60 '
+            #         + slide["text"].replace("\n", r'\line ')
+            #         + r'}'
+            #     ).encode("utf-8")
                 
-                add_text_cue(pres, group_uuid, label, rtf_payload)
+            #     add_text_cue(pres, group_uuid, label, rtf_payload)
             
             out_name = f"{plan_date}–{service_name}–Item{parsed['item_id']}-{safe_title}.pro"
             out_path = os.path.join("output_pros", out_name)
-            save_pro(pres, out_path)
-            print(f"  → Wrote {out_path}")
+            # save_pro(pres, out_path)
+            # print(f"  → Wrote {out_path}")
 
             # pco.post(f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
             #          payload=attach_payload)
