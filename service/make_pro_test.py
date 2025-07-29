@@ -120,6 +120,7 @@ def make_pro_for_items(
         bpres.ParseFromString(f.read())
 
     final_pres = deepcopy(bpres)  # Start with the blank template
+    final_pres.cue_groups[0].group.uuid.string = str(uuid.uuid4())  # Generate a new UUID for the cue group
     # final_pres.cues.clear()  # Clear existing cues to start fresh
     # final_pres.cue_groups[0].cue_identifiers.clear()  # Clear existing cue identifiers
 
@@ -133,6 +134,8 @@ def make_pro_for_items(
         template_cue = pres.cues[0]  # Use the first cue as a template
         new_cue = deepcopy(template_cue)
         new_cue.uuid.string = str(uuid.uuid4())  # Generate a new UUID for the cue
+        new_cue.actions[0].uuid.string = str(uuid.uuid4())  # Generate a new UUID for the action
+        new_cue.actions[0].slide.presentation.base_slide.uuid.string = str(uuid.uuid4())  # Generate a new UUID for the base_slide
 
         # Modify the rtf_data element in the new cue
         text = new_cue.actions[0].slide.presentation.base_slide.elements[0].element.text.rtf_data

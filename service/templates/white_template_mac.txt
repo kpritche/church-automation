@@ -1,0 +1,234 @@
+application_info {
+  platform: PLATFORM_MACOS
+  platform_version {
+    major_version: 14
+    minor_version: 5
+  }
+  application: APPLICATION_PROPRESENTER
+  application_version {
+    major_version: 19
+    build: "318767159"
+  }
+}
+uuid {
+  string: "D0E2CF77-2B95-4714-8790-4560DA46AD56"
+}
+name: "white_template"
+background {
+}
+chord_chart {
+  platform: PLATFORM_MACOS
+}
+cue_groups {
+  group {
+    uuid {
+      string: "1BA36138-5D81-41F7-B8F8-366C42CF6C95"
+    }
+    hotKey {
+    }
+  }
+  cue_identifiers {
+    string: "D7472666-D2BE-4F42-B0EE-1768AC9D7CBB"
+  }
+}
+cues {
+  uuid {
+    string: "D7472666-D2BE-4F42-B0EE-1768AC9D7CBB"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "1C66DC2C-89DF-4334-9305-56716518C6CD"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "1FCDDE33-5533-41A0-87BA-98E63A2C821C"
+              }
+              name: "TEXT LINE 1\nTEXT LINE 2\nTEXT LINE 3\nTEXT LINE 4"
+              bounds {
+                origin {
+                  x: 50
+                  y: 315
+                }
+                size {
+                  width: 1820
+                  height: 450
+                }
+              }
+              opacity: 1
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1
+                  }
+                  q0 {
+                    x: 1
+                  }
+                  q1 {
+                    x: 1
+                  }
+                }
+                points {
+                  point {
+                    x: 1
+                    y: 1
+                  }
+                  q0 {
+                    x: 1
+                    y: 1
+                  }
+                  q1 {
+                    x: 1
+                    y: 1
+                  }
+                }
+                points {
+                  point {
+                    y: 1
+                  }
+                  q0 {
+                    y: 1
+                  }
+                  q1 {
+                    y: 1
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.117647059
+                  green: 0.564705908
+                  blue: 1
+                  alpha: 1
+                }
+              }
+              stroke {
+                width: 3
+                color {
+                  red: 1
+                  green: 1
+                  blue: 1
+                  alpha: 1
+                }
+              }
+              shadow {
+                angle: 315
+                offset: 5
+                radius: 5
+                color {
+                  alpha: 1
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Bold"
+                    size: 80
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  capitalization: CAPITALIZATION_ALL_CAPS
+                  text_solid_fill {
+                    red: 1
+                    green: 0.99999994
+                    blue: 1
+                    alpha: 1
+                  }
+                  underline_style {
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1
+                    default_tab_interval: 84
+                    text_list {
+                    }
+                  }
+                  kerning: 2.5
+                  strikethrough_style {
+                  }
+                  custom_attributes {
+                    range {
+                      end: 10
+                    }
+                    capitalization: CAPITALIZATION_ALL_CAPS
+                  }
+                }
+                shadow {
+                  angle: 315
+                  offset: 5
+                  radius: 5
+                  color {
+                    alpha: 1
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2761\n\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Regular;}\n{\\colortbl;\\red255\\green255\\blue255;\\red255\\green255\\blue255;}\n{\\*\\expandedcolortbl;;\\cssrgb\\c100000\\c100000\\c100000;}\n\\deftab1680\n\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\n\n\\f0\\b\\fs160 \\cf2 \\kerning1\\expnd10\\expndtw50\nreplace_me}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                margins {
+                }
+                is_superscript_standardized: true
+                transformDelimiter: "  \342\200\242  "
+                chord_pro {
+                  color {
+                    alpha: 1
+                  }
+                }
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          background_color {
+            alpha: 0.196078435
+          }
+          size {
+            width: 1920
+            height: 1080
+          }
+          uuid {
+            string: "D733BB1A-28CE-46B6-96AD-05FB18566C12"
+          }
+        }
+        chord_chart {
+          platform: PLATFORM_MACOS
+        }
+      }
+    }
+  }
+  isEnabled: true
+}
+ccli {
+}
+timeline {
+  duration: 300
+}
