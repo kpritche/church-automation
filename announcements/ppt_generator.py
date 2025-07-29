@@ -7,6 +7,8 @@ from pptx.enum.text import PP_ALIGN
 import requests
 import config
 from PIL import Image
+import os
+from win32com.client import Dispatch
 
 def truncate_text(text, max_length):
     """Truncate text to a maximum length, ensuring it ends with a complete word."""
@@ -46,6 +48,31 @@ def fetch_image_from_url(url):
     except Exception as e:
         print(f"Error fetching image from {url}: {e}")
         return None
+    
+def export_pptx_to_jpg(pptx_path: str, output_dir: str):
+    """
+    Opens the given PPTX in PowerPoint via COM and exports each slide
+    as a JPG into output_dir (creates it if necessary).
+    """
+    # Ensure output folder exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Launch PowerPoint
+    ppt_app = Dispatch("PowerPoint.Application")
+    ppt_app.Visible = True  # or False if you prefer it hidden
+
+    # Open the presentation (ReadOnly=True, WithWindow=False)
+    pres = ppt_app.Presentations.Open(os.path.abspath(pptx_path), WithWindow=False)
+
+    # The SaveAs format 17 corresponds to jpg
+    # It will dump slide1.jpg, slide2.jpg, ... into a folder named after the PPT
+    base_name = os.path.splitext(os.path.basename(pptx_path))[0]
+    target = os.path.join(output_dir, base_name)
+    pres.SaveAs(target, 17)
+
+    # Clean up
+    pres.Close()
+    ppt_app.Quit() 
 
 def create_pptx_with_qr(announcements, output_path, use_summary=False):
     prs = Presentation()

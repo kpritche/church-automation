@@ -3,6 +3,8 @@ from html_parser import parse_announcements
 from ppt_generator import create_pptx_with_qr
 from datetime import date, timedelta
 from summarize import summarize_text
+from ppt_generator import export_pptx_to_jpg
+import os
 
 def get_next_sunday():
     today = date.today()
@@ -23,7 +25,13 @@ def main():
             ann['summary'] = "No summary available."
 
     date = get_next_sunday().strftime("%m-%d")
-    create_pptx_with_qr(announcements, f"weekly_announcements_{date}.pptx", use_summary=True)
+    output_path = os.path.join("output", f"weekly_announcements_{date}.pptx")
+    create_pptx_with_qr(announcements, output_path, use_summary=True)
+
+    # Create jpgs of the slides
+    jpg_folder = os.path.join("output", date)
+    export_pptx_to_jpg(output_path, jpg_folder)
+    print(f"  → Exported slides to JPGs in {jpg_folder}")
 
 if __name__ == "__main__":
     main()
