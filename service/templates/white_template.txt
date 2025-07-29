@@ -1,0 +1,277 @@
+application_info {
+  platform: PLATFORM_WINDOWS
+  platform_version {
+    major_version: 10
+    patch_version: 4294967295
+    build: "26100"
+  }
+  application: APPLICATION_PROPRESENTER
+  application_version {
+    major_version: 19
+    build: "318767159"
+  }
+}
+uuid {
+  string: "3c2d8eb1-f306-4daa-a460-9cbf0b324f0a"
+}
+name: "white_template"
+last_date_used {
+  seconds: 1753401355
+}
+last_modified_date {
+  seconds: 1753403547
+}
+background {
+  color {
+    alpha: 1
+  }
+}
+selected_arrangement {
+  string: "7abaa762-54ab-47f3-8051-31d8de9a8936"
+}
+cue_groups {
+  group {
+    uuid {
+      string: "c5dc40fa-4614-4326-ba95-e6131d3fda61"
+    }
+  }
+  cue_identifiers {
+    string: "24e96225-c006-4235-b25c-e26052587fd0"
+  }
+}
+cues {
+  uuid {
+    string: "24e96225-c006-4235-b25c-e26052587fd0"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  trigger_time {
+  }
+  actions {
+    uuid {
+      string: "f4fee3f0-1e77-4003-9d13-df22f440bee1"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "920f23f3-fec9-4e92-8557-c328947d9876"
+              }
+              name: "\nTEXT\n"
+              bounds {
+                origin {
+                  x: 150
+                  y: 100
+                }
+                size {
+                  width: 1620
+                  height: 880
+                }
+              }
+              opacity: 1
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1
+                  }
+                  q0 {
+                    x: 1
+                  }
+                  q1 {
+                    x: 1
+                  }
+                }
+                points {
+                  point {
+                    x: 1
+                    y: 1
+                  }
+                  q0 {
+                    x: 1
+                    y: 1
+                  }
+                  q1 {
+                    x: 1
+                    y: 1
+                  }
+                }
+                points {
+                  point {
+                    y: 1
+                  }
+                  q0 {
+                    y: 1
+                  }
+                  q1 {
+                    y: 1
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.129411772
+                  green: 0.588235319
+                  blue: 0.949019611
+                  alpha: 1
+                }
+              }
+              stroke {
+                width: 3
+                color {
+                  red: 1
+                  green: 1
+                  blue: 1
+                  alpha: 1
+                }
+              }
+              shadow {
+                angle: 315
+                offset: 5
+                radius: 5
+                color {
+                  alpha: 1
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "HelveticaNeue-Bold"
+                    size: 80
+                    bold: true
+                    family: "HelveticaNeue-Bold"
+                    face: "Regular"
+                  }
+                  capitalization: CAPITALIZATION_ALL_CAPS
+                  text_solid_fill {
+                    red: 1
+                    green: 1
+                    blue: 1
+                    alpha: 1
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1
+                    text_list {
+                    }
+                  }
+                  stroke_color {
+                    red: 1
+                    green: 1
+                    blue: 1
+                    alpha: 1
+                  }
+                  custom_attributes {
+                    range {
+                      end: 10
+                    }
+                    capitalization: CAPITALIZATION_ALL_CAPS
+                  }
+                  ligature_style: LIGATURE_STYLE_NONE
+                }
+                shadow {
+                  angle: 315
+                  offset: 5
+                  radius: 5
+                  color {
+                    alpha: 1
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf0\\ansi\\ansicpg1252{\\fonttbl\\f0\\fnil HelveticaNeue-Bold;}{\\colortbl;\\red255\\green255\\blue255;\\red255\\green255\\blue255;}{\\*\\expandedcolortbl;\\csgenericrgb\\c100000\\c100000\\c100000\\c100000;\\csgenericrgb\\c100000\\c100000\\c100000\\c0;}{\\*\\listtable}{\\*\\listoverridetable}\\uc1\\paperw12240\\margl0\\margr0\\margt0\\margb0\\pard\\li0\\fi0\\ri0\\qc\\sb0\\sa0\\sl20\\slmult0\\slleading0\\f0\\b\\i0\\ul0\\strike0\\fs160\\expnd0\\expndtw0\\CocoaLigature0\\cf1\\strokewidth0\\strokec1\\nosupersub\\ulc0\\highlight2\\cb2 replace_me}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                margins {
+                }
+                is_superscript_standardized: true
+                transformDelimiter: "  \342\200\242  "
+                chord_pro {
+                  color {
+                    red: 0.992156863
+                    green: 0.760784328
+                    blue: 0.0313725509
+                    alpha: 1
+                  }
+                }
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.061728395061728392
+            }
+          }
+          background_color {
+            alpha: 1
+          }
+          size {
+            width: 1920
+            height: 1080
+          }
+          uuid {
+            string: "9e1b5185-fa83-4c41-9c36-0f0fd849a8c1"
+          }
+        }
+        notes {
+          rtf_data: "{\\rtf0\\ansi\\ansicpg1252{\\fonttbl\\f0\\fnil ArialMT;}{\\colortbl;\\red0\\green0\\blue0;\\red255\\green255\\blue255;\\red255\\green255\\blue255;}{\\*\\expandedcolortbl;\\csgenericrgb\\c0\\c0\\c0\\c100000;\\csgenericrgb\\c100000\\c100000\\c100000\\c100000;\\csgenericrgb\\c100000\\c100000\\c100000\\c0;}{\\*\\listtable}{\\*\\listoverridetable}\\uc1\\paperw12240\\margl0\\margr0\\margt0\\margb0\\pard\\li0\\fi0\\ri0\\ql\\sb0\\sa0\\sl240\\slmult1\\slleading0\\f0\\b0\\i0\\ul0\\strike0\\fs100\\expnd0\\expndtw0\\CocoaLigature1\\cf1\\strokewidth0\\strokec2\\nosupersub\\ulc0\\highlight3\\cb3}"
+          attributes {
+            font {
+              name: "ArialMT"
+              size: 50
+              family: "Arial"
+              face: "Regular"
+            }
+            text_solid_fill {
+              alpha: 1
+            }
+            paragraph_style {
+              line_height_multiple: 1
+              text_list {
+              }
+            }
+            stroke_color {
+              red: 1
+              green: 1
+              blue: 1
+              alpha: 1
+            }
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+  isEnabled: true
+}
+ccli {
+}
+timeline {
+  duration: 300
+}
