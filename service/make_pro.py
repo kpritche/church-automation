@@ -152,6 +152,8 @@ def make_pro_for_items(
         new_cue_id = final_pres.cue_groups[0].cue_identifiers.add()
         new_cue_id.string = new_cue.uuid.string
     
+ 
+
     current_color = "white"  # Start with white slides
     
     if scripture_reference:
@@ -242,6 +244,8 @@ def main():
                 continue
             
             slides = slice_into_slides(parsed["text_chunks"], max_chars=33, max_lines=2)
+            slides.append({"text": "", "style":"blank"}
+                          )
             safe_title = parsed["title"].strip().replace(" ", "_").replace("/", "_")
             filename = f"{plan_date}-{service_name}-{safe_title}.pro"
             

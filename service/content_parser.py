@@ -35,13 +35,15 @@ SCRIPTURE_TITLES = {
     "The Old Testament Lesson",
     "The Epistle Lesson",
     "The First Gospel Lesson",
-    "The Second Gospel Lesson"
+    "The Second Gospel Lesson",
+    "Scripture Reading",
+    "Reading from the Psalms"
 }
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}
 
 
-def _parse_html_details(html_content: str) -> List[str]:
+def _parse_html_details(html_content: str) -> List[dict]:
     """
     Convert html_details into clean text chunks:
       - Unescape HTML
@@ -65,7 +67,14 @@ def _parse_html_details(html_content: str) -> List[str]:
         for sent in sentences:
             text = re.sub(r'<[^>]+>', '', sent).strip()
             if text:
-                chunks.append(text)
+
+                is_bold = bool(re.search(rf'(?:<b>|<strong>)\s*{re.escape(text)}\s*(?:</b>|</strong>)',
+                                         html_content,
+                                         flags=re.IGNORECASE
+                                    )
+                                )
+                
+                chunks.append({"text":text, "is_bold":is_bold})
     return chunks
 
 
@@ -112,21 +121,22 @@ def extract_items_from_pypco(
         if description.strip():
             scripture_reference = description.strip()
         if html_detail.strip():
-            text_chunks = _parse_html_details(html_detail)
+            parsed_chunks = _parse_html_details(html_detail)
+            text_chunks = [c["text"] for c in parsed_chunks]
 
-    # Song: look in attachments first, then html_details fallback
-    elif is_song or item_type.lower() == "song":
-        return {
-            'item_id': item_id,
-            'title': title,
-            'type': item_type,
-            'html_details': html_detail,
-            'text_chunks': [],
-            'html_present': False,
-            'is_scripture': False,
-            'scripture_reference': None,
-            'is_song': False
-        }
+    # # Song: look in attachments first, then html_details fallback
+    # elif is_song or item_type.lower() == "song":
+    #     return {
+    #         'item_id': item_id,
+    #         'title': title,
+    #         'type': item_type,
+    #         'html_details': html_detail,
+    #         'text_chunks': [],
+    #         'html_present': False,
+    #         'is_scripture': False,
+    #         'scripture_reference': None,
+    #         'is_song': False
+    #     }
         # # 1) Try the lyrics.txt (or *Lyrics*) attachment
         # attach_url = item_obj['links']['self'] + '/attachments'
         # resp = pco.get(attach_url)
@@ -183,6 +193,7 @@ def extract_items_from_pypco(
         'title': title,
         'type': item_type,
         'html_details': html_detail,
+        'parsed_chunks':parsed_chunks,
         'text_chunks': text_chunks,
         'html_present': html_present,
         'is_scripture': is_scripture,
