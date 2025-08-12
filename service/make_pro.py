@@ -1,9 +1,6 @@
 """
 Programmatically generate ProPresenter .pro slides by cloning a template and replacing only the text and text color.
 
-Usage:
-  python use_template.py --template template.txt --output_dir output_slides
-
 Requirements:
   • `protobuf` Python package
   • Generated Python modules from your `.proto` definitions (presentation_pb2, cue_pb2, action_pb2, slide_pb2, presentationSlide_pb2, graphicsData_pb2) in a `generated` folder on PYTHONPATH
