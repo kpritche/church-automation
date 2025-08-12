@@ -26,7 +26,8 @@ SKIP_TITLES = {
     "Welcome,_Prelude_&_Lighting_of_Candles",
     "Pastoral_Prayer",
     "The_Pastoral_Prayer",
-    "The Pastoral Prayer"
+    "The Pastoral Prayer",
+    "The Lord's Prayer",
 }
 # Scripture reading item titles
 SCRIPTURE_TITLES = {
@@ -87,6 +88,7 @@ def extract_items_from_pypco(
     Given a single item JSON and included array from pypco,
     extract html_details, text_chunks, detect scripture/song, and return metadata.
     """
+    parsed_chunks: List[Dict] = []
     attrs = item_obj.get('attributes', {}) or {}
     item_id = str(item_obj.get('id'))
     item_type = (attrs.get('item_type') or '').strip() or 'Item'
@@ -95,6 +97,7 @@ def extract_items_from_pypco(
     # Capture raw html_details and description
     html_detail = attrs.get('html_details') or ''
     description = attrs.get('description') or ''
+    
 
     # Skip unwanted items
     if title.strip() in SKIP_TITLES:
@@ -103,6 +106,7 @@ def extract_items_from_pypco(
             'title': title,
             'type': item_type,
             'html_details': html_detail,
+            'parsed_chunks': [],
             'text_chunks': [],
             'html_present': False,
             'is_scripture': False,
@@ -184,7 +188,8 @@ def extract_items_from_pypco(
     # Other items: use HTML by default
     else:
         if html_detail.strip():
-            text_chunks = _parse_html_details(html_detail)
+            parsed_chunks = _parse_html_details(html_detail)
+            text_chunks = [c["text"] for c in parsed_chunks]
 
     html_present = bool(text_chunks)
 

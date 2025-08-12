@@ -9,6 +9,8 @@ def summarize_text(body_text, max_chars=250):
         location="global",
     )
 
+    msg1_text1 = types.Part.from_text(text=body_text)
+
     si_text1 = """You are an expert summarization assistant whose sole job is to turn raw church announcement text into a single, slide ready summary. When given an announcement, you must:
         - Produce up to three complete sentences.
         - Limit the summary to 250 characters or less.
@@ -21,19 +23,19 @@ def summarize_text(body_text, max_chars=250):
         - Do not include any HTML tags or formatting.
         - Each summary should end in a period."""
 
-    model = "gemini-2.5-flash"
+    model = "gemini-2.5-flash-lite"
     contents = [
         types.Content(
         role="user",
         parts=[
-            types.Part.from_text(text=body_text)
+            msg1_text1
         ]
         ),
     ]
 
     generate_content_config = types.GenerateContentConfig(
         temperature = 1,
-        top_p = 1,
+        top_p = 0.95,
         seed = 0,
         max_output_tokens = 2048,
         safety_settings = [types.SafetySetting(
@@ -51,7 +53,7 @@ def summarize_text(body_text, max_chars=250):
         )],
         system_instruction=[types.Part.from_text(text=si_text1)],
         thinking_config=types.ThinkingConfig(
-        thinking_budget=-1,
+        thinking_budget=0,
         ),
     )
 
@@ -67,3 +69,68 @@ def summarize_text(body_text, max_chars=250):
 
 
     return "".join(text_chunks) 
+
+def summarize_title(title: str, max_chars=80) -> str:
+    """
+    Summarize the title to fit within the specified character limit.
+    """
+    client = genai.Client(
+        vertexai=True,
+        project="gmail-pptx-tool",
+        location="global",
+    )
+    msg1_text1 = types.Part.from_text(text=title)
+
+    si_text1 = f"""You are a concise summarizer. Shorten this announcement title to at most {max_chars} characters. 
+        - When possible, preserve the key event, date, and location information. Output only the shortened title.
+        - Do not include any HTML tags or formatting."""
+
+    model = "gemini-2.5-flash-lite"
+    contents = [
+        types.Content(
+        role="user",
+        parts=[
+            msg1_text1
+        ]
+        ),
+    ]
+
+    generate_content_config = types.GenerateContentConfig(
+        temperature = 1,
+        top_p = 0.95,
+        seed = 0,
+        max_output_tokens = 80,
+        safety_settings = [types.SafetySetting(
+        category="HARM_CATEGORY_HATE_SPEECH",
+        threshold="OFF"
+        ),types.SafetySetting(
+        category="HARM_CATEGORY_DANGEROUS_CONTENT",
+        threshold="OFF"
+        ),types.SafetySetting(
+        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        threshold="OFF"
+        ),types.SafetySetting(
+        category="HARM_CATEGORY_HARASSMENT",
+        threshold="OFF"
+        )],
+        system_instruction=[types.Part.from_text(text=si_text1)],
+        thinking_config=types.ThinkingConfig(
+        thinking_budget=0,
+        ),
+    )
+
+    text_chunks = []
+    for chunk in client.models.generate_content_stream(
+        model = model,
+        contents = contents,
+        config = generate_content_config,
+        ):
+        if chunk.text is None or not chunk.text.strip():
+            continue
+        text_chunks.append(chunk.text)
+
+
+    return "".join(text_chunks)
+
+if __name__ == "__main__":
+    print(summarize_title("Three Sundays of Renovation Celebration – August 24, August 31, and September 7"))

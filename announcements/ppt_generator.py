@@ -9,6 +9,8 @@ import config
 from PIL import Image
 import os
 from win32com.client import Dispatch
+import textwrap
+from summarize import summarize_title
 
 def truncate_text(text, max_length):
     """Truncate text to a maximum length, ensuring it ends with a complete word."""
@@ -67,8 +69,7 @@ def export_pptx_to_jpg(pptx_path: str, output_dir: str):
     # The SaveAs format 17 corresponds to jpg
     # It will dump slide1.jpg, slide2.jpg, ... into a folder named after the PPT
     base_name = os.path.splitext(os.path.basename(pptx_path))[0]
-    target = os.path.join(output_dir, base_name)
-    pres.SaveAs(target, 17)
+    pres.SaveAs(output_dir, 17)
 
     # Clean up
     pres.Close()
@@ -88,7 +89,25 @@ def create_pptx_with_qr(announcements, output_path, use_summary=False):
         # Title
         title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(11.5), Inches(1))
         title_frame = title_box.text_frame
-        title_frame.text = ann['title']
+
+        orig_title = ann['title']
+        
+        if len(orig_title) > config.TITLE_MAX_CHARS:
+            short = summarize_title(orig_title, max_chars=80)
+            print(short)
+        else:
+            short = orig_title
+
+        # # 2) Wrap the (possibly shortened) title into two lines
+        # import textwrap
+        # wrapped = textwrap.wrap(short, width=config.TITLE_WRAP_WIDTH)
+        # if len(wrapped) > 2:
+        #     wrapped = wrapped[:2]
+        #     wrapped[-1] = wrapped[-1].rstrip(' .,') + "…"
+
+        title_text = short
+        title_frame.text = title_text
+
         title_frame.paragraphs[0].font.size = Pt(42)
         title_frame.paragraphs[0].font.bold = True
         title_frame.paragraphs[0].font.color.rgb = RGBColor(*config.BRAND_COLOR_1)  # Dark green
@@ -119,7 +138,7 @@ def create_pptx_with_qr(announcements, output_path, use_summary=False):
             if img_stream:
                 # Define the maximum box for the image
                 left = Inches(8.53)
-                top  = Inches(1.61)
+                top  = Inches(2.15)
                 max_width  = prs.slide_width  - left - Inches(0.5)   # leave 0.5" right margin
                 max_height = Inches(5.4)                             # as before
 
