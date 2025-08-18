@@ -29,11 +29,11 @@ def main():
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     create_pptx_with_qr(announcements, output_path, use_summary=True)
 
-    # Create jpgs of the slides
-    jpg_folder = os.path.join("C:\\Users\\KP\\Documents\\Github\\church\\announcements\\output", date)
-    os.makedirs(jpg_folder, exist_ok=True)
-    export_pptx_to_jpg(output_path, jpg_folder)
-    print(f"  → Exported slides to JPGs in {jpg_folder}")
+    # # Create jpgs of the slides
+    # jpg_folder = os.path.join("C:\\Users\\KP\\Documents\\Github\\church\\announcements\\output", date)
+    # os.makedirs(jpg_folder, exist_ok=True)
+    # export_pptx_to_jpg(output_path, jpg_folder)
+    # print(f"  → Exported slides to JPGs in {jpg_folder}")
 
 if __name__ == "__main__":
     main()

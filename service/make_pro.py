@@ -8,9 +8,6 @@ Requirements:
 import os
 import sys
 import uuid
-from argparse import ArgumentParser
-from google.protobuf.message import DecodeError
-from google.protobuf import text_format
 from copy import deepcopy
 
 from datetime import date, timedelta
@@ -19,7 +16,6 @@ import config
 from pypco.pco import PCO
 from content_parser import extract_items_from_pypco
 from slide_utils import slice_into_slides
-from ppt_generator_services import create_pptx_for_items
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -43,7 +39,7 @@ import ProPresenter7_Proto.generated.presentation_pb2 as rv_presentation
 from typing import List, Dict, Optional
 
 # Aliases
-Presentation      = rv_presentation.Presentation
+Presentation = rv_presentation.Presentation
 
 def get_upcoming_sunday() -> str:
     today = date.today()
@@ -90,6 +86,12 @@ def upload_pro_to_media(file_path: str) -> str:
     resp.raise_for_status()
     return resp.json()["data"]["id"]
 
+def load_template(path):
+    pres = Presentation()
+    with open(path, 'rb') as rf:
+        pres.ParseFromString(rf.read())
+    return pres
+
 def make_pro_for_items(
     slides: List[Dict[str, object]],
     parsed: Dict[str, object],
@@ -97,14 +99,6 @@ def make_pro_for_items(
     scripture_reference: Optional[str] = None,
     plan_date: Optional[str] = None
 ) -> None:
-    
-    
-    # Load templates
-    def load_template(path):
-        pres = Presentation()
-        with open(path, 'rb') as rf:
-            pres.ParseFromString(rf.read())
-        return pres
 
     wpres = load_template(WHITE_TEMPLATE)
     ypres = load_template(YELLOW_TEMPLATE)
@@ -174,6 +168,7 @@ def make_pro_for_items(
     out_path = os.path.join(out_dir, filename)
     with open(out_path, 'wb') as wf:
         wf.write(final_pres.SerializeToString())
+        
 
 def main():
     cfg = load_config(CONFIG_PATH)

@@ -41,8 +41,8 @@ def attach_images_to_announcements(jpg_folder: str):
 
         # 4) Loop through each JPG and attach it
         for fname in sorted(os.listdir(jpg_folder)):
-            if not fname.lower().endswith((".jpg", ".jpeg", ".png")):
-                print(f"Skipping non-image file: {fname}")
+            if fname.lower().endswith((".jpg", ".jpeg", ".png")):
+                print(f"Skipping image file: {fname}")
                 continue
             path = os.path.join(jpg_folder, fname)
 
