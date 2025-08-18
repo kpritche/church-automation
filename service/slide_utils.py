@@ -4,7 +4,7 @@ Functions to slice text_chunks into slides abiding by:
 - no more than two lines per slide
 - no more than 35 characters per line
 Each slide dict has:
-  - text: a string with 1–2 lines separated by newline
+  - text: a string with 1-2 lines separated by newline
   - style: 'content' (for PPT generator)
 """
 from typing import List, Dict
