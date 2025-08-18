@@ -12,7 +12,7 @@ from datetime import date, timedelta
 
 import config          # contains client_id & secret (or PAT)
 from pypco.pco import PCO
-from make_service_slides import get_upcoming_sunday, load_config  # re-use your existing helpers
+from deprecated.make_service_slides import get_upcoming_sunday, load_config  # re-use your existing helpers
 
 # Directory where JSON files will be written
 OUTPUT_DIR = os.getenv("EXPORT_DIR", "exported_plans")
