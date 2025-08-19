@@ -47,6 +47,7 @@ SONG_TITLES = {"Song", "Hymn"}
 PRELUDE_POSTLUDE_TITLES = {
     "Prelude",
     "Postlude",
+    "The Postlude"
 }
 
 
