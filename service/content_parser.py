@@ -43,16 +43,24 @@ SCRIPTURE_TITLES = {
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}
 
+# Prelude and Postlude item titles
+PRELUDE_POSTLUDE_TITLES = {
+    "Prelude",
+    "Postlude",
+}
+
 
 def _parse_html_details(html_content: str) -> List[dict]:
+    """Convert ``html_details`` into clean text chunks with bold detection.
+
+    The parser performs a lightweight HTML clean up and then splits content into
+    chunks. Bold segments (``<b>`` or ``<strong>``) are extracted as their own
+    chunks so they can later be rendered with yellow text. Additionally, very
+    short chunks are merged with the previous chunk to avoid slides that only
+    contain a couple of words.
     """
-    Convert html_details into clean text chunks:
-      - Unescape HTML
-      - Remove red/highlighted spans and <mark> tags
-      - Normalize <br> to paragraph breaks
-      - Split on </p> and sentence-ending punctuation
-      - Strip remaining tags
-    """
+
+    # 1) Basic cleanup and normalisation
     content = html_mod.unescape(html_content or "")
     content = re.sub(
         r'<span[^>]*style="[^"]*(?:color\s*:\s*red|background-color)[^"]*"[^>]*>.*?</span>',
@@ -61,22 +69,38 @@ def _parse_html_details(html_content: str) -> List[dict]:
     content = re.sub(r'<mark[^>]*>.*?</mark>', '', content, flags=re.IGNORECASE | re.DOTALL)
     content = re.sub(r'<br\s*/?>', '</p>', content, flags=re.IGNORECASE)
 
-    chunks: List[str] = []
+    chunks: List[dict] = []
     parts = re.split(r'</p>\s*', content, flags=re.IGNORECASE)
-    for part in parts:
-        sentences = re.split(r'(?<=[\.?!])\s+', part)
-        for sent in sentences:
-            text = re.sub(r'<[^>]+>', '', sent).strip()
-            if text:
 
-                is_bold = bool(re.search(rf'(?:<b>|<strong>)\s*{re.escape(text)}\s*(?:</b>|</strong>)',
-                                         html_content,
-                                         flags=re.IGNORECASE
-                                    )
-                                )
-                
-                chunks.append({"text":text, "is_bold":is_bold})
-    return chunks
+    for part in parts:
+        # First split into segments that preserve bold tags
+        segments = re.split(r'(<(?:b|strong)>.*?</(?:b|strong)>)', part, flags=re.IGNORECASE | re.DOTALL)
+        for seg in segments:
+            if not seg.strip():
+                continue
+
+            is_bold = bool(re.match(r'<(?:b|strong)>', seg, flags=re.IGNORECASE))
+            seg_clean = re.sub(r'</?(?:b|strong)>', '', seg, flags=re.IGNORECASE)
+
+            sentences = re.split(r'(?<=[\.?!])\s+', seg_clean)
+            for sent in sentences:
+                text = re.sub(r'<[^>]+>', '', sent).strip()
+                if text:
+                    chunks.append({"text": text, "is_bold": is_bold})
+
+    # Merge very short chunks with the previous one when possible
+    merged: List[dict] = []
+    for chunk in chunks:
+        if (
+            merged
+            and len(chunk["text"].split()) <= 3
+            and merged[-1]["is_bold"] == chunk["is_bold"]
+        ):
+            merged[-1]["text"] += " " + chunk["text"]
+        else:
+            merged.append(chunk)
+
+    return merged
 
 
 def extract_items_from_pypco(
@@ -115,8 +139,10 @@ def extract_items_from_pypco(
         }
 
     # Identify type flags
-    is_scripture = title.strip() in SCRIPTURE_TITLES
-    is_song = title.strip() in SONG_TITLES
+    stripped_title = title.strip()
+    is_scripture = stripped_title in SCRIPTURE_TITLES
+    is_song = stripped_title in SONG_TITLES
+    is_prelude_postlude = stripped_title in PRELUDE_POSTLUDE_TITLES
     scripture_reference: Optional[str] = None
     text_chunks: List[str] = []
 
@@ -127,6 +153,16 @@ def extract_items_from_pypco(
         if html_detail.strip():
             parsed_chunks = _parse_html_details(html_detail)
             text_chunks = [c["text"] for c in parsed_chunks]
+
+    elif is_prelude_postlude and html_detail.strip():
+        # Prelude/Postlude: ignore line breaks and keep all text on one slide
+        content = html_mod.unescape(html_detail)
+        content = re.sub(r'<br\s*/?>', ' ', content, flags=re.IGNORECASE)
+        text = re.sub(r'<[^>]+>', '', content)
+        text = re.sub(r'\s+', ' ', text).strip()
+        is_bold = bool(re.search(r'<(?:b|strong)[^>]*>', html_detail, flags=re.IGNORECASE))
+        parsed_chunks = [{"text": text, "is_bold": is_bold}]
+        text_chunks = [text]
 
     # # Song: look in attachments first, then html_details fallback
     # elif is_song or item_type.lower() == "song":
