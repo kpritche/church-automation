@@ -1,6 +1,9 @@
 from google import genai
 from google.genai import types
+import os
 import base64
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\KP\\Documents\\Github\\church\\announcements\\gmail-pptx-tool-1fa9ec3effd6.json"
 
 def summarize_text(body_text, max_chars=250):
     client = genai.Client(

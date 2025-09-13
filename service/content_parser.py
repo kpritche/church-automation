@@ -15,9 +15,18 @@ fetching lyrics from a lyrics.txt attachment first, then fallback to html_detail
 import re
 import html as html_mod
 from typing import Any, Dict, List, Optional
-import requests
-import PyPDF2
-from io import BytesIO
+# Optional imports only needed for attachment/PDF features. Make them lazy-safe
+# so ad-hoc tests can run without installing extras.
+try:  # pragma: no cover - optional dependency
+    import requests  # type: ignore
+except Exception:  # pragma: no cover
+    requests = None  # type: ignore
+try:  # pragma: no cover - optional dependency
+    import PyPDF2  # type: ignore
+    from io import BytesIO  # type: ignore
+except Exception:  # pragma: no cover
+    PyPDF2 = None  # type: ignore
+    BytesIO = None  # type: ignore
 
 # Titles to ignore entirely (various name variants)
 SKIP_TITLES = {
@@ -43,16 +52,124 @@ SCRIPTURE_TITLES = {
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}
 
+# Prelude and Postlude item titles
+PRELUDE_POSTLUDE_TITLES = {
+    "Prelude",
+    "Postlude",
+    "The Postlude"
+}
+
 
 def _parse_html_details(html_content: str) -> List[dict]:
+    """Convert ``html_details`` into clean, phrase-sized chunks with bold detection.
+
+    Goals:
+      - Respect lyric phrasing: favor splits at commas/semicolons/dashes within
+        sentences, not only full stops.
+      - Avoid tiny chunks: merge short phrases so slides don’t end up with single
+        words or very short fragments.
+      - Preserve bold segments as separate chunks so they can be styled later.
     """
-    Convert html_details into clean text chunks:
-      - Unescape HTML
-      - Remove red/highlighted spans and <mark> tags
-      - Normalize <br> to paragraph breaks
-      - Split on </p> and sentence-ending punctuation
-      - Strip remaining tags
-    """
+    # Tunable heuristics for natural phrases
+    MIN_WORDS = 4
+    MAX_WORDS = 18
+
+    def count_words(s: str) -> int:
+        return len([w for w in s.strip().split() if w])
+
+    def split_into_phrases(text: str) -> List[str]:
+        """Split a sentence-like string into musical/lyrical phrases.
+
+        Strategy:
+          1) Split hard at end-of-sentence punctuation (.?!).
+          2) Within each sentence, split on commas/semicolons/colons/em-dash to
+             form sub-phrases that are at least MIN_WORDS and at most MAX_WORDS
+             when possible.
+          3) Merge any leftover sub-phrases that are too short with neighbors.
+        """
+        # Normalize em-dash and various separators to assist splitting
+        t = text.replace("\u2014", " — ")  # em dash
+        # First split by sentence enders; keep punctuation with the segment
+        sentences = re.split(r"(?<=[\.!?])\s+", t)
+
+        phrases: List[str] = []
+        for sent in sentences:
+            s = sent.strip()
+            if not s:
+                continue
+            # Identify if the sentence ended with a strong terminator
+            end_punct_match = re.search(r"[\.!?]+$", s)
+            end_punct = end_punct_match.group(0) if end_punct_match else ""
+            core = s[:-len(end_punct)] if end_punct else s
+
+            # Secondary splits at commas/semicolon/colon/em-dash — but preserve
+            # the delimiter so punctuation (especially ':') is not lost.
+            tokens = re.split(r"\s*([,;:\u2014—])\s*", core)
+            # Build clause fragments with their trailing delimiter attached
+            clause_frags: List[str] = []
+            i = 0
+            while i < len(tokens):
+                part = (tokens[i] or '').strip()
+                delim = ''
+                if i + 1 < len(tokens) and tokens[i + 1] in {',', ';', ':', '\u2014', '—'}:
+                    delim = tokens[i + 1]
+                    i += 2
+                else:
+                    i += 1
+                if part:
+                    clause_frags.append(part + delim)
+
+            current: List[str] = []
+            current_words = 0
+            subphrases: List[str] = []
+
+            for frag in clause_frags:
+                w = count_words(frag)
+                if current_words == 0:
+                    current = [frag]
+                    current_words = w
+                    continue
+
+                if current_words + w <= MAX_WORDS:
+                    current.append(frag)
+                    current_words += w
+                else:
+                    # If the new fragment is short, prefer to keep it together
+                    if w < MIN_WORDS and current_words <= MAX_WORDS:
+                        current.append(frag)
+                        current_words += w
+                    else:
+                        subphrases.append(" ".join(x for x in current if x))
+                        current = [frag]
+                        current_words = w
+
+            if current_words:
+                subphrases.append(" ".join(x for x in current if x))
+
+            # Merge too-short subphrases with neighbors
+            merged: List[str] = []
+            for sp in subphrases:
+                if merged and count_words(sp) < MIN_WORDS:
+                    merged[-1] = f"{merged[-1]} {sp}".strip()
+                else:
+                    merged.append(sp)
+
+            # Attach the terminal punctuation to the last phrase
+            if merged:
+                merged[-1] = (merged[-1] + end_punct).strip()
+
+            phrases.extend(merged)
+
+        # Final safety merge: avoid leading tiny phrase
+        safe: List[str] = []
+        for ph in phrases:
+            if safe and count_words(ph) < MIN_WORDS:
+                safe[-1] = f"{safe[-1]} {ph}".strip()
+            else:
+                safe.append(ph)
+        return [p for p in safe if p]
+
+    # 1) Basic cleanup and normalisation
     content = html_mod.unescape(html_content or "")
     content = re.sub(
         r'<span[^>]*style="[^"]*(?:color\s*:\s*red|background-color)[^"]*"[^>]*>.*?</span>',
@@ -61,22 +178,39 @@ def _parse_html_details(html_content: str) -> List[dict]:
     content = re.sub(r'<mark[^>]*>.*?</mark>', '', content, flags=re.IGNORECASE | re.DOTALL)
     content = re.sub(r'<br\s*/?>', '</p>', content, flags=re.IGNORECASE)
 
-    chunks: List[str] = []
+    chunks: List[dict] = []
     parts = re.split(r'</p>\s*', content, flags=re.IGNORECASE)
-    for part in parts:
-        sentences = re.split(r'(?<=[\.?!])\s+', part)
-        for sent in sentences:
-            text = re.sub(r'<[^>]+>', '', sent).strip()
-            if text:
 
-                is_bold = bool(re.search(rf'(?:<b>|<strong>)\s*{re.escape(text)}\s*(?:</b>|</strong>)',
-                                         html_content,
-                                         flags=re.IGNORECASE
-                                    )
-                                )
-                
-                chunks.append({"text":text, "is_bold":is_bold})
-    return chunks
+    for part in parts:
+        # First split into segments that preserve bold tags
+        segments = re.split(r'(<(?:b|strong)>.*?</(?:b|strong)>)', part, flags=re.IGNORECASE | re.DOTALL)
+        for seg in segments:
+            if not seg.strip():
+                continue
+
+            is_bold = bool(re.match(r'<(?:b|strong)>', seg, flags=re.IGNORECASE))
+            seg_clean = re.sub(r'</?(?:b|strong)>', '', seg, flags=re.IGNORECASE)
+
+            # Remove residual tags and split into natural phrases
+            seg_text = re.sub(r'<[^>]+>', '', seg_clean)
+            for phrase in split_into_phrases(seg_text):
+                text = phrase.strip()
+                if text:
+                    chunks.append({"text": text, "is_bold": is_bold})
+
+    # Merge very short chunks with the previous one when possible
+    merged: List[dict] = []
+    for chunk in chunks:
+        if (
+            merged
+            and len(chunk["text"].split()) <= 3
+            and merged[-1]["is_bold"] == chunk["is_bold"]
+        ):
+            merged[-1]["text"] = (merged[-1]["text"] + ", " + chunk["text"]).strip(', ')
+        else:
+            merged.append(chunk)
+
+    return merged
 
 
 def extract_items_from_pypco(
@@ -115,8 +249,10 @@ def extract_items_from_pypco(
         }
 
     # Identify type flags
-    is_scripture = title.strip() in SCRIPTURE_TITLES
-    is_song = title.strip() in SONG_TITLES
+    stripped_title = title.strip()
+    is_scripture = stripped_title in SCRIPTURE_TITLES
+    is_song = stripped_title in SONG_TITLES
+    is_prelude_postlude = stripped_title in PRELUDE_POSTLUDE_TITLES
     scripture_reference: Optional[str] = None
     text_chunks: List[str] = []
 
@@ -127,6 +263,16 @@ def extract_items_from_pypco(
         if html_detail.strip():
             parsed_chunks = _parse_html_details(html_detail)
             text_chunks = [c["text"] for c in parsed_chunks]
+
+    elif is_prelude_postlude and html_detail.strip():
+        # Prelude/Postlude: ignore line breaks and keep all text on one slide
+        content = html_mod.unescape(html_detail)
+        content = re.sub(r'<br\s*/?>', ' ', content, flags=re.IGNORECASE)
+        text = re.sub(r'<[^>]+>', '', content)
+        text = re.sub(r'\s+', ' ', text).strip()
+        is_bold = bool(re.search(r'<(?:b|strong)[^>]*>', html_detail, flags=re.IGNORECASE))
+        parsed_chunks = [{"text": text, "is_bold": is_bold}]
+        text_chunks = [text]
 
     # # Song: look in attachments first, then html_details fallback
     # elif is_song or item_type.lower() == "song":

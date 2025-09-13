@@ -3,3 +3,6 @@
 *.pptx
 config.py
 *.jpg
+*.pro
+!*_template.pro
+!blank.pro
