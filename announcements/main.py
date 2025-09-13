@@ -12,6 +12,7 @@ def get_next_sunday():
     next_sunday = today + timedelta(days=days_until_sunday)
     return next_sunday
 
+
 def main():
     service = authenticate_gmail()
     html_content = fetch_latest_announcement_html(service, query='from:First United Methodist Church subject:"The Latest FUMC News for You!"')
