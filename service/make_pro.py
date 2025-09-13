@@ -22,8 +22,8 @@ import json
 from attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
-CALL_MARKERS = ("Leader:", "L:")
-RESPONSE_MARKERS = ("People:", "P:")
+CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
+RESPONSE_MARKERS = ("People:", "P:", "All:", "Many:")
 
 # Path to tempaltes
 WHITE_TEMPLATE = "templates/white_template.pro"
@@ -234,7 +234,14 @@ def main():
                 chunks = grouped_chunks
 
             # 2) Now slice into slides (each chunk may already be up to 2 lines)
-            slides = slice_into_slides(chunks, max_chars=33, max_lines=2)
+            # Enforce that any call/response markers start a new slide so color
+            # detection remains correct.
+            slides = slice_into_slides(
+                chunks,
+                max_chars=33,
+                max_lines=2,
+                force_new_slide_prefixes=list(CALL_MARKERS) + list(RESPONSE_MARKERS),
+            )
 
             # 3) Build a lookup of which chunks were bold in your HTML
             bold_map = {}
