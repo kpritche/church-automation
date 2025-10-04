@@ -26,9 +26,9 @@ CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
 RESPONSE_MARKERS = ("People:", "P:", "All:", "Many:")
 
 # Path to tempaltes
-WHITE_TEMPLATE = "templates/white_template.pro"
-YELLOW_TEMPLATE = "templates/yellow_template.pro"
-BLANK_TEMPLATE = "templates/blank_template.pro"
+WHITE_TEMPLATE = "templates/white_template_mac.pro"
+YELLOW_TEMPLATE = "templates/yellow_template_mac.pro"
+BLANK_TEMPLATE = "templates/blank_template_mac.pro"
 JPG_FOLDER = "C:\\Users\\KP\\Documents\\Github\\church\\announcements\\output"
 
 # 1) Ensure generated modules are in import path
@@ -200,7 +200,17 @@ def main():
 
         # Find plan for next Sunday
         plans = pco.iterate(f"/services/v2/service_types/{stid}/plans", filter="future")
-        plan_obj = next(p for p in plans if p["data"]["attributes"]["sort_date"][:10] == plan_date)
+        plan_obj = None
+        for plan in plans:
+            sort_date = plan["data"]["attributes"].get("sort_date", "")
+            if sort_date and sort_date[:10] == plan_date:
+                plan_obj = plan
+                break
+
+        if plan_obj is None:
+            print(f"No plan scheduled for {service_name} ({stid}) on {plan_date}; skipping.")
+            continue
+
         plan_id = plan_obj["data"]["id"]
 
         # Fetch items
