@@ -26,7 +26,17 @@ def attach_images_to_announcements(jpg_folder: str):
     for stid in service_ids:
     # fetch plans
         plans = pco.iterate(f"/services/v2/service_types/{stid}/plans", filter="future")
-        plan = next(p for p in plans if p["data"]["attributes"]["sort_date"][:10] == plan_date)
+        plan = None
+        for candidate in plans:
+            sort_date = candidate["data"]["attributes"].get("sort_date", "")
+            if sort_date and sort_date[:10] == plan_date:
+                plan = candidate
+                break
+
+        if plan is None:
+            print(f"No plan scheduled for service type {stid} on {plan_date}; skipping image attachments.")
+            continue
+
         plan_id = plan["data"]["id"]
 
         # 3) Fetch items & find the one titled "Announcements"
