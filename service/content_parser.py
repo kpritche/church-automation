@@ -37,6 +37,7 @@ SKIP_TITLES = {
     "The_Pastoral_Prayer",
     "The Pastoral Prayer",
     "The Lord's Prayer",
+    "The Call to Fly"
 }
 # Scripture reading item titles
 SCRIPTURE_TITLES = {
@@ -47,7 +48,8 @@ SCRIPTURE_TITLES = {
     "The First Gospel Lesson",
     "The Second Gospel Lesson",
     "Scripture Reading",
-    "Reading from the Psalms"
+    "Reading from the Psalms",
+    "A Story about Compassion"
 }
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}
