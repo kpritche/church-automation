@@ -41,6 +41,48 @@ from typing import List, Dict, Optional
 # Aliases
 Presentation = rv_presentation.Presentation
 
+
+
+
+
+
+
+
+
+def _rtf_escape_text(value: str) -> str:
+    """Return an RTF-safe string for the given plain text."""
+
+    def _escape_codepoint(cp: int) -> str:
+        return '\\u' + str(cp) + '?'
+
+    parts = []
+    for ch in value:
+        codepoint = ord(ch)
+        if ch == "\\":
+            parts.append("\\\\")
+        elif ch == "{":
+            parts.append("\\{")
+        elif ch == "}":
+            parts.append("\\}")
+        elif ch == "\r":
+            continue
+        elif ch == "\n":
+            parts.append("\\line ")
+        elif ch == "\t":
+            parts.append("\\tab ")
+        elif 32 <= codepoint <= 126:
+            parts.append(ch)
+        elif codepoint <= 0xFFFF:
+            parts.append(_escape_codepoint(codepoint))
+        else:
+            codepoint -= 0x10000
+            high = 0xD800 + (codepoint >> 10)
+            low = 0xDC00 + (codepoint & 0x3FF)
+            parts.append(_escape_codepoint(high))
+            parts.append(_escape_codepoint(low))
+    return ''.join(parts)
+
+
 def get_upcoming_sunday() -> str:
     today = date.today()
     days_ahead = (6 - today.weekday()) % 7
@@ -131,7 +173,11 @@ def make_pro_for_items(
         # Replace RTF placeholder
         raw_rtf = new_cue.actions[0].slide.presentation.base_slide.elements[0].element.text.rtf_data.decode('utf-8')
         parts = raw_rtf.split('replace_me')
-        new_rtf = (parts[0] + text.upper() + parts[1]).encode('utf-8')
+        if len(parts) != 2:
+            raise ValueError("Template missing 'replace_me' placeholder in RTF data.")
+
+        rtf_text = _rtf_escape_text(text.upper())
+        new_rtf = (parts[0] + rtf_text + parts[1]).encode('utf-8')
         new_cue.actions[0].slide.presentation.base_slide.elements[0].element.text.rtf_data = new_rtf
         
         # Add new slide
