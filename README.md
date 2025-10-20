@@ -9,3 +9,8 @@ The slides are uploaded to each Planning Center service for the upcoming week an
 Running `make_pro.py` connects to Planning Center Online to access all of the items for each service for the next Sunday. Text in each item is parsed and broken into text chunks that are an appropriate length for each ProPresenter slide. Each item that needs a ProPresenter presentaiton (e.g. Centering Words, Opening Prayer) gets a presentation made from it's text by pulling the appropriate ProPresenter template (white, yellow, blank) and replacing the text. The .pro files get uploaded to their corresponding Planning Center item. 
 
 .pro files are Google Protocol Buffer files. You can learn more about what these files are, how ProPresenter uses them, and how to use them in different programming languages in `/service/ProPresenter7_Proto` which is a fork of greyshirtguy's repository who did much of the legwork on decoding these undocumented files. That repository contains its own README.
+
+Hint: The decode command should look something like this:
+```
+protoc -I="C:\Users\KP\Documents\Github\church\service\ProPresenter7_Proto\Proto19beta"  --decode rv.data.Presentation  propresenter.proto < "C:\Users\KP\Documents\Github\church\service\outputs\2025-09-21\2025-09-21-CelebrateService11AM-A_Story_about_Compassion.pro"  > white_template.txt    
+```

@@ -42,6 +42,9 @@ SKIP_TITLES = {
 # Scripture reading item titles
 SCRIPTURE_TITLES = {
     "The Gospel Lesson",
+    "The Gospel Lesson I",
+    "The Gospel Lesson II",
+    "The Gospel Lesson III",
     "The New Testament Lesson",
     "The Old Testament Lesson",
     "The Epistle Lesson",
