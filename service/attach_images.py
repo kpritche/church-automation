@@ -3,7 +3,7 @@ import json
 import config
 from pypco.pco import PCO
 
-CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
+CONFIG_PATH = os.getenv("SLIDES_CONFIG", "service/slides_config.json")
 
 def load_config(path: str) -> dict:
     if not os.path.exists(path):
