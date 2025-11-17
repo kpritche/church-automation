@@ -52,7 +52,9 @@ SCRIPTURE_TITLES = {
     "The Second Gospel Lesson",
     "Scripture Reading",
     "Reading from the Psalms",
-    "A Story about Compassion"
+    "A Story about Compassion",
+    "Lesson from the Old Testament",
+    "Lesson from the New Testament"
 }
 # Song item titles
 SONG_TITLES = {"Song", "Hymn"}

@@ -21,14 +21,14 @@ from requests.auth import HTTPBasicAuth
 import json
 from attach_images import attach_images_to_announcements
 
-CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
+CONFIG_PATH = os.getenv("SLIDES_CONFIG", "service/slides_config.json")
 CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
 RESPONSE_MARKERS = ("People:", "P:", "All:", "Many:")
 
 # Path to tempaltes
-WHITE_TEMPLATE = "templates/white_template_mac.pro"
-YELLOW_TEMPLATE = "templates/yellow_template_mac.pro"
-BLANK_TEMPLATE = "templates/blank_template_mac.pro"
+WHITE_TEMPLATE = "service/templates/white_template_mac.pro"
+YELLOW_TEMPLATE = "service/templates/yellow_template_mac.pro"
+BLANK_TEMPLATE = "service/templates/blank_template_mac.pro"
 JPG_FOLDER = "C:\\Users\\KP\\Documents\\Github\\church\\announcements\\output"
 
 # 1) Ensure generated modules are in import path
