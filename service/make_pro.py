@@ -41,14 +41,6 @@ from typing import List, Dict, Optional
 # Aliases
 Presentation = rv_presentation.Presentation
 
-
-
-
-
-
-
-
-
 def _rtf_escape_text(value: str) -> str:
     """Return an RTF-safe string for the given plain text."""
 
@@ -83,10 +75,11 @@ def _rtf_escape_text(value: str) -> str:
     return ''.join(parts)
 
 
-def get_upcoming_sunday() -> str:
+def get_next_seven_day_window() -> tuple[str, str]:
+    """Return (start_date, end_date) ISO strings covering today through 7 days ahead inclusive."""
     today = date.today()
-    days_ahead = (6 - today.weekday()) % 7
-    return (today + timedelta(days=days_ahead)).isoformat()
+    end = today + timedelta(days=7)
+    return (today.isoformat(), end.isoformat())
 
 
 def load_config(path: str) -> dict:
@@ -222,20 +215,12 @@ def main():
     if not service_ids:
         raise ValueError(f"No service_type_ids in config: {CONFIG_PATH}")
     
-    plan_date = get_upcoming_sunday()
-    print(f"Generating slides for upcoming Sunday: {plan_date}")
-    
-    # Ensure output directory exists
-    output_dir = f'outputs/{plan_date}'
-    try:
-        os.makedirs(output_dir, exist_ok=True)
-        print(f"Directory created or already exists: {output_dir}")
-    except Exception as e:
-        print(f"Failed to create directory: {output_dir}. Error: {e}")
-        raise
+    start_date, end_date = get_next_seven_day_window()
+    print(f"Generating slides for services between {start_date} and {end_date}")
 
     # Initialize Pypco client
     pco = PCO(application_id=config.client_id, secret=config.secret)
+    processed_dates = set()
 
     for stid in service_ids:
         print(f"Processing service type ID: {stid}")
@@ -244,108 +229,109 @@ def main():
         svc_resp = pco.get(f"/services/v2/service_types/{stid}")
         service_name = svc_resp["data"]["attributes"]["name"].replace(" ","")
 
-        # Find plan for next Sunday
+        # Find all plans within the next 7 days window
         plans = pco.iterate(f"/services/v2/service_types/{stid}/plans", filter="future")
-        plan_obj = None
+        selected = []
         for plan in plans:
             sort_date = plan["data"]["attributes"].get("sort_date", "")
-            if sort_date and sort_date[:10] == plan_date:
-                plan_obj = plan
-                break
+            plan_date = sort_date[:10] if sort_date else ""
+            if plan_date and (start_date <= plan_date <= end_date):
+                selected.append((plan, plan_date))
 
-        if plan_obj is None:
-            print(f"No plan scheduled for {service_name} ({stid}) on {plan_date}; skipping.")
+        if not selected:
+            print(f"No plans scheduled for {service_name} ({stid}) between {start_date} and {end_date}; skipping.")
             continue
 
-        plan_id = plan_obj["data"]["id"]
+        for plan_obj, plan_date in selected:
+            plan_id = plan_obj["data"]["id"]
 
-        # Fetch items
-        items_resp = pco.get(f"/services/v2/service_types/{stid}/plans/{plan_id}/items",
-                             include="arrangement,attachments"
-        )
-        items = items_resp.get("data", [])
-        included = items_resp.get("included", [])
-        print(items)
-
-        # Process each item
-        for item_obj in items:
-            parsed = extract_items_from_pypco(item_obj, included, pco)
-                            
-            if not parsed["html_present"]:
-                continue
-            
-            # Build raw and bold-aware slides
-            print(f"Generating slides for item: {parsed['title']}")
-            raw_chunks = parsed['parsed_chunks']
-
-            # 1) For songs, first group every two lines into one chunk
-            chunks = parsed["text_chunks"]
-            if parsed.get("is_song"):
-                grouped_chunks = []
-                for i in range(0, len(chunks), 2):
-                    pair = chunks[i:i+2]
-                    # join two lines with a newline (or space) so slice_into_slides
-                    # sees them as one chunk of text
-                    grouped_chunks.append("\n".join(pair))
-                chunks = grouped_chunks
-
-            # 2) Now slice into slides (each chunk may already be up to 2 lines)
-            # Enforce that any call/response markers start a new slide so color
-            # detection remains correct.
-            slides = slice_into_slides(
-                chunks,
-                max_chars=33,
-                max_lines=2,
-                force_new_slide_prefixes=list(CALL_MARKERS) + list(RESPONSE_MARKERS),
+            # Fetch items
+            items_resp = pco.get(
+                f"/services/v2/service_types/{stid}/plans/{plan_id}/items",
+                include="arrangement,attachments"
             )
+            items = items_resp.get("data", [])
+            included = items_resp.get("included", [])
+            print(items)
 
-            # 3) Build a lookup of which chunks were bold in your HTML
-            bold_map = {}
-            for c in parsed.get('parsed_chunks', []):
-                if isinstance(c, dict):
-                    key = c.get("text", "")
-                    bold_map[key] = bool(c.get("is_bold", False))
-                elif isinstance(c, str):
-                    # text-only entry → no bold flag
-                    bold_map[c] = False
-                # else: ignore any other types
+            # Process each item
+            for item_obj in items:
+                parsed = extract_items_from_pypco(item_obj, included, pco)
 
-            # 4) Annotate each slide dict with its bold‐flag
-            for slide in slides:
-                slide["is_bold"] = bold_map.get(slide["text"], False)
+                if not parsed["html_present"]:
+                    continue
 
-            slides.append({'text': '', 'style': 'blank', 'is_bold': False})
+                # Build raw and bold-aware slides
+                print(f"Generating slides for item: {parsed['title']} on {plan_date}")
+                raw_chunks = parsed['parsed_chunks']
 
-            safe_title = parsed["title"].strip().replace(" ", "_").replace("/", "_")
-            filename = f"{plan_date}-{service_name}-{safe_title}.pro"
-            
+                # 1) For songs, first group every two lines into one chunk
+                chunks = parsed["text_chunks"]
+                if parsed.get("is_song"):
+                    grouped_chunks = []
+                    for i in range(0, len(chunks), 2):
+                        pair = chunks[i:i+2]
+                        grouped_chunks.append("\n".join(pair))
+                    chunks = grouped_chunks
 
-            make_pro_for_items(
-                slides,
-                parsed,
-                filename,
-                scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
-                plan_date=plan_date
-            )
-            print(f"Generated slides for service type ID {stid} into {filename}")
+                # 2) Slice into slides with call/response prefixes respected
+                slides = slice_into_slides(
+                    chunks,
+                    max_chars=33,
+                    max_lines=2,
+                    force_new_slide_prefixes=list(CALL_MARKERS) + list(RESPONSE_MARKERS),
+                )
 
-            # Upload the generated .pro file to its item
-            uplaod_resp = pco.upload(f'outputs/{plan_date}/' + filename)
-            upload_id = uplaod_resp["data"][0]["id"]
-            attach_payload = {
-                "data": {
-                    "attributes": {
-                        "file_upload_identifier": upload_id,
-                        "filename": filename
+                # 3) Build a lookup of which chunks were bold in your HTML
+                bold_map = {}
+                for c in parsed.get('parsed_chunks', []):
+                    if isinstance(c, dict):
+                        key = c.get("text", "")
+                        bold_map[key] = bool(c.get("is_bold", False))
+                    elif isinstance(c, str):
+                        bold_map[c] = False
+
+                # 4) Annotate each slide dict with its bold‐flag
+                for slide in slides:
+                    slide["is_bold"] = bold_map.get(slide["text"], False)
+
+                slides.append({'text': '', 'style': 'blank', 'is_bold': False})
+
+                safe_title = parsed["title"].strip().replace(" ", "_").replace("/", "_")
+                filename = f"{plan_date}-{service_name}-{safe_title}.pro"
+
+                make_pro_for_items(
+                    slides,
+                    parsed,
+                    filename,
+                    scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
+                    plan_date=plan_date
+                )
+                print(f"Generated slides for service type ID {stid} into {filename}")
+
+                # Upload the generated .pro file to its item
+                uplaod_resp = pco.upload(f'outputs/{plan_date}/' + filename)
+                upload_id = uplaod_resp["data"][0]["id"]
+                attach_payload = {
+                    "data": {
+                        "attributes": {
+                            "file_upload_identifier": upload_id,
+                            "filename": filename
+                        }
                     }
                 }
-            }
-            pco.post(f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
-                    payload=attach_payload)
-            print(f"  → Uploaded file; upload_id={upload_id}")
+                pco.post(
+                    f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+                    payload=attach_payload
+                )
+                print(f"  → Uploaded file; upload_id={upload_id}")
 
-    attach_images_to_announcements(JPG_FOLDER + f"/{plan_date}")
-    print("All slides generated and uploaded successfully.")
+            processed_dates.add(plan_date)
+
+    # Attach images for each processed date
+    for d in sorted(processed_dates):
+        attach_images_to_announcements(JPG_FOLDER + f"/{d}")
+    print("All slides generated and uploaded successfully for the next 7 days.")
 
 
 
