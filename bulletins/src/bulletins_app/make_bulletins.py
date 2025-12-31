@@ -146,7 +146,7 @@ class FontBundle:
         self.body_name = self._register("regular", "SourceSansPro-Regular-16", 16)
         self.body_bold_name = self._register("bold", "SourceSansPro-Bold-16", 16, allow_fallback=True)
         self.body_italic_name = self._register("italic", "SourceSansPro-Italic-12", 12, allow_fallback=True)
-        self.body_small_name = self._register("regular", "SourceSansPro-Regular-12", 12)
+        self.body_small_name = self._register("regular", "SourceSansPro-Regular-14", 14)
         # Sizes kept for layout calculations
         self.title_size = 28
         self.section_size = 18
@@ -1471,13 +1471,13 @@ class BulletinRenderer:
                 line_height = self._line_height(marker_size, leading=1.0)
                 self._ensure_space(line_height + 2)
                 
-                # Measure and draw centered text for markers
-                text_width = self._measure(line, marker_font, marker_size)
-                centered_x = x_offset + (column_width - text_width) / 2
+                # # Measure and draw centered text for markers
+                # text_width = self._measure(line, marker_font, marker_size)
+                # centered_x = x_offset + (column_width - text_width) / 2
                 
                 self.canvas.setFont(marker_font, marker_size)
                 self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_MUTED))
-                self.canvas.drawString(centered_x, PAGE_HEIGHT - self.cursor_y - marker_size, line)
+                self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - marker_size, line)
                 self._bump_cursor(line_height)
                 self._bump_cursor(1)
             else:
