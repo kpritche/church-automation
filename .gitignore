@@ -6,3 +6,27 @@ config.py
 *.pro
 !*_template.pro
 !blank.pro
+
+# Python cache and envs
+__pycache__/
+*.pyc
+.venv/
+
+# Generated outputs
+announcements/output/
+bulletins/output/
+slides/output/
+slides/outputs/
+slides/output_pros/
+slides/exported_plans/
+
+# Auth tokens / credentials
+announcements/token.pickle
+announcements/credentials.json
+announcements/gmail-pptx-tool-*.json
+
+# Proto generated artifacts
+slides/ProPresenter7_Proto/generated/
+
+# OS cruft
+.DS_Store
