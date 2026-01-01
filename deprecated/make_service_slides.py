@@ -13,10 +13,17 @@ parses content, slices into slides, and for each item with HTML:
 Configuration (client_id & secret) is loaded from config.py.
 """
 import os
+import sys
 import json
+from pathlib import Path
 from datetime import date, timedelta
 
-import config
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from shared.paths import SLIDES_SLIDES_CONFIG
+from shared import config
 from pypco.pco import PCO
 from content_parser import extract_items_from_pypco
 from slide_utils import slice_into_slides
@@ -29,7 +36,7 @@ import requests
 #     save_pro, make_probundle
 # )
 
-CONFIG_PATH = os.getenv("SLIDES_CONFIG", "slides_config.json")
+CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 
 # with open("pro_templates.json", "r") as f:
 #     TEMPLATE_MAP = json.load(f)
