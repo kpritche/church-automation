@@ -191,7 +191,7 @@ cues {
                     }
                     capitalization: CAPITALIZATION_ALL_CAPS
                   }
-                  ligature_style: LIGATURE_STYLE_NONE
+                  19: 1
                 }
                 shadow {
                   angle: 315
