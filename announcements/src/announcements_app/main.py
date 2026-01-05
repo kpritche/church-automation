@@ -7,14 +7,16 @@ import sys
 
 # Ensure repo root is importable for shared utilities
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+_SRC_ROOT = Path(__file__).resolve().parents[1]  # .../announcements/src
+for _p in (str(_SRC_ROOT), str(_REPO_ROOT)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from shared.paths import ANNOUNCEMENTS_OUTPUT_DIR
-from .gmail_utils import authenticate_gmail, fetch_latest_announcement_html
-from .html_parser import parse_announcements
-from .ppt_generator import create_pptx_with_qr
-from .summarize import summarize_text
+from announcements_app.gmail_utils import authenticate_gmail, fetch_latest_announcement_html
+from announcements_app.html_parser import parse_announcements
+from announcements_app.ppt_generator import create_pptx_with_qr
+from announcements_app.summarize import summarize_text
 
 
 def get_next_sunday() -> date:
