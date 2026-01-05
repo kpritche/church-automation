@@ -2,17 +2,22 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# User-specific secrets directory (not in repo)
+_SECRETS_DIR = Path(os.getenv('CHURCH_AUTOMATION_SECRETS_DIR', 
+                               str(Path.home() / '.church-automation')))
 
 # Announcements
 ANNOUNCEMENTS_DIR = REPO_ROOT / "announcements"
 ANNOUNCEMENTS_SRC = ANNOUNCEMENTS_DIR / "src"
 ANNOUNCEMENTS_OUTPUT_DIR = ANNOUNCEMENTS_DIR / "output"
-ANNOUNCEMENTS_TOKEN_PATH = ANNOUNCEMENTS_DIR / "token.pickle"
-ANNOUNCEMENTS_CREDENTIALS_PATH = ANNOUNCEMENTS_DIR / "credentials.json"
-ANNOUNCEMENTS_GCP_CREDENTIALS_PATH = ANNOUNCEMENTS_DIR / "gmail-pptx-tool-1fa9ec3effd6.json"
+ANNOUNCEMENTS_TOKEN_PATH = _SECRETS_DIR / "announcements_token.pickle"
+ANNOUNCEMENTS_CREDENTIALS_PATH = _SECRETS_DIR / "credentials.json"
+ANNOUNCEMENTS_GCP_CREDENTIALS_PATH = _SECRETS_DIR / "gmail-pptx-tool-1fa9ec3effd6.json"
 
 # Slides (formerly "service")
 SLIDES_DIR = REPO_ROOT / "slides"
