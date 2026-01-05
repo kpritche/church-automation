@@ -5,6 +5,7 @@ config.py
 *.jpg
 *.pro
 !*_template.pro
+!*_template_mac.pro
 !blank.pro
 
 # Python cache and envs
