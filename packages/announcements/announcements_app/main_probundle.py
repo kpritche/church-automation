@@ -1,0 +1,198 @@
+"""Main entry point for generating .probundle announcements."""
+from __future__ import annotations
+
+import os
+import json
+from datetime import date, timedelta
+from pathlib import Path
+
+try:
+    from church_automation_shared.paths import ANNOUNCEMENTS_OUTPUT_DIR, SLIDES_SLIDES_CONFIG
+    from church_automation_shared import config
+except ModuleNotFoundError:
+    _REPO_ROOT = Path(__file__).resolve().parents[3]
+    _SHARED_PARENT = _REPO_ROOT / "packages" / "shared"
+    if str(_SHARED_PARENT) not in sys.path:
+        sys.path.insert(0, str(_SHARED_PARENT))
+    from church_automation_shared.paths import ANNOUNCEMENTS_OUTPUT_DIR, SLIDES_SLIDES_CONFIG
+    from church_automation_shared import config
+from announcements_app.gmail_utils import authenticate_gmail, fetch_latest_announcement_html
+from announcements_app.html_parser import parse_announcements
+from announcements_app.summarize import summarize_text
+from announcements_app.probundle_generator import create_probundle
+
+try:
+    from pypco.pco import PCO
+    PYPCO_AVAILABLE = True
+except ImportError:
+    PYPCO_AVAILABLE = False
+
+
+def get_next_sunday() -> date:
+    today = date.today()
+    days_until_sunday = (6 - today.weekday()) % 7
+    if days_until_sunday == 0:
+        days_until_sunday = 7
+    next_sunday = today + timedelta(days=days_until_sunday)
+    return next_sunday
+
+
+def upload_to_planning_center(probundle_path: Path, plan_date_str: str) -> bool:
+    """Upload the generated probundle to Planning Center announcements item.
+    
+    Args:
+        probundle_path: Path to the .probundle file
+        plan_date_str: Date string in YYYY-MM-DD format
+        
+    Returns:
+        True if upload succeeded, False otherwise
+    """
+    if not PYPCO_AVAILABLE:
+        print("   ⚠ pypco not available, skipping upload")
+        return False
+    
+    try:
+        # Initialize PCO client
+        pco = PCO(application_id=config.client_id, secret=config.secret)
+        
+        # Load service type IDs from config
+        if not SLIDES_SLIDES_CONFIG.exists():
+            print(f"   ⚠ Config not found: {SLIDES_SLIDES_CONFIG}")
+            return False
+            
+        with open(SLIDES_SLIDES_CONFIG, 'r') as f:
+            cfg = json.load(f)
+        
+        service_type_ids = cfg.get('service_type_ids', [])
+        if not service_type_ids:
+            print("   ⚠ No service_type_ids in config")
+            return False
+        
+        upload_count = 0
+        for stid in service_type_ids:
+            # Find the plan for the target date
+            plans = pco.iterate(f"/services/v2/service_types/{stid}/plans", filter="future")
+            plan = None
+            plan_id = None
+            
+            for candidate in plans:
+                sort_date = candidate["data"]["attributes"].get("sort_date", "")
+                if sort_date and sort_date[:10] == plan_date_str:
+                    plan = candidate
+                    plan_id = plan["data"]["id"]
+                    break
+            
+            if not plan_id:
+                print(f"   ⚠ No plan found for service type {stid} on {plan_date_str}")
+                continue
+            
+            # Find the Announcements item
+            items_resp = pco.get(
+                f"/services/v2/service_types/{stid}/plans/{plan_id}/items"
+            )
+            
+            ann_item = None
+            for itm in items_resp.get("data", []):
+                if itm.get("attributes", {}).get("title", "") == "Announcements":
+                    ann_item = itm
+                    break
+            
+            if not ann_item:
+                print(f"   ⚠ No 'Announcements' item found in service type {stid}")
+                continue
+            
+            item_id = ann_item["id"]
+            
+            # Upload file to PCO
+            print(f"   Uploading to service type {stid}, plan {plan_id}...")
+            upload_resp = pco.upload(str(probundle_path))
+            upload_id = upload_resp["data"][0]["id"]
+            
+            # Attach to the Announcements item
+            filename = probundle_path.name
+            attach_payload = {
+                "data": {
+                    "attributes": {
+                        "file_upload_identifier": upload_id,
+                        "filename": filename
+                    }
+                }
+            }
+            
+            pco.post(
+                f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{item_id}/attachments",
+                payload=attach_payload
+            )
+            
+            print(f"   ✓ Uploaded to service type {stid} (item {item_id})")
+            upload_count += 1
+        
+        return upload_count > 0
+        
+    except Exception as e:
+        print(f"   ✗ Upload failed: {e}")
+        return False
+
+
+def main() -> None:
+    print("=" * 60)
+    print("ProPresenter Announcements Generator (.probundle)")
+    print("=" * 60)
+    
+    # Get Gmail query from environment or use default
+    gmail_query = os.getenv(
+        'GMAIL_ANNOUNCEMENTS_QUERY',
+        'from:"First United Methodist Church" subject:"The Latest FUMC News for You!"'
+    )
+    
+    # Authenticate and fetch
+    print("\n1. Fetching announcements from Gmail...")
+    service = authenticate_gmail()
+    html_content = fetch_latest_announcement_html(
+        service,
+        query=gmail_query,
+    )
+    
+    # Parse announcements
+    print("\n2. Parsing announcements...")
+    announcements = parse_announcements(html_content)
+    print(f"   Found {len(announcements)} announcements")
+    
+    # Add summaries
+    print("\n3. Generating summaries...")
+    for idx, ann in enumerate(announcements, 1):
+        print(f"   {idx}. {ann['title'][:50]}...")
+        if "body" in ann:
+            ann["summary"] = summarize_text(ann["body"], max_chars=250)
+        else:
+            ann["summary"] = "No summary available."
+    
+    # Create output directory
+    date_str = get_next_sunday().strftime("%Y-%m-%d")
+    output_dir = ANNOUNCEMENTS_OUTPUT_DIR / date_str
+    output_path = output_dir / f"weekly_announcements_{date_str}.probundle"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    print(f"\n4. Creating .probundle file...")
+    print(f"   Output: {output_path}")
+    
+    # Generate .probundle
+    create_probundle(announcements, output_path)
+    
+    print(f"\n✓ ProBundle created: {output_path}")
+    
+    # Upload to Planning Center
+    print(f"\n5. Uploading to Planning Center...")
+    upload_success = upload_to_planning_center(output_path, date_str)
+    
+    print(f"\n{'=' * 60}")
+    if upload_success:
+        print(f"✓ Complete! File saved and uploaded successfully")
+    else:
+        print(f"✓ File saved (upload skipped or failed)")
+    print(f"  {output_path}")
+    print(f"{'=' * 60}")
+
+
+if __name__ == "__main__":
+    main()
