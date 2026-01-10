@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "church-automation-shared"
+version = "0.1.0"
+description = "Shared utilities for church automation tools"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Church Automation", email = "contact@example.com"}
+]
+dependencies = [
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["church_automation_shared*"]

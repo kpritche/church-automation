@@ -4,21 +4,16 @@ Unified runner for church automation tasks.
 
 Runs both:
 1. Announcements generation (announcements_app)
-2. ProPresenter slides generation (service_app)
+2. ProPresenter slides generation (slides_app)
+
+Note: Packages must be installed first. Run:
+  pip install -e ./packages/shared
+  pip install -e ./packages/announcements
+  pip install -e ./packages/slides
 """
 from __future__ import annotations
 
 import sys
-from pathlib import Path
-
-# Add all necessary paths to sys.path
-REPO_ROOT = Path(__file__).resolve().parent
-ANNOUNCEMENTS_SRC = REPO_ROOT / "announcements" / "src"
-SLIDES_SRC = REPO_ROOT / "slides" / "src"
-
-for p in (str(REPO_ROOT), str(ANNOUNCEMENTS_SRC), str(SLIDES_SRC)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
 
 
 def run_announcements():
@@ -41,7 +36,7 @@ def run_slides():
     print("STEP 2: Generating ProPresenter Slides")
     print("=" * 60)
     try:
-        from service_app.make_pro import main as slides_main
+        from slides_app.make_pro import main as slides_main
         slides_main()
         print("✓ ProPresenter slides generation completed successfully\n")
     except Exception as e:
