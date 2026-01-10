@@ -31,7 +31,7 @@ _DEFAULTS = {
     "BASE_FONT_SIZE": 28,
     "MIN_FONT_SIZE": 16,
     "BRAND_COLOR_1": (22, 70, 62),  # dark green
-    "LOGO_PATH": ASSETS_DIR / "logo.png",
+    "LOGO_PATH": ANNOUNCEMENTS_DIR / "logo.png",  # Use logo from announcements folder
     "GOOGLE_APPLICATION_CREDENTIALS": ANNOUNCEMENTS_GCP_CREDENTIALS_PATH,
 }
 

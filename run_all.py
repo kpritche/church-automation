@@ -24,10 +24,10 @@ for p in (str(REPO_ROOT), str(ANNOUNCEMENTS_SRC), str(SLIDES_SRC)):
 def run_announcements():
     """Run the announcements generation workflow."""
     print("=" * 60)
-    print("STEP 1: Generating Announcements PowerPoint")
+    print("STEP 1: Generating Announcements ProBundle")
     print("=" * 60)
     try:
-        from announcements_app.main import main as announcements_main
+        from announcements_app.main_probundle import main as announcements_main
         announcements_main()
         print("✓ Announcements generation completed successfully\n")
     except Exception as e:

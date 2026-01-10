@@ -7,6 +7,7 @@ config.py
 !*_template.pro
 !*_template_mac.pro
 !blank.pro
+.env
 
 # Python cache and envs
 __pycache__/
@@ -30,4 +31,4 @@ announcements/gmail-pptx-tool-*.json
 slides/ProPresenter7_Proto/generated/
 
 # OS cruft
-.DS_Store
+.DS_Store"deprecated/" 
