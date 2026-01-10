@@ -1,1 +1,0 @@
-"""Bulletin generation package."""

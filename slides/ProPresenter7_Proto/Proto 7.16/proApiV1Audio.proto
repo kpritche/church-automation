@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package rv.data;
-
-import "proApiV1Identifier.proto";
-import "proApiV1MediaPlaylistItem.proto";
-import "proApiV1Playlist.proto";
