@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "church-automation-bulletins"
+version = "0.1.0"
+description = "Generate PDF church bulletins from Planning Center"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Church Automation", email = "contact@example.com"}
+]
+dependencies = [
+    "church-automation-shared",
+    "pypco>=1.2.0,<1.3.0",
+    "reportlab>=4.0.0",
+    "pillow>=10.0.0",
+    "PyPDF2>=3.0.0",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+generate-bulletins = "bulletins_app.make_bulletins:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bulletins_app*"]

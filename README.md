@@ -1,21 +1,273 @@
-This repository contains two, currently unmerged, repositories: **Announcements** and **Slides**. The deprecated folder conatins files that may have some use as reference material, but are currently not part of any pipeline. Connecting to Planning Center requires API keys that are not included in this repository.
+# Church Automation Suite
 
-# Announcements
-Running `main.py` in this repository creates the announcement .pptx file and the .jpg files of each slide in the .pptx file. Running `main.py` will ask for authorization to a Google account. The announcements are created by reading the weekly E-vents email that goes out and parsing the content in to slides. The information in the email is summarized by a text-bison LLM model if the title or body text is too long to fit in the PowerPoint slide. This process requires authenitcation with Google's Vertext AI platform. Additional users likely need to be configured for anyone other than Kory to run this at present.
+A modular Python monorepo for automating church presentation and bulletin workflows using Planning Center Online and Gmail integration.
 
-The slides are uploaded to each Planning Center service for the upcoming week and saved locally.
+## 🎯 What This Does
 
-# Slides
-Running `make_pro.py` connects to Planning Center Online to access all of the items for each service for the next Sunday. Text in each item is parsed and broken into text chunks that are an appropriate length for each ProPresenter slide. Each item that needs a ProPresenter presentaiton (e.g. Centering Words, Opening Prayer) gets a presentation made from it's text by pulling the appropriate ProPresenter template (white, yellow, blank) and replacing the text. The .pro files get uploaded to their corresponding Planning Center item. 
+This suite provides three independent tools that work together to automate common church media production tasks:
 
-.pro files are Google Protocol Buffer files. You can learn more about what these files are, how ProPresenter uses them, and how to use them in different programming languages in `/slides/ProPresenter7_Proto` which is a fork of greyshirtguy's repository who did much of the legwork on decoding these undocumented files. That repository contains its own README.
+- **📢 Announcements** - Generate ProPresenter `.probundle` files from Gmail announcement emails
+- **🖼️ Slides** - Generate ProPresenter `.pro` slides from Planning Center liturgy items
+- **📄 Bulletins** - Generate PDF bulletins from Planning Center service plans
 
-Hint: The decode command should look something like this:
+## 🏗️ Architecture
+
+This is a **multi-package monorepo** where each tool can be installed and used independently:
+
 ```
-protoc -I="C:\Users\KP\Documents\Github\church\slides\ProPresenter7_Proto\Proto19beta"  --decode rv.data.Presentation  propresenter.proto < "C:\Users\KP\Documents\Github\church\slides\output\2025-09-21\2025-09-21-CelebrateService11AM-A_Story_about_Compassion.pro"  > white_template.txt    
+church-automation/
+├── packages/
+│   ├── shared/                     # Common utilities (required by all)
+│   ├── announcements/              # Gmail → ProPresenter announcements
+│   ├── bulletins/                  # Planning Center → PDF bulletins
+│   └── slides/                     # Planning Center → ProPresenter slides
+├── examples/                       # Configuration templates
+├── assets/                         # Shared fonts and resources
+└── run_all.py                     # Unified runner for all tools
 ```
 
-## New Layout (packaged)
-- Announcements code now lives in `announcements/src/announcements_app`. Legacy `announcements/*.py` files are wrappers so existing commands still work. Preferred entrypoint: `python -m announcements_app.main` from `announcements/src`.
-- Slides code now lives in `slides/src/service_app`. Preferred entrypoint from repo root: `python -m service_app.make_pro` inside `slides/src`. (Legacy "service" name is retired; see `shared/paths.py` for compatibility aliases.)
-- Shared path helpers live in `shared/paths.py` to keep output/config locations in one place.
+## 🚀 Quick Start
+
+### 1. Install Packages
+
+```bash
+# Install shared utilities first (required by all tools)
+pip install -e ./packages/shared
+
+# Install the tools you need
+pip install -e ./packages/announcements
+pip install -e ./packages/bulletins
+pip install -e ./packages/slides
+```
+
+### 2. Configure Credentials
+
+```bash
+# Copy environment template
+cp examples/.env.example .env
+
+# Edit .env and add your credentials:
+# - PCO_CLIENT_ID and PCO_SECRET (get from Planning Center)
+# - GMAIL_ANNOUNCEMENTS_QUERY (customize for your church)
+```
+
+### 3. Set Up Gmail OAuth (for announcements)
+
+Place these files in `~/.church-automation/`:
+- `credentials.json` - Gmail API OAuth credentials from Google Cloud Console
+- `gcp-credentials.json` - GCP service account (optional, for AI summarization)
+
+The first run will create `announcements_token.pickle` automatically.
+
+### 4. Configure Service Types
+
+```bash
+# Copy and edit the slides config
+cp examples/slides_config.example.json packages/slides/slides_config.json
+
+# Add your Planning Center service type IDs
+```
+
+### 5. Run the Tools
+
+```bash
+# Run all tools sequentially
+python run_all.py
+
+# Or run individual tools
+python -m announcements_app.main_probundle    # Or use: generate-announcements
+python -m bulletins_app.make_bulletins        # Or use: generate-bulletins
+python -m slides_app.make_pro                 # Or use: generate-slides
+```
+
+## 📦 Package Details
+
+### Shared Utilities (`church-automation-shared`)
+
+Common functionality used by all tools:
+- Path management and configuration
+- Planning Center API credential handling
+- Environment variable loading
+
+**Dependencies:** `python-dotenv`
+
+### Announcements (`church-automation-announcements`)
+
+Fetches weekly emails from Gmail, parses announcements, generates summarized ProPresenter bundles with QR codes.
+
+**Key Features:**
+- Gmail API integration with OAuth2
+- HTML email parsing
+- AI-powered text summarization (Google Vertex AI)
+- QR code generation
+- ProPresenter protobuf serialization
+
+**Dependencies:** `google-api-python-client`, `google-genai`, `beautifulsoup4`, `qrcode`, `pillow`, `protobuf`
+
+**CLI Command:** `generate-announcements`
+
+### Bulletins (`church-automation-bulletins`)
+
+Generates PDF church bulletins from Planning Center service plans.
+
+**Key Features:**
+- Planning Center API integration
+- Custom PDF generation with ReportLab
+- Font management (Source Sans Pro)
+- Brand color enforcement
+- QR code integration
+
+**Dependencies:** `pypco`, `reportlab`, `pillow`, `PyPDF2`, `beautifulsoup4`
+
+**CLI Command:** `generate-bulletins`
+
+### Slides (`church-automation-slides`)
+
+Generates ProPresenter `.pro` slide files from Planning Center liturgy items.
+
+**Key Features:**
+- Planning Center API integration
+- Protobuf-based `.pro` file generation
+- Template cloning and text replacement
+- Automatic file upload to Planning Center
+- Scripture reference parsing
+
+**Dependencies:** `pypco`, `protobuf`, `requests`
+
+**Includes:** ProPresenter7 Protocol Buffer definitions
+
+**CLI Command:** `generate-slides`
+
+## 🔧 Configuration
+
+### Environment Variables (.env)
+
+```bash
+# Required
+PCO_CLIENT_ID=your_planning_center_client_id
+PCO_SECRET=your_planning_center_secret
+
+# Optional
+GCP_CREDENTIALS_FILENAME=gcp-credentials.json
+GMAIL_ANNOUNCEMENTS_QUERY=from:"Your Church" subject:"Announcements"
+CHURCH_AUTOMATION_SECRETS_DIR=/custom/secrets/path
+```
+
+### Planning Center Setup
+
+1. Go to https://api.planningcenteronline.com/oauth/applications
+2. Create a new Personal Access Token (PAT)
+3. Add `PCO_CLIENT_ID` and `PCO_SECRET` to your `.env` file
+4. Find your service type IDs in Planning Center (Services → Service Types → URL)
+5. Add them to `packages/slides/slides_config.json`
+
+### Gmail API Setup
+
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable Gmail API
+3. Create OAuth 2.0 credentials (Desktop application)
+4. Download `credentials.json` to `~/.church-automation/`
+5. Run announcements tool - it will open a browser for OAuth consent
+
+## 📂 Directory Structure
+
+```
+packages/
+├── shared/
+│   └── church_automation_shared/
+│       ├── __init__.py
+│       ├── config.py              # API credentials
+│       └── paths.py               # Path management
+├── announcements/
+│   ├── announcements_app/
+│   │   ├── main_probundle.py     # Main entry point
+│   │   ├── gmail_utils.py        # Gmail API
+│   │   ├── html_parser.py        # Email parsing
+│   │   ├── summarize.py          # AI summarization
+│   │   └── probundle_generator.py # ProPresenter generation
+│   ├── output/                    # Generated files
+│   └── pyproject.toml
+├── bulletins/
+│   ├── bulletins_app/
+│   │   └── make_bulletins.py     # Main entry point
+│   ├── output/                    # Generated PDFs
+│   └── pyproject.toml
+└── slides/
+    ├── slides_app/
+    │   ├── make_pro.py            # Main entry point
+    │   ├── content_parser.py      # PCO parsing
+    │   └── slide_utils.py         # Slide formatting
+    ├── ProPresenter7_Proto/       # Protobuf definitions
+    ├── templates/                 # .pro templates
+    ├── output/                    # Generated files
+    └── pyproject.toml
+```
+
+## 🧪 Development
+
+### Installing in Development Mode
+
+```bash
+# Install all packages in editable mode
+pip install -e ./packages/shared
+pip install -e ./packages/announcements
+pip install -e ./packages/bulletins
+pip install -e ./packages/slides
+
+# With development dependencies
+pip install -e "./packages/shared[dev]"
+pip install -e "./packages/announcements[dev]"
+```
+
+### Running Tests
+
+```bash
+# Run tests for a specific package
+cd packages/announcements
+pytest tests/
+
+# Or from repo root
+pytest packages/announcements/tests/
+```
+
+### Code Quality
+
+```bash
+# Format code
+black packages/
+
+# Type checking
+mypy packages/announcements/announcements_app/
+```
+
+## 🔒 Security Notes
+
+- **Never commit `.env`** - it contains sensitive credentials
+- All credentials are loaded from environment variables
+- Gmail OAuth tokens are stored in `~/.church-automation/`
+- Use `.gitignore` to protect sensitive files
+
+## 📝 ProPresenter Protocol Buffers
+
+The `.pro` files used by ProPresenter are Google Protocol Buffer files. Learn more about decoding and working with these undocumented files in `packages/slides/ProPresenter7_Proto/`, which is a fork of greyshirtguy's repository.
+
+Example decode command:
+```bash
+protoc -I="packages/slides/ProPresenter7_Proto/Proto19beta" \
+  --decode rv.data.Presentation propresenter.proto \
+  < "output_file.pro" > decoded_output.txt
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📞 Support
+
+For issues or questions:
+- Check package-specific README files in `packages/*/`
+- Review configuration examples in `examples/`
+- See `.github/copilot-instructions.md` for detailed architecture notes

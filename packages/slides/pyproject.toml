@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "church-automation-slides"
+version = "0.1.0"
+description = "Generate ProPresenter slides from Planning Center liturgy"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Church Automation", email = "contact@example.com"}
+]
+dependencies = [
+    "church-automation-shared",
+    "pypco>=1.2.0,<1.3.0",
+    "protobuf>=4.0.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+generate-slides = "slides_app.make_pro:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["slides_app*", "ProPresenter7_Proto*"]
+
+[tool.setuptools.package-data]
+slides_app = ["templates/*", "templates/**/*"]
