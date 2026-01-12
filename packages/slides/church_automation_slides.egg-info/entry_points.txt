@@ -1,2 +1,2 @@
 [console_scripts]
-generate-slides = slides_app.make_pro:main
+make-slides = slides_app.make_pro:main

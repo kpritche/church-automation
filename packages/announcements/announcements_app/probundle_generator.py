@@ -17,17 +17,19 @@ from PIL import Image
 
 # Add protobuf path
 # Path hierarchy: probundle_generator.py -> announcements_app -> announcements -> packages -> repo_root
-_PROTO_PATH = Path(__file__).resolve().parents[3] / "slides" / "ProPresenter7_Proto" / "generated"
+_PROTO_PATH = Path(__file__).resolve().parents[3] / "packages" / "slides" / "ProPresenter7_Proto" / "generated"
 if str(_PROTO_PATH) not in sys.path:
     sys.path.insert(0, str(_PROTO_PATH))
 
 import presentation_pb2
+import presentationSlide_pb2
 import cue_pb2
 import action_pb2
 import slide_pb2
 import graphicsData_pb2
 import basicTypes_pb2
 import background_pb2
+import hotKey_pb2
 
 from .settings import LOGO_PATH, BRAND_COLOR_1
 from .summarize import summarize_text
@@ -206,11 +208,18 @@ def create_media_element(media_uuid: str, file_path: str, width: int, height: in
     element.fill.enable = True
     element.fill.media.uuid.CopyFrom(create_uuid_message(media_uuid))
     
-    # Set URL
-    element.fill.media.url.absolute_string = f"file://{file_path}"
-    element.fill.media.url.platform = basicTypes_pb2.URL.Platform.PLATFORM_WIN32
+    # Set URL (use Mac platform; keep paths under Media/Assets so ProPresenter can resolve inside bundle)
+    filename = Path(file_path).name
+    relative_path = f"Media/Assets/{filename}"
+
+    # Absolute path is required for Mac; allow override via env var but default to the known
+    # production path used on the booth Mac.
+    mac_media_root = os.environ.get("PROPRESENTER_MEDIA_ROOT", "/Users/fcproduction/Documents/ProPresenter")
+    mac_media_root = mac_media_root.rstrip("/")
+    element.fill.media.url.absolute_string = f"file://{mac_media_root}/{relative_path}"
+    element.fill.media.url.platform = basicTypes_pb2.URL.Platform.PLATFORM_MACOS
     element.fill.media.url.local.root = basicTypes_pb2.URL.LocalRelativePath.Root.ROOT_SHOW
-    element.fill.media.url.local.path = Path(file_path).name
+    element.fill.media.url.local.path = relative_path
     
     # Set metadata
     element.fill.media.metadata.format = "png"
@@ -328,6 +337,9 @@ def create_text_element(text: str, element_uuid: str, element_name: str,
     element.text.shadow.color.CopyFrom(create_color(0.0, 0.0, 0.0, 1.0))
     element.text.shadow.opacity = 0.75
     
+    # textLineMask - required empty object for Mac compatibility
+    element.text_line_mask.CopyFrom(graphicsData_pb2.Graphics.Text.LineFillMask())
+    
     return element
 
 
@@ -339,19 +351,43 @@ def create_announcement_slide(announcement: dict, slide_index: int,
     Returns:
         Tuple of (slide_proto, list of media files to include)
     """
-    import presentationSlide_pb2
-    
     media_files = []
     
     # Create new slide by copying template structure
     slide = presentationSlide_pb2.PresentationSlide()
     slide.CopyFrom(template_slide)
     
-    # Clear existing elements and rebuild with announcement data
+    # Regenerate baseSlide UUID to ensure uniqueness per slide (critical for Mac compatibility)
+    slide.base_slide.uuid.CopyFrom(create_uuid_message(generate_uuid()))
+    
+    # Ensure critical slide properties are set for Mac compatibility
+    slide.base_slide.draws_background_color = True
+    slide.base_slide.background_color.red = 1.0
+    slide.base_slide.background_color.green = 1.0
+    slide.base_slide.background_color.blue = 1.0
+    slide.base_slide.background_color.alpha = 1.0
+    
+    # Clear chordChart - must be empty, not contain platform info
+    slide.chord_chart.Clear()
+    
+    # Clear all template elements - we'll build our own list from scratch to match working file structure
+    # The working file has only the elements we explicitly create, no template remnants
     del slide.base_slide.elements[:]
     
-    # 1. Title element (always present)
+    # Helper to create and add a new element with text scroller defaults
+    def create_slide_element(element: Any, info_value: int) -> None:
+        slide_element = slide.base_slide.elements.add()
+        slide_element.element.CopyFrom(element)
+        slide_element.info = info_value
+        slide_element.element.hidden = False
+        # Ensure text scroller defaults are present
+        slide_element.text_scroller.scroll_rate = 0.5
+        slide_element.text_scroller.should_repeat = True
+        slide_element.text_scroller.repeat_distance = 0.054945054945054944
+    
     brand_color_normalized = rgb_to_normalized(BRAND_COLOR_1)
+    
+    # 1. Title element (always present)
     title_element = create_text_element(
         text=announcement["title"],
         element_uuid=generate_uuid(),
@@ -369,9 +405,7 @@ def create_announcement_slide(announcement: dict, slide_index: int,
     )
     # Change stroke color to primary brand color
     title_element.stroke.color.CopyFrom(create_color(*brand_color_normalized, 1.0))
-    slide_element = slide.base_slide.elements.add()
-    slide_element.element.CopyFrom(title_element)
-    slide_element.info = 3
+    create_slide_element(title_element, 3)
     
     # 2. Body element (always present)
     body_text = announcement.get("body", "")
@@ -392,17 +426,14 @@ def create_announcement_slide(announcement: dict, slide_index: int,
         alignment="left",
         bg_color=(0.13, 0.59, 0.95)
     )
-    slide_element = slide.base_slide.elements.add()
-    slide_element.element.CopyFrom(body_element)
-    slide_element.info = 2
+    create_slide_element(body_element, 2)
     
-    # 3. Logo (always present)
+    # 3. Logo (always present if it exists)
     logo_path = LOGO_PATH
     if os.path.exists(logo_path):
         # Copy logo to media dir
         logo_dest = media_dir / "logo.png"
         if not logo_dest.exists():
-            import shutil
             shutil.copy(logo_path, logo_dest)
             media_files.append(("logo.png", logo_dest))
         
@@ -421,10 +452,11 @@ def create_announcement_slide(announcement: dict, slide_index: int,
             element_uuid=generate_uuid(),
             element_name="logo"
         )
-        slide_element = slide.base_slide.elements.add()
-        slide_element.element.CopyFrom(logo_element)
+        create_slide_element(logo_element, 1)
+    else:
+        print(f"   ⚠ Warning: Logo not found at {logo_path}")
     
-    # 4. Main image (if exists)
+    # 4. Main image (ONLY if it exists)
     if announcement.get("image_url"):
         img_filename = f"announcement_{slide_index + 1}_image.png"
         img_path = media_dir / img_filename
@@ -445,10 +477,9 @@ def create_announcement_slide(announcement: dict, slide_index: int,
                 element_uuid=generate_uuid(),
                 element_name="image"
             )
-            slide_element = slide.base_slide.elements.add()
-            slide_element.element.CopyFrom(image_element)
+            create_slide_element(image_element, 1)
     
-    # 5. QR Code (if link exists)
+    # 5. QR Code (ONLY if link exists)
     if announcement.get("link"):
         qr_filename = f"announcement_{slide_index + 1}_qr.png"
         qr_path = media_dir / qr_filename
@@ -472,10 +503,9 @@ def create_announcement_slide(announcement: dict, slide_index: int,
                 element_uuid=generate_uuid(),
                 element_name="qr_code"
             )
-            slide_element = slide.base_slide.elements.add()
-            slide_element.element.CopyFrom(qr_element)
+            create_slide_element(qr_element, 1)
             
-            # 6. QR text (button text)
+            # 6. QR text (ONLY if link exists and we added QR code)
             qr_text = announcement.get("button_text", "Scan for more info")
             qr_text_element = create_text_element(
                 text=qr_text,
@@ -491,9 +521,7 @@ def create_announcement_slide(announcement: dict, slide_index: int,
                 alignment="center",
                 bg_color=(0.13, 0.59, 0.95)
             )
-            slide_element = slide.base_slide.elements.add()
-            slide_element.element.CopyFrom(qr_text_element)
-            slide_element.info = 2
+            create_slide_element(qr_text_element, 2)
     
     return slide, media_files
 
@@ -510,11 +538,26 @@ def create_probundle(announcements: list[dict], output_path: Path) -> None:
     media_dir = output_path.parent / "temp_media"
     media_dir.mkdir(exist_ok=True, parents=True)
     
-    # Load template presentation
-    template_path = Path(__file__).resolve().parents[3] / "slides" / "templates" / "announcement_template_extracted" / "announcement_template.pro"
+    # Load template presentation - try Mac version first, then fallback to generic
+    templates_base = Path(__file__).resolve().parents[3] / "packages" / "slides" / "templates"
     
-    if not template_path.exists():
-        raise FileNotFoundError(f"Template not found: {template_path}")
+    # Try Mac-specific template first
+    template_candidates = [
+        templates_base / "blank_template_mac.pro",
+        templates_base / "announcement_template_extracted" / "announcement_template.pro",
+        templates_base / "blank_template.pro",
+    ]
+    
+    template_path = None
+    for candidate in template_candidates:
+        if candidate.exists():
+            template_path = candidate
+            break
+    
+    if not template_path:
+        raise FileNotFoundError(f"No template found. Tried: {[str(p) for p in template_candidates]}")
+    
+    print(f"   Using template: {template_path.name}")
     
     # Read template
     with open(template_path, 'rb') as f:
@@ -532,6 +575,18 @@ def create_probundle(announcements: list[dict], output_path: Path) -> None:
     # Create new presentation
     presentation = presentation_pb2.Presentation()
     presentation.CopyFrom(template_pres)
+
+    # Normalize application info to match known-good Mac version to avoid platform/version drift
+    app_info = presentation.application_info
+    app_info.platform = basicTypes_pb2.ApplicationInfo.Platform.PLATFORM_MACOS
+    app_info.platform_version.major_version = 15
+    app_info.platform_version.minor_version = 6
+    app_info.platform_version.patch_version = 0
+    app_info.application = basicTypes_pb2.ApplicationInfo.Application.APPLICATION_PROPRESENTER
+    app_info.application_version.major_version = 19
+    app_info.application_version.minor_version = 0
+    app_info.application_version.patch_version = 1
+    app_info.application_version.build = "318767361"
     
     # Clear existing cues
     del presentation.cues[:]
@@ -540,6 +595,8 @@ def create_probundle(announcements: list[dict], output_path: Path) -> None:
     # Create cue group
     cue_group = presentation.cue_groups.add()
     cue_group.group.uuid.CopyFrom(create_uuid_message(generate_uuid()))
+    # Add empty hotKey to group
+    cue_group.group.hotKey.CopyFrom(hotKey_pb2.HotKey())
     
     # Collect all media files
     all_media_files = []
@@ -557,7 +614,14 @@ def create_probundle(announcements: list[dict], output_path: Path) -> None:
         cue = presentation.cues.add()
         cue_uuid = generate_uuid()
         cue.uuid.CopyFrom(create_uuid_message(cue_uuid))
-        # cue.completion_action_type = cue_pb2.Cue.COMPLETION_ACTION_TYPE_LAST  # Use default
+        
+        # Set completion fields
+        cue.completion_target_uuid.CopyFrom(create_uuid_message("00000000-0000-0000-0000-000000000000"))
+        cue.completion_action_type = cue_pb2.Cue.COMPLETION_ACTION_TYPE_LAST
+        cue.completion_action_uuid.CopyFrom(create_uuid_message("00000000-0000-0000-0000-000000000000"))
+        
+        # Add empty hotKey to cue
+        cue.hot_key.CopyFrom(hotKey_pb2.HotKey())
         
         # Add to cue group
         cue_identifier = cue_group.cue_identifiers.add()
@@ -566,13 +630,18 @@ def create_probundle(announcements: list[dict], output_path: Path) -> None:
         # Create action
         action = cue.actions.add()
         action.uuid.CopyFrom(create_uuid_message(generate_uuid()))
-        # action.is_enabled = True  # Use default
+        action.isEnabled = True
         action.type = action_pb2.Action.ACTION_TYPE_PRESENTATION_SLIDE
         action.slide.presentation.CopyFrom(slide)
     
     # Update presentation name
-    presentation.name = f"announcements_{output_path.stem}"
+    presentation.name = output_path.stem
     presentation.uuid.CopyFrom(create_uuid_message(generate_uuid()))
+    
+    # Set presentation-level background color (white)
+    presentation.background.color.red = 1.0
+    presentation.background.color.green = 1.0
+    presentation.background.color.blue = 1.0
     
     # Serialize presentation
     presentation_data = presentation.SerializeToString()

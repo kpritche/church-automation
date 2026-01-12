@@ -38,12 +38,12 @@ except ModuleNotFoundError:
     )
     from church_automation_shared import config
 from pypco.pco import PCO
-from content_parser import extract_items_from_pypco
-from slide_utils import slice_into_slides
+from .content_parser import extract_items_from_pypco
+from .slide_utils import slice_into_slides
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from attach_images import attach_images_to_announcements
+from .attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
@@ -109,9 +109,14 @@ def get_next_seven_day_window() -> tuple[str, str]:
 
 
 def load_config(path: str) -> dict:
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Config file not found: {path}")
-    with open(path, "r", encoding="utf-8") as f:
+    p = Path(path)
+    if not p.exists():
+        fallback = Path(__file__).resolve().parents[3] / "slides" / "slides_config.json"
+        if fallback.exists():
+            with open(fallback, "r", encoding="utf-8") as f:
+                return json.load(f)
+        raise FileNotFoundError(f"Config file not found: {p} or {fallback}")
+    with open(p, "r", encoding="utf-8") as f:
         return json.load(f)
     
 def upload_pro_to_media(file_path: str) -> str:
