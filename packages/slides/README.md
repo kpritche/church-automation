@@ -50,7 +50,7 @@ You can add your own templates by exporting from ProPresenter.
 
 ```bash
 # Run the generator
-generate-slides
+make-slides
 
 # Or use module syntax
 python -m slides_app.make_pro

@@ -41,7 +41,7 @@ GCP_CREDENTIALS_FILENAME=gcp-credentials.json
 
 ```bash
 # Run the generator
-generate-announcements
+make-announcements
 
 # Or use module syntax
 python -m announcements_app.main_probundle

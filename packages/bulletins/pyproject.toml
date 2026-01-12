@@ -29,7 +29,7 @@ dev = [
 ]
 
 [project.scripts]
-generate-bulletins = "bulletins_app.make_bulletins:main"
+make-bulletins = "bulletins_app.make_bulletins:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

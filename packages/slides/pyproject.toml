@@ -26,7 +26,7 @@ dev = [
 ]
 
 [project.scripts]
-generate-slides = "slides_app.make_pro:main"
+make-slides = "slides_app.make_pro:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

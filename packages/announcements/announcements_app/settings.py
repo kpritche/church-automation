@@ -18,6 +18,7 @@ from church_automation_shared.paths import (
     ASSETS_DIR,
 )
 
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _DEFAULTS = {
     "TITLE_MAX_CHARS": 120,

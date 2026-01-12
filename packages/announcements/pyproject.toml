@@ -33,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-generate-announcements = "announcements_app.main_probundle:main"
+make-announcements = "announcements_app.main_probundle:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

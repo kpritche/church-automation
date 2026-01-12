@@ -75,9 +75,9 @@ cp examples/slides_config.example.json packages/slides/slides_config.json
 python run_all.py
 
 # Or run individual tools
-python -m announcements_app.main_probundle    # Or use: generate-announcements
-python -m bulletins_app.make_bulletins        # Or use: generate-bulletins
-python -m slides_app.make_pro                 # Or use: generate-slides
+python -m announcements_app.main_probundle    # Or use: make-announcements
+python -m bulletins_app.make_bulletins        # Or use: make-bulletins
+python -m slides_app.make_pro                 # Or use: make-slides
 ```
 
 ## 📦 Package Details
@@ -104,7 +104,7 @@ Fetches weekly emails from Gmail, parses announcements, generates summarized Pro
 
 **Dependencies:** `google-api-python-client`, `google-genai`, `beautifulsoup4`, `qrcode`, `pillow`, `protobuf`
 
-**CLI Command:** `generate-announcements`
+**CLI Command:** `make-announcements`
 
 ### Bulletins (`church-automation-bulletins`)
 
@@ -119,7 +119,7 @@ Generates PDF church bulletins from Planning Center service plans.
 
 **Dependencies:** `pypco`, `reportlab`, `pillow`, `PyPDF2`, `beautifulsoup4`
 
-**CLI Command:** `generate-bulletins`
+**CLI Command:** `make-bulletins`
 
 ### Slides (`church-automation-slides`)
 
@@ -136,7 +136,7 @@ Generates ProPresenter `.pro` slide files from Planning Center liturgy items.
 
 **Includes:** ProPresenter7 Protocol Buffer definitions
 
-**CLI Command:** `generate-slides`
+**CLI Command:** `make-slides`
 
 ## 🔧 Configuration
 
