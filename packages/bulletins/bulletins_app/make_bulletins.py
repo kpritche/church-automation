@@ -266,6 +266,14 @@ def remove_red_text(soup: BeautifulSoup) -> None:
             )
         )
     for tag in soup.find_all(True):
+        # Only process Tag objects, skip NavigableString and other types
+        if not isinstance(tag, Tag):
+            continue
+        
+        # Skip tags with None attributes (malformed/empty tags)
+        if tag.attrs is None:
+            continue
+        
         style = (tag.get("style") or "")
         color_attr = (tag.get("color") or "")
         if is_red_style(style) or re.search(r"^red$", color_attr, re.IGNORECASE):
@@ -467,6 +475,92 @@ def fetch_lyrics_attachments(
             print(f"[warn] Unable to fetch attachments for song '{title}': {exc}")
     
     return lyrics_attachments
+
+
+def fetch_sheet_music_attachments(
+    pco: PCO,
+    song_items: List[Dict[str, object]],
+    service_type_id: int,
+    plan_id: str,
+    included: Optional[List[Dict[str, object]]] = None,
+) -> List[Dict[str, object]]:
+    """Fetch sheet music PDF attachments for song items.
+    
+    For each song, looks for PDFs that are NOT lyrics. If multiple non-lyrics PDFs exist,
+    prioritizes:
+    1. PDFs with 'vocal' in filename (case-insensitive)
+    2. PDFs with 'lead' in filename (case-insensitive)
+    3. First remaining PDF
+    
+    Returns list of dicts with 'title' and 'attachment_obj' for sheet music PDFs.
+    """
+    sheet_music_attachments: List[Dict[str, object]] = []
+    
+    for song_info in song_items:
+        item_obj = song_info["item_obj"]
+        title = song_info["title"]
+        item_id = str(item_obj.get("id", ""))
+        
+        # Get all attachments for this song
+        attach_url = f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+        try:
+            resp = pco.get(attach_url)
+            all_attachments = resp.get("data") or []
+        except Exception as exc:
+            print(f"  ⚠ Could not fetch attachments for '{title}': {exc}")
+            continue
+        
+        if not all_attachments:
+            continue
+        
+        # Filter to PDFs, excluding lyrics
+        pdf_attachments = []
+        for att_obj in all_attachments:
+            att_attrs = att_obj.get("attributes") or {}
+            filename = (att_attrs.get("filename") or "").lower()
+            file_type = (att_attrs.get("content_type") or "").lower()
+            
+            is_pdf = filename.endswith(".pdf") or "pdf" in file_type
+            is_lyrics = "lyric" in filename
+            
+            if is_pdf and not is_lyrics:
+                pdf_attachments.append(att_obj)
+        
+        if not pdf_attachments:
+            continue
+        
+        # Apply priority logic if multiple PDFs
+        selected_attachment = None
+        if len(pdf_attachments) == 1:
+            selected_attachment = pdf_attachments[0]
+        else:
+            # Look for 'vocal' first
+            for att_obj in pdf_attachments:
+                filename = ((att_obj.get("attributes") or {}).get("filename") or "").lower()
+                if "vocal" in filename:
+                    selected_attachment = att_obj
+                    break
+            
+            # If no 'vocal', look for 'lead'
+            if not selected_attachment:
+                for att_obj in pdf_attachments:
+                    filename = ((att_obj.get("attributes") or {}).get("filename") or "").lower()
+                    if "lead" in filename:
+                        selected_attachment = att_obj
+                        break
+            
+            # Otherwise take first
+            if not selected_attachment:
+                selected_attachment = pdf_attachments[0]
+        
+        if selected_attachment:
+            sheet_music_attachments.append({
+                "title": title,
+                "attachment_obj": selected_attachment,
+                "item_id": item_id,
+            })
+    
+    return sheet_music_attachments
 
 
 def download_lyrics_pdf(attachment_obj: Dict[str, object], pco: PCO, service_type_id: int, plan_id: str, item_id: str) -> Optional[bytes]:
@@ -710,11 +804,20 @@ def build_sections(
         description = (attrs.get("description") or "").strip()
         html_detail = attrs.get("html_details") or ""
         # log_html_detail(title, html_detail)
+        item_id = item_obj.get("id", "UNKNOWN")
+        try:
+            html_paragraphs = parse_html_detail(html_detail)
+        except Exception as exc:
+            print(f"\n[ERROR] Failed to parse html_detail for item {item_id} ('{title}')")
+            print(f"[ERROR] Exception: {exc}")
+            print(f"[ERROR] HTML detail:\n{repr(html_detail)}\n")
+            raise
+        
         current_section["items"].append(
             {
                 "title": title,
                 "description": description,
-                "html_paragraphs": parse_html_detail(html_detail),
+                "html_paragraphs": html_paragraphs,
                 "is_song": is_song,
             }
         )
@@ -739,6 +842,7 @@ class BulletinRenderer:
         self.current_item: Optional[str] = None
         self.cover_pdf_bytes: Optional[bytes] = None
         self.lyrics_data: List[Tuple[str, str]] = []  # List of (song_title, lyrics_text)
+        self.sheet_music_pages: List[object] = []  # List of PDF pages for sheet music
 
     def _set_cursor(self, value: float, note: str = "") -> None:
         self.cursor_y = float(value)
@@ -981,15 +1085,33 @@ class BulletinRenderer:
             self._bump_cursor(self.HEADING_GAP)
 
         if description:
-            self.draw_wrapped_block(
-                description,
-                self.fonts.description_name,
-                self.fonts.description_size,
-                COLOR_PRIMARY,
-                align="center",
-                leading=DESCRIPTION_LEADING,
-            )
-            self._bump_cursor(self.DESCRIPTION_GAP)
+            if "\n" in description:
+                lines = description.splitlines()
+                for line in lines:
+                    text_line = line.strip()
+                    if not text_line:
+                        # Preserve explicit blank lines with vertical space
+                        self._bump_cursor(self._line_height(self.fonts.description_size, leading=DESCRIPTION_LEADING))
+                        continue
+                    self.draw_wrapped_block(
+                        text_line,
+                        self.fonts.description_name,
+                        self.fonts.description_size,
+                        COLOR_PRIMARY,
+                        align="center",
+                        leading=DESCRIPTION_LEADING,
+                    )
+                self._bump_cursor(self.DESCRIPTION_GAP)
+            else:
+                self.draw_wrapped_block(
+                    description,
+                    self.fonts.description_name,
+                    self.fonts.description_size,
+                    COLOR_PRIMARY,
+                    align="center",
+                    leading=DESCRIPTION_LEADING,
+                )
+                self._bump_cursor(self.DESCRIPTION_GAP)
 
         for para in paragraphs:
             text = para.get("text", "")
@@ -1221,7 +1343,7 @@ class BulletinRenderer:
                     for position in positions:
                         if position not in worship_team:
                             continue
-                            
+                        
                         members = worship_team[position]
                         if not members:
                             continue
@@ -1581,6 +1703,27 @@ class BulletinRenderer:
                         self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - lyric_size, wrapped_line)
                         self._bump_cursor(self._line_height(lyric_size, leading=BODY_LEADING))
 
+    def draw_sheet_music_pages(self, sheet_music_pdfs: List[Tuple[str, bytes]]) -> None:
+        """Add sheet music PDF pages directly to the bulletin.
+        
+        Each PDF's pages are added as-is without title pages.
+        Silently skips corrupted PDFs.
+        
+        Args:
+            sheet_music_pdfs: List of (song_title, pdf_bytes) tuples
+        """
+        for song_title, pdf_bytes in sheet_music_pdfs:
+            if not pdf_bytes:
+                continue
+            
+            try:
+                reader = PdfReader(io.BytesIO(pdf_bytes))
+                for page in reader.pages:
+                    self.sheet_music_pages.append(page)
+            except Exception as exc:
+                print(f"  ⚠ Could not read sheet music PDF for '{song_title}': {exc}")
+                continue
+
     def save(self, path: Path) -> None:
         self.canvas.save()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1594,8 +1737,12 @@ class BulletinRenderer:
             if cover_reader.pages:
                 writer.add_page(cover_reader.pages[0])
 
-        # Add all generated bulletin pages (including extracted/formatted lyrics)
+        # Add all generated bulletin pages (liturgy content)
         for page in generated_reader.pages:
+            writer.add_page(page)
+        
+        # Add sheet music pages (replaces lyrics for configured service types)
+        for page in self.sheet_music_pages:
             writer.add_page(page)
 
         with open(path, "wb") as f:
@@ -1695,20 +1842,40 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
 
     worship_team, position_to_team_map = fetch_team_members(pco, service_type_id, plan_id)
     
-    # Fetch and download lyrics PDFs
-    lyrics_attachments = fetch_lyrics_attachments(
-        pco, lyrics_items, service_type_id, plan_id, items_resp.get("included")
-    )
-    lyrics_pdfs: List[Tuple[str, bytes]] = []
-    for lyrics_info in lyrics_attachments:
-        title = lyrics_info["title"]
-        attachment_obj = lyrics_info["attachment_obj"]
-        item_id = lyrics_info["item_id"]
-        pdf_bytes = download_lyrics_pdf(attachment_obj, pco, service_type_id, plan_id, item_id)
-        if pdf_bytes:
-            lyrics_pdfs.append((title, pdf_bytes))
-        else:
-            print(f"[warn] Failed to download lyrics for '{title}'")
+    # Check if this service type uses sheet music instead of lyrics
+    cfg = load_config(CONFIG_PATH)
+    sheet_music_service_types = cfg.get("sheet_music_service_type_ids", [])
+    uses_sheet_music = service_type_id in sheet_music_service_types
+    
+    # Fetch and process sheet music or lyrics based on config
+    if uses_sheet_music:
+        # Fetch sheet music PDFs
+        sheet_music_attachments = fetch_sheet_music_attachments(
+            pco, lyrics_items, service_type_id, plan_id, items_resp.get("included")
+        )
+        sheet_music_pdfs: List[Tuple[str, bytes]] = []
+        for sheet_info in sheet_music_attachments:
+            title = sheet_info["title"]
+            attachment_obj = sheet_info["attachment_obj"]
+            item_id = sheet_info["item_id"]
+            pdf_bytes = download_lyrics_pdf(attachment_obj, pco, service_type_id, plan_id, item_id)
+            if pdf_bytes:
+                sheet_music_pdfs.append((title, pdf_bytes))
+    else:
+        # Fetch and download lyrics PDFs
+        lyrics_attachments = fetch_lyrics_attachments(
+            pco, lyrics_items, service_type_id, plan_id, items_resp.get("included")
+        )
+        lyrics_pdfs: List[Tuple[str, bytes]] = []
+        for lyrics_info in lyrics_attachments:
+            title = lyrics_info["title"]
+            attachment_obj = lyrics_info["attachment_obj"]
+            item_id = lyrics_info["item_id"]
+            pdf_bytes = download_lyrics_pdf(attachment_obj, pco, service_type_id, plan_id, item_id)
+            if pdf_bytes:
+                lyrics_pdfs.append((title, pdf_bytes))
+            else:
+                print(f"[warn] Failed to download lyrics for '{title}'")
 
     cover_img: Optional[Image.Image] = None
     cover_pdf_bytes: Optional[bytes] = None
@@ -1721,7 +1888,15 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
     renderer = BulletinRenderer(fonts)
     renderer.add_cover(cover_img, cover_pdf_bytes)
     renderer.draw_sections(sections, service_name, plan_date)
-    renderer.draw_lyrics_pages(lyrics_pdfs)
+    
+    # Add sheet music or lyrics pages based on config
+    if uses_sheet_music:
+        if sheet_music_pdfs:
+            print(f"[info] Adding {len(sheet_music_pdfs)} sheet music file(s)...")
+            renderer.draw_sheet_music_pages(sheet_music_pdfs)
+    else:
+        renderer.draw_lyrics_pages(lyrics_pdfs)
+    
     renderer.draw_prayers_and_worship_page(load_qr_codes(), worship_team, position_to_team_map)
 
     safe_service = safe_slug(service_name)
