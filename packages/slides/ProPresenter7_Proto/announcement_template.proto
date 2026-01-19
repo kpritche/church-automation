@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package rv.data;
+
+// Generated from JSON structure
+// Root message type: Presentation
+// Generated using SchemaRegistry from ProPresenter _pb2 modules
+
+message Presentation {
+  ApplicationInfo application_info = 1;
+  UUID uuid = 2;  // Present in JSON
+  string name = 3;  // Present in JSON
+  Timestamp last_date_used = 4;
+  Timestamp last_modified_date = 5;
+  string category = 6;
+  string notes = 7;
+  Background background = 8;  // Present in JSON
+  URL chord_chart = 9;
+  UUID selected_arrangement = 10;
+  repeated Arrangement arrangements = 11;
+  repeated CueGroup cue_groups = 12;
+  repeated Cue cues = 13;  // Present in JSON
+  CCLI ccli = 14;  // Present in JSON
+  BibleReference bible_reference = 15;
+  SocialMedia social_media = 16;
+  Timeline timeline = 17;  // Present in JSON
+  Transition transition = 18;  // Present in JSON
+  ContentDestination content_destination = 19;
+  double slide_show_duration = 20;
+  MultiTracksLicensing multi_tracks_licensing = 21;
+  string music_key = 22;
+  Music music = 23;
+}
+
+// Nested message types referenced:
+//   - rv.data.ApplicationInfo
+//   - rv.data.Background
+//   - rv.data.Cue
+//   - rv.data.Presentation.Arrangement
+//   - rv.data.Presentation.BibleReference
+//   - rv.data.Presentation.CCLI
+//   - rv.data.Presentation.CueGroup
+//   - rv.data.Presentation.MultiTracksLicensing
+//   - rv.data.Presentation.Music
+//   - rv.data.Presentation.SocialMedia
+//   - rv.data.Presentation.Timeline
+//   - rv.data.Timestamp
+//   - rv.data.Transition
+//   - rv.data.URL
+//   - rv.data.UUID
+
+// Enum types referenced:
+//   - rv.data.Presentation.ContentDestination
