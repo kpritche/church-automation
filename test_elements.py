@@ -4,10 +4,11 @@ import zipfile
 sys.path.insert(0, 'packages/slides/ProPresenter7_Proto/generated')
 import presentation_pb2
 
-prob_file = r"c:\Users\Kory's PC\Documents\GitHub\church\packages\announcements\output\2026-01-11\weekly_announcements_2026-01-11.probundle"
+prob_file = r"c:\Users\Kory's PC\Documents\GitHub\church\packages\announcements\output\test_announcements.probundle"
 
 try:
     with zipfile.ZipFile(prob_file, 'r') as z:
+        print(f"Files in bundle: {z.namelist()}")
         pro_files = [f for f in z.namelist() if f.endswith('.pro')]
         if pro_files:
             with z.open(pro_files[0]) as f:
