@@ -16,12 +16,12 @@ __pycache__/
 .venv/
 
 # Generated outputs
-announcements/output/
-bulletins/output/
-slides/output/
-slides/outputs/
-slides/output_pros/
-slides/exported_plans/
+packages/announcements/output/
+packages/bulletins/output/
+packages/slides/output/
+packages/slides/outputs/
+packages/slides/output_pros/
+packages/slides/exported_plans/
 
 # Auth tokens / credentials
 announcements/token.pickle
