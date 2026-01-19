@@ -38,12 +38,12 @@ except ModuleNotFoundError:
     )
     from church_automation_shared import config
 from pypco.pco import PCO
-from .content_parser import extract_items_from_pypco
-from .slide_utils import slice_into_slides
+from content_parser import extract_items_from_pypco
+from slide_utils import slice_into_slides
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from .attach_images import attach_images_to_announcements
+from attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")

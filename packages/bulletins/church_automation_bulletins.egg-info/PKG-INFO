@@ -56,7 +56,7 @@ These will be printed three across on the last page of each bulletin.
 
 ```bash
 # Run the generator
-generate-bulletins
+make-bulletins
 
 # Or use module syntax
 python -m bulletins_app.make_bulletins

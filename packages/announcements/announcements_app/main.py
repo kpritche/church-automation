@@ -21,6 +21,7 @@ from church_automation_shared import config
 from announcements_app.gmail_utils import authenticate_gmail, fetch_latest_announcement_html
 from announcements_app.html_parser import parse_announcements
 from announcements_app.ppt_generator import create_pptx_with_qr
+from announcements_app.pro_generator import generate_pro_file
 from announcements_app.summarize import summarize_text
 
 try:
@@ -39,15 +40,15 @@ def get_next_sunday() -> date:
     return next_sunday
 
 
-def upload_to_planning_center(pptx_path: Path, plan_date_str: str) -> bool:
-    """Upload the generated PPTX to Planning Center announcements item.
+def upload_to_planning_center(file_paths: list[Path], plan_date_str: str) -> bool:
+    """Upload generated files to Planning Center announcements item.
     
     Args:
-        pptx_path: Path to the .pptx file
+        file_paths: List of paths to files (e.g. .pptx, .probundle)
         plan_date_str: Date string in YYYY-MM-DD format
         
     Returns:
-        True if upload succeeded, False otherwise
+        True if at least one upload succeeded, False otherwise
     """
     if not PYPCO_AVAILABLE:
         print("   ⚠ pypco not available, skipping upload")
@@ -105,28 +106,30 @@ def upload_to_planning_center(pptx_path: Path, plan_date_str: str) -> bool:
             
             item_id = ann_item["id"]
             
-            # Upload file to PCO
-            print(f"   Uploading to service type {stid}, plan {plan_id}...")
-            upload_resp = pco.upload(str(pptx_path))
-            upload_id = upload_resp["data"][0]["id"]
+            # Upload files to PCO
+            print(f"   Uploading files to service type {stid}, plan {plan_id}...")
             
-            # Attach to the Announcements item
-            filename = pptx_path.name
-            attach_payload = {
-                "data": {
-                    "attributes": {
-                        "file_upload_identifier": upload_id,
-                        "filename": filename
+            for file_path in file_paths:
+                print(f"     Uploading {file_path.name}...")
+                upload_resp = pco.upload(str(file_path))
+                upload_id = upload_resp["data"][0]["id"]
+                
+                # Attach to the Announcements item
+                attach_payload = {
+                    "data": {
+                        "attributes": {
+                            "file_upload_identifier": upload_id,
+                            "filename": file_path.name
+                        }
                     }
                 }
-            }
-            
-            pco.post(
-                f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{item_id}/attachments",
-                payload=attach_payload
-            )
-            
-            print(f"   ✓ Uploaded to service type {stid} (item {item_id})")
+                
+                pco.post(
+                    f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{item_id}/attachments",
+                    payload=attach_payload
+                )
+                print(f"     ✓ {file_path.name} attached")
+                
             upload_count += 1
         
         return upload_count > 0
@@ -175,21 +178,28 @@ def main() -> None:
     output_path = output_dir / f"weekly_announcements_{date_str}.pptx"
     os.makedirs(output_dir, exist_ok=True)
     
-    print(f"\n4. Creating .pptx file...")
+    print(f"\n4. Creating ProPresenter file...")
+    pro_output_path = output_dir / f"weekly_announcements_{date_str}.probundle"
+    print(f"   Output: {pro_output_path}")
+    generate_pro_file(announcements, str(pro_output_path), as_bundle=True)
+    print(f"\n✓ ProPresenter bundle created: {pro_output_path}")
+    
+    print(f"\n5. Creating .pptx backup file...")
     print(f"   Output: {output_path}")
     create_pptx_with_qr(announcements, str(output_path), use_summary=True)
-
-    print(f"\n✓ PPTX created: {output_path}")
+    print(f"\n✓ PPTX backup created: {output_path}")
     
     # Upload to Planning Center
-    print(f"\n5. Uploading to Planning Center...")
-    upload_success = upload_to_planning_center(output_path, date_str)
+    print(f"\n6. Uploading to Planning Center...")
+    files_to_upload = [pro_output_path, output_path]
+    upload_success = upload_to_planning_center(files_to_upload, date_str)
     
     print(f"\n{'=' * 60}")
     if upload_success:
-        print(f"✓ Complete! File saved and uploaded successfully")
+        print(f"✓ Complete! Files saved and uploaded successfully")
     else:
-        print(f"✓ File saved (upload skipped or failed)")
+        print(f"✓ Files saved (upload skipped or failed)")
+    print(f"  {pro_output_path}")
     print(f"  {output_path}")
     print(f"{'=' * 60}")
 
