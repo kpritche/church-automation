@@ -9,7 +9,7 @@ Church Automation is a **Python monorepo** with independent installable packages
 3. **Bulletins** (`packages/bulletins/`) - Generates PDF bulletins from Planning Center service plans.
 4. **Shared** (`packages/shared/`) - Common utilities for path management, configuration, and PCO credentials (required by all).
 
-All workflows use **ProPresenter Protocol Buffers** - undocumented binary format that requires protobuf Python modules in `packages/slides/ProPresenter7_Proto/generated/`.
+All workflows use **ProPresenter 7 Protocol Buffers** - an undocumented binary format requiring protobuf Python modules in `packages/slides/ProPresenter7_Proto/generated/`. These 45+ generated `*_pb2.py` modules are **already committed** - regeneration requires `protoc` binaries in `packages/slides/protoc-31.1-win64/`. **Only ProPresenter 7 is supported** - no backward or forward compatibility.
 
 ## Architecture & Data Flow
 
@@ -98,7 +98,17 @@ Both announcement and service slides generate `.pro` or `.probundle` files via p
 - [announcements_app/probundle_generator.py](packages/announcements/announcements_app/probundle_generator.py) - Builds from scratch using protobuf message factories
 - [slides_app/make_pro.py](packages/slides/slides_app/make_pro.py) - Clones templates and replaces text via protobuf `deepcopy()` and field mutation
 
-**Key insight**: ProPresenter `.pro` files are serialized `Presentation` protobuf messages. Protobuf modules are in `packages/slides/ProPresenter7_Proto/generated/`:
+**Key insights**: 
+- ProPresenter `.pro` files are serialized `Presentation` protobuf messages
+- `.probundle` = ZIP archive containing: `.pro` file + `Media/Assets/` directory with images (QR codes, logos, photos)
+- Templates live in `packages/announcements/templates/` as extracted directories (contains `.pro` + `.json` + `.txt` versions)
+- Protobuf modules are in `packages/slides/ProPresenter7_Proto/generated/`
+
+**ProPresenter Element Structure** (from template JSON):
+- Presentation → cues[] → actions[] → slide → presentation → baseSlide → elements[]
+- Each element has: `uuid`, `name`, `bounds` (position/size), `fill` (color/media), `text` (RTF data), `stroke`, `shadow`
+- Media elements: reference files via `fill.media.url.local.path` (e.g., "Media/Assets/{UUID}.png")
+- Text elements: store content in `text.rtfData` (base64-encoded RTF)
 
 ```python
 # In slides_app (ProPresenter7_Proto is packaged with it)
@@ -115,7 +125,50 @@ import cue_pb2
 import action_pb2
 ```
 
-### 2. Text Formatting & RTF Generation
+### 2. Template Loading & Element Manipulation
+
+**Template Pattern**: Templates are **immutable references** - always load fresh for each generation:
+
+```python
+# Load template from directory (preferred - allows inspection)
+template_dir = ANNOUNCEMENTS_DIR / "templates" / "announcement_template"
+with open(template_dir / "announcement_template.pro", 'rb') as f:
+    template_presentation = presentation_pb2.Presentation()
+    template_presentation.ParseFromString(f.read())
+
+# Or from .probundle (ZIP archive)
+import zipfile
+with zipfile.ZipFile(template_path, 'r') as z:
+    pro_files = [f for f in z.namelist() if f.endswith('.pro')]
+    with z.open(pro_files[0]) as f:
+        template_presentation.ParseFromString(f.read())
+```
+
+**Finding Elements by Name** (use `element.name` field for reliable identification):
+
+```python
+for elem_wrapper in slide.base_slide.elements:
+    elem = elem_wrapper.element
+    if elem.name == "title_text":
+        # Modify title element
+    elif elem.name == "qr_code":
+        # Update QR code media
+    elif elem.name == "announcement_image":
+        # Update image media
+```
+
+**Media Element Updates** (images, QR codes, logos):
+
+```python
+# Generate new UUID for media asset
+media_uuid = str(uuid.uuid4()).upper()
+elem.fill.media.uuid.string = media_uuid
+elem.fill.media.url.local.path = f"Media/Assets/{media_uuid}.png"
+elem.fill.media.image.drawing.natural_size.width = img.width
+elem.fill.media.image.drawing.natural_size.height = img.height
+```
+
+### 3. Text Formatting & RTF Generation
 
 **Announcements** generate RTF from scratch in [probundle_generator.py](packages/announcements/announcements_app/probundle_generator.py):
 
@@ -133,9 +186,9 @@ def _rtf_escape_text(value: str) -> str:
     # Handles backslashes, braces, newlines, Unicode
 ```
 
-**Pattern**: Always use these functions when mutating slide text - don't build RTF manually.
+**Pattern**: Always use these functions when mutating slide text - don't build RTF manually. RTF data is base64-encoded before assignment to `element.text.rtfData`.
 
-### 3. Email Parsing
+### 4. Email Parsing
 
 Announcements come from a specific Gmail inbox via a pattern-matched query:
 
@@ -149,7 +202,7 @@ announcements = parse_announcements(html_content)  # Returns list of dicts
 
 **Key fields**: `title`, `body`, `link`, `button_text`, `image_url` (optional)
 
-### 4. Planning Center Online Integration
+### 5. Planning Center Online Integration
 
 Service workflows query PCO for future Sunday items:
 
@@ -179,6 +232,26 @@ pip install -e ./packages/announcements
 pip install -e ./packages/bulletins
 pip install -e ./packages/slides
 ```
+
+### Debugging ProPresenter Files
+
+Utility scripts in `utils/` for inspecting generated files:
+
+```powershell
+# Decode .pro file to JSON
+python decode_pro_file.py path/to/file.pro
+
+# Analyze .probundle structure and media references
+python utils/analyze_bundle.py
+
+# Compare two bundles
+python utils/compare_bundles.py bundle1.probundle bundle2.probundle
+
+# Check template element structure
+python packages/announcements/inspect_template_elements.py
+```
+
+These scripts are **essential for development** - they reveal the actual protobuf structure, help debug media path issues, and verify element configurations.
 
 ### Running Announcements Pipeline
 
@@ -221,6 +294,17 @@ python run_all.py
 - **Date handling**: Use ISO format (`YYYY-MM-DD`) for all output folder names and filenames.
 - **Logging**: Use print statements (no logging framework configured). Include "✓" / "✗" prefixes for status.
 - **Backwards compatibility**: Legacy aliases exist (e.g., `SERVICE_*` → `SLIDES_*` in `paths.py`). Use new names in new code.
+- **UUID generation**: Use `str(uuid.uuid4()).upper()` for all ProPresenter UUIDs (uppercase required).
+- **Bundle creation**: `.probundle` files are **standard ZIP archives** (not 7z) with extension `.probundle`. Structure:
+  ```
+  weekly_announcements_YYYY-MM-DD.probundle/
+  ├── weekly_announcements_YYYY-MM-DD.pro  (protobuf binary)
+  └── Media/
+      └── Assets/
+          ├── {UUID}.png  (QR codes)
+          ├── {UUID}.png  (announcement images)
+          └── logo.png    (static assets)
+  ```
 
 ## File Organization by Purpose
 
@@ -251,6 +335,12 @@ python run_all.py
 ## Testing Notes
 
 - No test runner configured - files like `test_line.py` are manual ad-hoc scripts
-- Protobuf generation requires running `protoc` (in `packages/slides/protoc-*/bin/`); generated modules already committed
-- Templates are binary `.pro` files that must be edited in ProPresenter GUI
+- Protobuf generation requires running `protoc` (in `packages/slides/protoc-31.1-win64/bin/`); generated modules already committed
+- **Template editing workflow** (requires ProPresenter 7 on Mac - manual process): 
+  1. Edit `.pro` file in ProPresenter 7 GUI on Mac
+  2. Save to `packages/announcements/templates/announcement_template/`
+  3. Decode to JSON: `python decode_pro_file.py template.pro > template.json`
+  4. Inspect structure to identify element names/UUIDs
+  5. Update code to reference correct element names
 - Test code execution directly with `python -m <module>` from package directory
+- **Example workflow**: `examples/generate_probundle_example.py` demonstrates end-to-end bundle creation
