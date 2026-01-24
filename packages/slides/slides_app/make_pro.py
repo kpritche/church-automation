@@ -38,7 +38,12 @@ except ModuleNotFoundError:
     )
     from church_automation_shared import config
 from pypco.pco import PCO
-from .content_parser import extract_items_from_pypco
+from .content_parser import (
+    extract_items_from_pypco,
+    fetch_lyrics_attachments,
+    download_lyrics_pdf,
+    extract_lyrics_text,
+)
 from .slide_utils import slice_into_slides
 import requests
 from requests.auth import HTTPBasicAuth
@@ -283,27 +288,68 @@ def main():
             )
             items = items_resp.get("data", [])
             included = items_resp.get("included", [])
-            print(items)
+            # print(items)
 
             # Process each item
             for item_obj in items:
                 parsed = extract_items_from_pypco(item_obj, included, pco)
 
-                if not parsed["html_present"]:
+                # Skip if no HTML content, unless it's a song (which we'll try to fetch lyrics for)
+                if not parsed["html_present"] and not parsed.get("is_song"):
                     continue
 
                 # Build raw and bold-aware slides
                 print(f"Generating slides for item: {parsed['title']} on {plan_date}")
                 raw_chunks = parsed['parsed_chunks']
 
-                # 1) For songs, first group every two lines into one chunk
+                # For songs, try to fetch and use lyrics from PDF attachment
                 chunks = parsed["text_chunks"]
                 if parsed.get("is_song"):
-                    grouped_chunks = []
-                    for i in range(0, len(chunks), 2):
-                        pair = chunks[i:i+2]
-                        grouped_chunks.append("\n".join(pair))
-                    chunks = grouped_chunks
+                    print(f"  > Song detected: {parsed['title']}")
+                    # Fetch lyrics attachments
+                    lyrics_items = [{"item_obj": item_obj, "title": parsed['title']}]
+                    lyrics_attachments = fetch_lyrics_attachments(
+                        pco,
+                        lyrics_items,
+                        stid,
+                        plan_id,
+                        included,
+                    )
+                    
+                    if lyrics_attachments:
+                        # Download and extract lyrics from the first attachment
+                        att_info = lyrics_attachments[0]
+                        attachment_obj = att_info["attachment_obj"]
+                        item_id = att_info["item_id"]
+                        
+                        pdf_bytes = download_lyrics_pdf(
+                            attachment_obj,
+                            pco,
+                            stid,
+                            plan_id,
+                            item_id,
+                        )
+                        
+                        if pdf_bytes:
+                            lyrics_text = extract_lyrics_text(pdf_bytes, parsed['title'])
+                            if lyrics_text:
+                                print(f"  [OK] Extracted lyrics from PDF")
+                                # Split lyrics into lines for processing
+                                chunks = [line.strip() for line in lyrics_text.split('\n') if line.strip()]
+                            else:
+                                print(f"  [WARN] Failed to extract text from lyrics PDF, using fallback HTML")
+                        else:
+                            print(f"  [WARN] Failed to download lyrics PDF, using fallback HTML")
+                    else:
+                        print(f"  [INFO] No lyrics.pdf attachment found, using fallback HTML")
+                    
+                    # Group every two lines into one chunk for song display
+                    if chunks:
+                        grouped_chunks = []
+                        for i in range(0, len(chunks), 2):
+                            pair = chunks[i:i+2]
+                            grouped_chunks.append("\n".join(pair))
+                        chunks = grouped_chunks
 
                 # 2) Slice into slides with call/response prefixes respected
                 slides = slice_into_slides(
@@ -357,7 +403,7 @@ def main():
                     f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
                     payload=attach_payload
                 )
-                print(f"  → Uploaded file; upload_id={upload_id}")
+                print(f"  > Uploaded file; upload_id={upload_id}")
 
             processed_dates.add(plan_date)
 
