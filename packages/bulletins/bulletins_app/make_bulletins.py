@@ -20,6 +20,7 @@ import os
 import re
 import sys
 from datetime import date, timedelta, datetime
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -68,6 +69,7 @@ except ModuleNotFoundError:
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 OUTPUT_DIR = BULLETINS_OUTPUT_DIR
 QR_CODE_DIR = BULLETINS_QR_DIR
+_GET_INVOLVED_PDF_CACHE: Optional[bytes] = None  # cached PDF reused across services
 
 # Layout constants (points; letter size)
 PAGE_WIDTH, PAGE_HEIGHT = letter  # 612 x 792 pt
@@ -513,7 +515,7 @@ def fetch_sheet_music_attachments(
         if not all_attachments:
             continue
         
-        # Filter to PDFs, excluding lyrics
+        # Filter to PDFs, excluding lyrics and chord charts
         pdf_attachments = []
         for att_obj in all_attachments:
             att_attrs = att_obj.get("attributes") or {}
@@ -522,8 +524,9 @@ def fetch_sheet_music_attachments(
             
             is_pdf = filename.endswith(".pdf") or "pdf" in file_type
             is_lyrics = "lyric" in filename
+            is_chord_chart = any(keyword in filename for keyword in ["chart", "chord", "chords"])
             
-            if is_pdf and not is_lyrics:
+            if is_pdf and not is_lyrics and not is_chord_chart:
                 pdf_attachments.append(att_obj)
         
         if not pdf_attachments:
@@ -760,12 +763,13 @@ def build_sections(
     included: Optional[List[Dict[str, object]]] = None,
     service_type_id: Optional[int] = None,
     plan_id: Optional[str] = None,
-) -> Tuple[List[Dict[str, object]], Optional[str], List[Dict[str, object]]]:
-    """Create ordered sections/items and locate the cover attachment and lyrics attachments."""
+) -> Tuple[List[Dict[str, object]], Optional[str], List[Dict[str, object]], Optional[Dict[str, object]]]:
+    """Create ordered sections/items and locate the cover attachment, lyrics attachments, and Get Involved item."""
     sections: List[Dict[str, object]] = []
     current_section: Optional[Dict[str, object]] = None
     cover_attachment_id: Optional[str] = None
     lyrics_items: List[Dict[str, object]] = []
+    get_involved_item: Optional[Dict[str, object]] = None
 
     for item_obj in items:
         attrs = item_obj.get("attributes") or {}
@@ -790,6 +794,7 @@ def build_sections(
             continue
 
         if title == "Get Involved":
+            get_involved_item = item_obj
             continue
 
         if item_type == "header":
@@ -830,7 +835,7 @@ def build_sections(
             })
 
     sections = [s for s in sections if s.get("items")]
-    return sections, cover_attachment_id, lyrics_items
+    return sections, cover_attachment_id, lyrics_items, get_involved_item
 
 
 class BulletinRenderer:
@@ -843,6 +848,7 @@ class BulletinRenderer:
         self.cover_pdf_bytes: Optional[bytes] = None
         self.lyrics_data: List[Tuple[str, str]] = []  # List of (song_title, lyrics_text)
         self.sheet_music_pages: List[object] = []  # List of PDF pages for sheet music
+        self.get_involved_pages: List[object] = []  # List of PDF pages for Get Involved attachment
 
     def _set_cursor(self, value: float, note: str = "") -> None:
         self.cursor_y = float(value)
@@ -1186,7 +1192,7 @@ class BulletinRenderer:
         
         self._set_cursor(max_cursor_y)
 
-    def _draw_prayer_list(self, title: str, names: List[str], num_columns: int = 3) -> None:
+    def _draw_prayer_list(self, title: str, names: List[str], num_columns: int = 3, message: Optional[str] = None) -> None:
         self.canvas.setFont(self.fonts.subheading_name, self.fonts.subheading_size)
         self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_PRIMARY))
         
@@ -1198,6 +1204,18 @@ class BulletinRenderer:
         self.canvas.drawString(x, PAGE_HEIGHT - self.cursor_y - self.fonts.subheading_size, title)
         self._bump_cursor(self._line_height(self.fonts.subheading_size, leading=1.2))
         self._bump_cursor(4)  # padding after title
+
+        # Optional message under the heading (left-aligned, italicized, smaller)
+        if message:
+            self.draw_wrapped_block(
+                message,
+                self.fonts.body_italic_name,
+                self.fonts.body_italic_size,
+                COLOR_BLACK,
+                align="left",
+                leading=1.2,
+            )
+            self._bump_cursor(6)
 
         self._draw_list_in_columns(names, num_columns=num_columns)
         self._bump_cursor(10)
@@ -1219,23 +1237,40 @@ class BulletinRenderer:
         qr_codes: Dict[str, Optional[Image.Image]],
         worship_team: Dict[str, List[str]],
         position_to_team_map: Optional[Dict[str, str]] = None,
+        prayer_lists: Optional[Dict[str, List[str]]] = None,
     ) -> None:
         self._new_page()
         
         # Prayers Section
         self.draw_section_header("Prayers")
-        
-        prayer_lists = {
-            "Concerns Shared": ["WR Miller",
-                                "Marissa Rowe, Niece of Barbara Krause", "Mace Williams",
-                                "Emily Mclaughlin, Niece of Mary Maxine", "All in need of prayers"],
-            "Those In Memory Care": ["Jack Gaunt", "Pat Staver"],
-        }
-        
-        for title, names in prayer_lists.items():
-            # Use 2 columns for Concerns Shared, 3 for others
-            num_cols = 2 if title == "Concerns Shared" else 3
-            self._draw_prayer_list(title, names, num_columns=num_cols)
+
+        # If dynamic lists are provided, render them; otherwise keep a minimal fallback
+        if prayer_lists is None:
+            dynamic_sections = [
+                ("Concerns Shared", [], 2),
+                ("Those In Memory Care", [], 3),
+                ("Active Military", [], 3),
+            ]
+        else:
+            dynamic_sections = [
+                ("Concerns Shared", prayer_lists.get("concerns", []) or [], 2),
+                ("Those In Memory Care", prayer_lists.get("memory_care", []) or [], 3),
+                ("Active Military", prayer_lists.get("military", []) or [], 3),
+            ]
+
+        for title, names, num_cols in dynamic_sections:
+            if title == "Active Military":
+                military_msg = (
+                    "As we update our list of active military personnel, we invite First Church families to share the names of any immediate "
+                    "family members currently serving. Please contact Ronda at rkroeschen@fumcwl.org and include each military member’s name and rank."
+                )
+            else:
+                military_msg = None
+
+            # Always draw Active Military section; draw others only if they have names
+            if title == "Active Military" or names:
+                self._draw_prayer_list(title, names, num_columns=num_cols, message=military_msg)
+                self._bump_cursor(6)
             
         # Worship Team Section
         self.draw_section_header("Worship Team")
@@ -1556,9 +1591,9 @@ class BulletinRenderer:
         available_height = PAGE_HEIGHT - self.cursor_y - MARGIN_Y
         total_needed = title_height + (estimated_height / 2) + 8  # Divide by 2 for two columns, plus spacing after
         
-        # Only start new page if very little space available (< 30% of what's needed)
+        # Only start new page if very little space available (< 50% of what's needed)
         # This allows better space utilization while still keeping songs reasonably together
-        if available_height < (total_needed * 0.3) or available_height < 100:
+        if available_height < (total_needed * 0.5) or available_height < 100:
             self._new_page()
         
         # Render song title with artist info (always at normal size)
@@ -1744,6 +1779,10 @@ class BulletinRenderer:
         # Add sheet music pages (replaces lyrics for configured service types)
         for page in self.sheet_music_pages:
             writer.add_page(page)
+        
+        # Add Get Involved pages at the end
+        for page in self.get_involved_pages:
+            writer.add_page(page)
 
         with open(path, "wb") as f:
             writer.write(f)
@@ -1821,6 +1860,167 @@ def fetch_team_members(pco: PCO, service_type_id: int, plan_id: str) -> Tuple[Di
 
     return team_members_by_position, position_to_team_map
 
+def prefetch_get_involved_pdf(pco: PCO, service_type_ids: List[int], start_date: str, end_date: str) -> Optional[bytes]:
+    """Find and cache the first available 'Get Involved' PDF across upcoming plans.
+
+    Returns the cached bytes if found, else None. Minimizes redundant downloads
+    by stopping at the first discovered attachment.
+    """
+    global _GET_INVOLVED_PDF_CACHE
+    if _GET_INVOLVED_PDF_CACHE:
+        return _GET_INVOLVED_PDF_CACHE
+
+    try:
+        for stid in service_type_ids:
+            plans = find_plans_in_range(pco, stid, start_date, end_date)
+            for entry in plans:
+                plan_obj = entry["plan"]
+                plan_id = plan_obj["data"]["id"]
+                items_resp = pco.get(
+                    f"/services/v2/service_types/{stid}/plans/{plan_id}/items",
+                    include="attachments",
+                )
+                items = items_resp.get("data", [])
+                sections, cover_attachment_id, lyrics_items, get_involved_item = build_sections(
+                    items, pco, items_resp.get("included"), service_type_id=stid, plan_id=plan_id
+                )
+                if get_involved_item:
+                    att_id = fetch_first_attachment_id(pco, get_involved_item, stid, plan_id, items_resp.get("included"))
+                    if att_id:
+                        try:
+                            _, pdf_bytes = download_attachment_image(att_id)
+                            if pdf_bytes:
+                                _GET_INVOLVED_PDF_CACHE = pdf_bytes
+                                print("[info] Prefetched 'Get Involved' PDF for reuse across services.")
+                                return _GET_INVOLVED_PDF_CACHE
+                        except Exception:
+                            pass
+        return None
+    except Exception:
+        return None
+
+
+# ---------------------- Prayer Lists (PCO People) ----------------------
+_DEFAULT_PRAYER_LIST_NAMES = {
+    "concerns": "Bulletin - Concerns Shared",
+    "memory_care": "Bulletin - Memory Care",
+    "military": "Bulletin - Active Military",
+}
+
+
+def _get_people_lists_index(pco: PCO) -> Dict[str, Dict[str, str]]:
+    """Return indexes for People Lists: by name and by id."""
+    by_name: Dict[str, str] = {}
+    by_id: Dict[str, str] = {}
+    try:
+        for lst in pco.iterate("/people/v2/lists"):
+            lid = lst["id"]
+            name = lst.get("attributes", {}).get("name", "")
+            if name:
+                by_name[name] = lid
+            by_id[lid] = name
+    except Exception:
+        pass
+    return {"by_name": by_name, "by_id": by_id}
+
+
+def _resolve_list_id(pco: PCO, cfg_entry: Optional[Dict[str, object]], default_name: str) -> Optional[str]:
+    """Resolve a list id from config entry which may contain id or name."""
+    if not cfg_entry:
+        cfg_entry = {}
+    explicit_id = cfg_entry.get("id") or cfg_entry.get("list_id")
+    if explicit_id:
+        return str(explicit_id)
+    name = str(cfg_entry.get("name") or default_name)
+    idx = _get_people_lists_index(pco)
+    return idx["by_name"].get(name)
+
+
+def _ensure_list_refreshed(pco: PCO, list_id: str, timeout_seconds: int = 10) -> None:
+    """Trigger a refresh (run) for a People List and wait briefly.
+
+    Note: PCO executes list runs asynchronously. We trigger a run and then
+    pause briefly to allow results to settle. For most lists this is fast; if
+    necessary, increase the timeout in config.
+    """
+    try:
+        pco.post(f"/people/v2/lists/{list_id}/run")
+        # Brief wait; robust polling requires inspecting list result status which
+        # may not be available in all accounts. Keep it simple and fast.
+        time.sleep(2)
+    except Exception:
+        # Non-fatal; we can still read the current results
+        pass
+
+
+def _fetch_people_names_from_list(pco: PCO, list_id: str) -> List[str]:
+    """Fetch people in a list via /lists/{id}/people."""
+    names: List[str] = []
+    try:
+        for person in pco.iterate(f"/people/v2/lists/{list_id}/people"):
+            person_obj = person.get("data", person)
+            attrs = person_obj.get("attributes", {})
+            full = (attrs.get("name") or "").strip()
+            if full:
+                names.append(full)
+            else:
+                first = (attrs.get("first_name") or "").strip()
+                last = (attrs.get("last_name") or "").strip()
+                name = (first + " " + last).strip()
+                if name:
+                    names.append(name)
+    except Exception:
+        pass
+    return sorted(names)
+
+
+def fetch_prayer_lists_from_pco(pco: PCO, cfg: Dict[str, object]) -> Dict[str, List[str]]:
+    """Fetch Concerns, Memory Care, Military names from People Lists.
+
+    Config structure (in slides_config.json):
+    {
+      "prayer_lists": {
+        "refresh_before_fetch": true,
+        "timeout_seconds": 10,
+        "military_first_name_only": false,
+        "concerns": {"id": 12345, "name": "Bulletin - Concerns Shared"},
+        "memory_care": {"name": "Bulletin - Memory Care"},
+        "military": {"name": "Bulletin - Active Military"}
+      }
+    }
+    """
+    result: Dict[str, List[str]] = {"concerns": [], "memory_care": [], "military": []}
+    pcfg = (cfg or {}).get("prayer_lists", {}) or {}
+
+    refresh = bool(pcfg.get("refresh_before_fetch", True))
+    timeout_s = int(pcfg.get("timeout_seconds", 10))
+    military_first_only = bool(pcfg.get("military_first_name_only", False))
+
+    # Resolve list ids
+    list_ids: Dict[str, Optional[str]] = {}
+    for key in ("concerns", "memory_care", "military"):
+        default = _DEFAULT_PRAYER_LIST_NAMES[key]
+        list_ids[key] = _resolve_list_id(pco, pcfg.get(key), default)
+
+    # Optionally refresh and then fetch
+    for key, lid in list_ids.items():
+        if not lid:
+            continue
+        if refresh:
+            _ensure_list_refreshed(pco, lid, timeout_seconds=timeout_s)
+        names = _fetch_people_names_from_list(pco, lid)
+        if key == "military" and military_first_only:
+            names = [n.split(" ")[0] if n else n for n in names]
+        # Always append the concerns footer message as the last entry
+        if key == "concerns":
+            footer = "All in need of prayer"
+            # Avoid duplicate if already present (case-insensitive)
+            if not any((n or "").strip().lower() == footer.lower() for n in names):
+                names.append(footer)
+        result[key] = names
+
+    return result
+
 
 def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, service_name: str) -> None:
     items_resp = pco.get(
@@ -1829,7 +2029,7 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
     )
     items = items_resp.get("data", [])
 
-    sections, cover_attachment_id, lyrics_items = build_sections(
+    sections, cover_attachment_id, lyrics_items, get_involved_item = build_sections(
         items,
         pco,
         items_resp.get("included"),
@@ -1883,6 +2083,31 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         cover_img, cover_pdf_bytes = download_attachment_image(cover_attachment_id)
     else:
         print(f"[warn] No cover attachment found for plan {plan_id}.")
+    
+    # Fetch Get Involved PDF if item exists; otherwise fall back to cache
+    get_involved_pdf_bytes: Optional[bytes] = None
+    if get_involved_item:
+        get_involved_attachment_id = fetch_first_attachment_id(
+            pco, get_involved_item, service_type_id, plan_id, items_resp.get("included")
+        )
+        if get_involved_attachment_id:
+            try:
+                _, get_involved_pdf_bytes = download_attachment_image(get_involved_attachment_id)
+                if get_involved_pdf_bytes:
+                    print("  ✓ Found Get Involved PDF attachment")
+                    # Cache for reuse in other services during this run
+                    global _GET_INVOLVED_PDF_CACHE
+                    _GET_INVOLVED_PDF_CACHE = get_involved_pdf_bytes
+                else:
+                    print("  ⚠ Get Involved attachment is not a PDF")
+            except Exception as exc:
+                print(f"  ⚠ Failed to download Get Involved attachment: {exc}")
+        else:
+            print("  ℹ No attachment found for Get Involved item")
+    # Fallback to prefetched cache if current plan lacks it
+    if not get_involved_pdf_bytes and _GET_INVOLVED_PDF_CACHE:
+        get_involved_pdf_bytes = _GET_INVOLVED_PDF_CACHE
+        print("  ↺ Using cached 'Get Involved' PDF")
 
     fonts = FontBundle()
     renderer = BulletinRenderer(fonts)
@@ -1897,7 +2122,25 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
     else:
         renderer.draw_lyrics_pages(lyrics_pdfs)
     
-    renderer.draw_prayers_and_worship_page(load_qr_codes(), worship_team, position_to_team_map)
+    # Load dynamic prayer lists from PCO People
+    prayer_lists = fetch_prayer_lists_from_pco(pco, cfg)
+
+    renderer.draw_prayers_and_worship_page(
+        load_qr_codes(),
+        worship_team,
+        position_to_team_map,
+        prayer_lists=prayer_lists,
+    )
+    
+    # Add Get Involved PDF pages if present
+    if get_involved_pdf_bytes:
+        try:
+            reader = PdfReader(io.BytesIO(get_involved_pdf_bytes))
+            for page in reader.pages:
+                renderer.get_involved_pages.append(page)
+            print(f"  ✓ Added {len(reader.pages)} Get Involved page(s)")
+        except Exception as exc:
+            print(f"  ⚠ Failed to process Get Involved PDF: {exc}")
 
     safe_service = safe_slug(service_name)
     filename = f"Bulletin-{plan_date}-{safe_service}.pdf"
@@ -1914,6 +2157,13 @@ def main() -> None:
     start_date, end_date = get_next_seven_day_window()
 
     pco = PCO(application_id=config.client_id, secret=config.secret)
+
+    # Prefetch a single 'Get Involved' PDF to reuse across services
+    # This ensures bulletins still include the page even if some plans omit it.
+    try:
+        prefetch_get_involved_pdf(pco, service_type_ids, start_date, end_date)
+    except Exception:
+        pass
 
     for stid in service_type_ids:
         service_name = fetch_service_name(pco, stid)
