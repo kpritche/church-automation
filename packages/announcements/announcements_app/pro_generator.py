@@ -31,15 +31,10 @@ import presentation_pb2
 
 # Template paths
 TEMPLATE_DIR = REPO_ROOT / "packages" / "announcements" / "templates"
-ANNOUNCEMENT_TEMPLATE = TEMPLATE_DIR / "announcement_template_mac" / "announcement_template.pro"
-BLANK_TEMPLATE = TEMPLATE_DIR / "blank_template_mac.pro"
-# Optional: A .probundle containing static template assets (logo, backgrounds, etc.)
-# Export this from ProPresenter on Mac to include all referenced assets
-TEMPLATE_ASSETS_BUNDLE = TEMPLATE_DIR / "weekly_announcements_2026-01-25_corrected.proBundle"
-
-# Placeholder text in the template RTF
-TITLE_PLACEHOLDER = "title_text"
-BODY_PLACEHOLDER = "body_text"
+# Use the extracted template directory
+ANNOUNCEMENT_TEMPLATE = TEMPLATE_DIR / "announcement_template" / "announcement_template.pro"
+# Media assets from the template bundle
+TEMPLATE_MEDIA_DIR = TEMPLATE_DIR / "announcement_template" / "Users" / "fcproduction" / "Documents" / "ProPresenter" / "Media" / "Assets"
 
 
 def _rtf_escape_text(value: str) -> str:
@@ -79,13 +74,58 @@ def _rtf_escape_text(value: str) -> str:
 
 
 def load_template(path: Path) -> presentation_pb2.Presentation:
-    """Load a .pro template file."""
+    """Load a .pro template file or extract from .probundle (ZIP or 7z)."""
     if not path.exists():
         raise FileNotFoundError(f"Template not found: {path}")
     
     pres = presentation_pb2.Presentation()
-    with open(path, 'rb') as f:
-        pres.ParseFromString(f.read())
+    
+    # Handle .probundle (can be ZIP or 7z format)
+    if path.suffix.lower() in ['.probundle', '.zip', '.7z']:
+        import zipfile
+        import tempfile
+        
+        # Try ZIP format first
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                with zipfile.ZipFile(path, 'r') as z:
+                    # Find the .pro file in the bundle
+                    pro_files = [name for name in z.namelist() if name.endswith('.pro')]
+                    if not pro_files:
+                        raise ValueError(f"No .pro file found in bundle: {path}")
+                    
+                    # Use the first .pro file found
+                    pro_name = pro_files[0]
+                    temp_pro = Path(temp_dir) / "template.pro"
+                    
+                    with z.open(pro_name) as src:
+                        with open(temp_pro, 'wb') as dst:
+                            dst.write(src.read())
+                    
+                    with open(temp_pro, 'rb') as f:
+                        pres.ParseFromString(f.read())
+        except zipfile.BadZipFile:
+            # Try 7z format
+            try:
+                import py7zr
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    with py7zr.SevenZipFile(path, 'r') as z:
+                        z.extractall(temp_dir)
+                    
+                    # Find .pro file
+                    pro_files = list(Path(temp_dir).rglob('*.pro'))
+                    if not pro_files:
+                        raise ValueError(f"No .pro file found in bundle: {path}")
+                    
+                    with open(pro_files[0], 'rb') as f:
+                        pres.ParseFromString(f.read())
+            except Exception as e:
+                raise ValueError(f"Failed to extract bundle {path}: {e}")
+    else:
+        # Regular .pro file
+        with open(path, 'rb') as f:
+            pres.ParseFromString(f.read())
+    
     return pres
 
 
@@ -145,6 +185,24 @@ def find_element_by_name(elements, name: str):
     return None
 
 
+def find_element_by_rtf_content(elements, search_text: str):
+    """Find an element wrapper by searching for text in its rtf_data.
+    
+    Fallback method when element.name is not set but rtf_data contains placeholder text.
+    """
+    for elem_wrapper in elements:
+        if elem_wrapper.HasField('element'):
+            elem = elem_wrapper.element
+            if elem.HasField('text') and elem.text.rtf_data:
+                try:
+                    rtf_str = elem.text.rtf_data.decode('utf-8', errors='ignore')
+                    if search_text in rtf_str:
+                        return elem_wrapper
+                except:
+                    continue
+    return None
+
+
 def update_media_element(element, image_path: Path, propresenter_assets_path: str = None) -> None:
     """Update a media element's URL to point to a local image.
     
@@ -153,10 +211,14 @@ def update_media_element(element, image_path: Path, propresenter_assets_path: st
         image_path: Path to the image file
         propresenter_assets_path: The ProPresenter Media/Assets path for absolute_string
     """
-    import basicTypes_pb2
-    from PIL import Image
-    
-    if element.HasField('fill') and element.fill.HasField('media'):
+    try:
+        import basicTypes_pb2
+        from PIL import Image
+        
+        if not element.HasField('fill') or not element.fill.HasField('media'):
+            print(f"      [WARN] Element does not have media fill")
+            return
+            
         media = element.fill.media
         media.uuid.string = str(uuid_module.uuid4()).upper()
         
@@ -164,13 +226,18 @@ def update_media_element(element, image_path: Path, propresenter_assets_path: st
         media.url.platform = basicTypes_pb2.URL.PLATFORM_MACOS
         
         if propresenter_assets_path:
-            # For bundles: use ProPresenter's expected path format
-            full_path = f"{propresenter_assets_path}/{image_path.name}"
-            media.url.absolute_string = full_path
+            # For bundles: Don't use absolute paths - use relative paths only
+            # ProPresenter will look in the bundle's Media/Assets folder first
             
-            # local: relative path with root set to ROOT_SHOW
+            # CLEAR absolute_string so ProPresenter uses the bundle-relative path
+            media.url.ClearField('absolute_string')
+            
+            # Set local path relative to the bundle root
             media.url.local.root = basicTypes_pb2.URL.LocalRelativePath.ROOT_SHOW
             media.url.local.path = f"Media/Assets/{image_path.name}"
+            
+            print(f"         [DEBUG] Set media path to: Media/Assets/{image_path.name}")
+            print(f"         [DEBUG] Cleared absolute_string")
         else:
             # For standalone files, use absolute path
             abs_path = str(image_path.resolve()).replace("\\", "/")
@@ -191,42 +258,12 @@ def update_media_element(element, image_path: Path, propresenter_assets_path: st
                 media.image.drawing.natural_size.width = float(width)
                 media.image.drawing.natural_size.height = float(height)
         except Exception as e:
-            print(f"      Warning: Could not read image dimensions for {image_path.name}: {e}")
-
-
-def fix_all_media_paths(presentation, assets_path_prefix: str) -> None:
-    """Updates absolute_string for ALL media elements to match production path.
-    
-    This ensures that even static elements from the template (logos, backgrounds)
-    use the correct production file path and macOS platform setting.
-    """
-    import basicTypes_pb2
-    
-    for cue in presentation.cues:
-        for action in cue.actions:
-            if action.HasField('slide') and action.slide.HasField('presentation'):
-                slide = action.slide.presentation
-                if slide.HasField('base_slide'):
-                    for elem_wrapper in slide.base_slide.elements:
-                        if elem_wrapper.HasField('element'):
-                            elem = elem_wrapper.element
-                            if elem.HasField('fill') and elem.fill.HasField('media'):
-                                media = elem.fill.media
-                                
-                                # Enforce macOS platform
-                                media.url.platform = basicTypes_pb2.URL.PLATFORM_MACOS
-                                
-                                # Extract filename and rebuild absolute path
-                                if media.url.HasField('local') and media.url.local.path:
-                                    filename = Path(media.url.local.path).name
-                                    full_path = f"{assets_path_prefix}/{filename}"
-                                    media.url.absolute_string = full_path
-                                    
-                                    # Ensure local path has correct prefix
-                                    # This handles cases where template might have just "logo.png"
-                                    if not media.url.local.path.replace("\\", "/").startswith("Media/Assets/"):
-                                        media.url.local.path = f"Media/Assets/{filename}"
-                                        media.url.local.root = basicTypes_pb2.URL.LocalRelativePath.ROOT_SHOW
+            print(f"      [WARN] Could not read image dimensions for {image_path.name}: {e}")
+            
+    except Exception as e:
+        print(f"      [ERROR] Failed to update media element: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def replace_rtf_placeholder(rtf_bytes: bytes, placeholder: str, new_text: str) -> bytes:
@@ -244,6 +281,55 @@ def replace_rtf_placeholder(rtf_bytes: bytes, placeholder: str, new_text: str) -
     return new_rtf.encode('utf-8')
 
 
+def generate_rtf_text(text: str, font_name: str = "SourceSansPro-Regular", 
+                     font_size: int = 48, bold: bool = False, 
+                     italic: bool = False, color: tuple = None) -> bytes:
+    """Generate RTF data for given text with formatting.
+    
+    Args:
+        text: Plain text to convert to RTF
+        font_name: Font name (e.g., 'SourceSansPro-Black')
+        font_size: Font size in points
+        bold: Whether text is bold
+        italic: Whether text is italic
+        color: RGB tuple (0-255) for text color
+    
+    Returns:
+        Base64-encoded RTF bytes
+    """
+    import base64
+    
+    # Escape the text for RTF
+    escaped = _rtf_escape_text(text)
+    
+    # Build RTF header
+    rtf = r'{\rtf1\ansi\ansicpg1252\cocoartf2822' + '\n'
+    rtf += r'{\fonttbl\f0\fnil\fcharset0 ' + font_name + ';}'  + '\n'
+    
+    # Color table (black text by default)
+    if color:
+        r, g, b = color
+        rtf += r'{\colortbl;\red' + str(r) + r'\green' + str(g) + r'\blue' + str(b) + ';}'  + '\n'
+    else:
+        rtf += r'{\colortbl;\red0\green0\blue0;}'  + '\n'
+    
+    rtf += r'{\*\expandedcolortbl;;}'  + '\n'
+    rtf += r'\deftab720\pardefftab720\pardirnatural\partightenfactor0'  + '\n\n'
+    
+    # Font formatting
+    rtf += r'\f0'
+    if bold:
+        rtf += r'\b'
+    if italic:
+        rtf += r'\i'
+    rtf += r'\fs' + str(font_size * 2)  # RTF uses half-points
+    rtf += ' ' + escaped
+    rtf += '}'  # Close RTF
+    
+    # Return as base64-encoded bytes
+    return base64.b64encode(rtf.encode('utf-8'))
+
+
 def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bool = False) -> None:
     """Generate a ProPresenter file (.pro or .probundle).
     
@@ -253,20 +339,14 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
         as_bundle: If True, creates a .probundle (zip) with assets
     """
     output_path = Path(output_path)
-    print(f"   Loading templates...")
-    print(f"      Blank: {BLANK_TEMPLATE}")
+    print(f"   Loading template...")
     print(f"      Announcement: {ANNOUNCEMENT_TEMPLATE}")
     
-    # Load both templates
-    blank_pres = load_template(BLANK_TEMPLATE)
+    # Load announcement template
     announcement_pres = load_template(ANNOUNCEMENT_TEMPLATE)
     
-    # Start with a deep copy of the blank template (keeps structure intact)
-    final_pres = deepcopy(blank_pres)
-    
-    # Copy application version info from announcement template to match newer version
-    if announcement_pres.HasField('application_info'):
-        final_pres.application_info.CopyFrom(announcement_pres.application_info)
+    # Start with a deep copy of the announcement template (preserves transition, guidelines, etc.)
+    final_pres = deepcopy(announcement_pres)
     
     # Generate new UUID for the presentation and cue group
     final_pres.uuid.string = str(uuid_module.uuid4()).upper()
@@ -280,6 +360,11 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
         raise ValueError("Announcement template has no cues/slides")
     template_cue = announcement_pres.cues[0]
     
+    # Clear existing cues - we'll add new ones for each announcement
+    del final_pres.cues[:]
+    if len(final_pres.cue_groups) > 0:
+        del final_pres.cue_groups[0].cue_identifiers[:]
+    
     # Working directory (temp)
     # If bundling, we need a persistent structure to zip
     work_dir_obj = tempfile.TemporaryDirectory(prefix="propresenter_")
@@ -289,27 +374,28 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
     try:
         # For bundles, create Media subdirectory matching ProPresenter's structure
         if as_bundle:
-            media_dir = work_dir / "Media"
-            media_dir.mkdir(exist_ok=True)
+            media_dir = work_dir / "Media" / "Assets"
+            media_dir.mkdir(parents=True, exist_ok=True)
             # ProPresenter expects absolute path to its Media/Assets folder
             # User specified production path on Mac
             propresenter_assets_path = "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets"
             
             # Extract static template assets from template bundle if available
-            if TEMPLATE_ASSETS_BUNDLE.exists():
-                print(f"   Extracting template assets from {TEMPLATE_ASSETS_BUNDLE.name}...")
-                with zipfile.ZipFile(TEMPLATE_ASSETS_BUNDLE, 'r') as z:
-                    for name in z.namelist():
-                        # Extract only Media files (not .pro or PDF)
-                        if name.startswith('Media/') and not name.endswith('/'):
-                            # Extract to our media_dir
-                            filename = Path(name).name
-                            dest_path = media_dir / filename
-                            # Don't overwrite if file already exists (dynamic content takes priority)
-                            if not dest_path.exists():
-                                with z.open(name) as src, open(dest_path, 'wb') as dst:
-                                    dst.write(src.read())
-                print(f"   Extracted template assets to {media_dir}")
+            # Only copy logo and other static assets - skip placeholder images that will be replaced
+            if TEMPLATE_MEDIA_DIR.exists() and TEMPLATE_MEDIA_DIR.is_dir():
+                print(f"   Copying template assets from {TEMPLATE_MEDIA_DIR.name}...")
+                for asset_file in TEMPLATE_MEDIA_DIR.glob('*.*'):
+                    # Skip UUID-named placeholder files - these will be replaced with dynamic content
+                    if len(asset_file.stem) == 36 and '-' in asset_file.stem:  # UUID format
+                        print(f"      Skipped placeholder: {asset_file.name}")
+                        continue
+                    
+                    dest_path = media_dir / asset_file.name
+                    # Don't overwrite if file already exists (dynamic content takes priority)
+                    if not dest_path.exists():
+                        shutil.copy2(asset_file, dest_path)
+                        print(f"      Copied: {asset_file.name}")
+                print(f"   Template assets copied to {media_dir}")
         else:
             media_dir = work_dir
             propresenter_assets_path = None
@@ -328,11 +414,13 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
             # Generate new UUIDs for the cue, action, and slide
             new_cue.uuid.string = str(uuid_module.uuid4()).upper()
             
-            if len(new_cue.actions) > 0:
-                new_cue.actions[0].uuid.string = str(uuid_module.uuid4()).upper()
+            # Regenerate UUIDs for ALL actions (not just first)
+            for action in new_cue.actions:
+                action.uuid.string = str(uuid_module.uuid4()).upper()
                 
-                if new_cue.actions[0].HasField('slide'):
-                    slide_action = new_cue.actions[0].slide
+                if action.HasField('slide'):
+                    slide_action = action.slide
+                    
                     if slide_action.HasField('presentation'):
                         pres_slide = slide_action.presentation
                         if pres_slide.HasField('base_slide'):
@@ -347,36 +435,60 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                                     # Update media UUID if present
                                     if elem.HasField('fill') and elem.fill.HasField('media'):
                                         elem.fill.media.uuid.string = str(uuid_module.uuid4()).upper()
-                                    
-                                    # Replace text placeholders
-                                    if elem.HasField('text'):
-                                        rtf_data = elem.text.rtf_data
-                                        
-                                        # Check for title placeholder
-                                        if TITLE_PLACEHOLDER in rtf_data.decode('utf-8', errors='ignore'):
-                                            elem.text.rtf_data = replace_rtf_placeholder(
-                                                rtf_data, TITLE_PLACEHOLDER, title
-                                            )
-                                        
-                                        # Check for body placeholder
-                                        elif BODY_PLACEHOLDER in rtf_data.decode('utf-8', errors='ignore'):
-                                            elem.text.rtf_data = replace_rtf_placeholder(
-                                                rtf_data, BODY_PLACEHOLDER, body
-                                            )
-                                    
-                                    # Update image element
-                                    if elem.name == "image" and image_url:
-                                        local_img = download_image(image_url, media_dir)
-                                        if local_img:
-                                            update_media_element(elem, local_img, propresenter_assets_path)
-                                    
-                                    # Update QR code element
-                                    if elem.name == "qr_code" and link:
-                                        # Use unique filename to avoid cache collisions
-                                        qr_uuid = str(uuid_module.uuid4())[:8]
-                                        qr_path = media_dir / f"qr_{qr_uuid}.png"
-                                        generate_qr_image(link, qr_path)
-                                        update_media_element(elem, qr_path, propresenter_assets_path)
+                        
+                        # Regenerate UUIDs for template_guidelines
+                        for guideline in pres_slide.template_guidelines:
+                            if guideline.HasField('uuid'):
+                                guideline.uuid.string = str(uuid_module.uuid4()).upper()
+            
+            # Now update elements by name
+            # Get the base_slide elements for targeted updates
+            base_slide_elements = None
+            for action in new_cue.actions:
+                if action.HasField('slide') and action.slide.HasField('presentation'):
+                    if action.slide.presentation.HasField('base_slide'):
+                        base_slide_elements = action.slide.presentation.base_slide.elements
+                        break
+            
+            if base_slide_elements:
+                # Update title text by element name
+                title_elem = find_element_by_name(base_slide_elements, 'title_text')
+                if title_elem and title_elem.HasField('element') and title_elem.element.HasField('text'):
+                    title_elem.element.text.rtf_data = generate_rtf_text(
+                        title, font_name="SourceSansPro-Black", font_size=84, bold=True
+                    )
+                    print(f"      → Updated title text element")
+                
+                # Update body text by element name (with rtf_data fallback)
+                body_elem = find_element_by_name(base_slide_elements, 'body_text')
+                if not body_elem:
+                    # Fallback: search for "body_text" in rtf_data
+                    body_elem = find_element_by_rtf_content(base_slide_elements, 'body_text')
+                
+                if body_elem and body_elem.HasField('element') and body_elem.element.HasField('text'):
+                    body_elem.element.text.rtf_data = generate_rtf_text(
+                        body, font_name="SourceSansPro-Regular", font_size=48
+                    )
+                    print(f"      → Updated body text element")
+                
+                # Update QR code by element name if link present
+                if link:
+                    qr_elem = find_element_by_name(base_slide_elements, 'qr_code')
+                    if qr_elem and qr_elem.HasField('element'):
+                        qr_uuid = str(uuid_module.uuid4())[:8]
+                        qr_path = media_dir / f"qr_{qr_uuid}.png"
+                        generate_qr_image(link, qr_path)
+                        update_media_element(qr_elem.element, qr_path, propresenter_assets_path)
+                        print(f"      → Updated QR code: {qr_path.name}")
+                
+                # Update announcement image by element name if URL present
+                if image_url:
+                    img_elem = find_element_by_name(base_slide_elements, 'announcement_image')
+                    if img_elem and img_elem.HasField('element'):
+                        local_img = download_image(image_url, media_dir)
+                        if local_img:
+                            update_media_element(img_elem.element, local_img, propresenter_assets_path)
+                            print(f"      → Updated image: {local_img.name}")
             
             # Add the new cue to the presentation
             final_pres.cues.append(new_cue)
@@ -386,9 +498,10 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                 cue_id = final_pres.cue_groups[0].cue_identifiers.add()
                 cue_id.string = new_cue.uuid.string
         
-        # Fix all media paths (including template elements) to match production environment
-        if propresenter_assets_path:
-             fix_all_media_paths(final_pres, propresenter_assets_path)
+        # Don't call fix_all_media_paths for bundles - we want relative paths only
+        # The absolute paths prevent Mac from finding media in the bundle
+        # if propresenter_assets_path:
+        #      fix_all_media_paths(final_pres, propresenter_assets_path)
 
         # Serialize and save
         output_data = final_pres.SerializeToString()
@@ -408,6 +521,9 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
             # Zip it up - preserve Media/ folder structure
             # Match ProPresenter's format (DEFLATED with unicode filenames)
             print(f"   Zipping bundle to {output_path}...")
+            media_file_count = len(list(media_dir.glob('*.*'))) if media_dir.exists() else 0
+            print(f"   Media files to include: {media_file_count}")
+            
             with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(work_dir):
                     for file in files:
@@ -415,6 +531,11 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                         # Preserve relative path from work_dir, use forward slashes
                         arcname = str(file_path.relative_to(work_dir)).replace('\\', '/')
                         zipf.write(file_path, arcname)
+                        
+            print(f"   Bundle contents:")
+            with zipfile.ZipFile(output_path, 'r') as zipf:
+                for name in sorted(zipf.namelist()):
+                    print(f"      - {name}")
                         
         else:
             # Standalone .pro
