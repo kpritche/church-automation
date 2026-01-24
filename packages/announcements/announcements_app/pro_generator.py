@@ -519,6 +519,7 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                 f.write(output_data)
             
             # Zip it up - preserve Media/ folder structure
+            # Match ProPresenter's format (DEFLATED with unicode filenames)
             print(f"   Zipping bundle to {output_path}...")
             media_file_count = len(list(media_dir.glob('*.*'))) if media_dir.exists() else 0
             print(f"   Media files to include: {media_file_count}")
@@ -527,8 +528,8 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                 for root, _, files in os.walk(work_dir):
                     for file in files:
                         file_path = Path(root) / file
-                        # Preserve relative path from work_dir
-                        arcname = str(file_path.relative_to(work_dir))
+                        # Preserve relative path from work_dir, use forward slashes
+                        arcname = str(file_path.relative_to(work_dir)).replace('\\', '/')
                         zipf.write(file_path, arcname)
                         
             print(f"   Bundle contents:")
