@@ -406,13 +406,14 @@ def generate_pro_file(announcements: List[dict], output_path: str, as_bundle: bo
                 f.write(output_data)
             
             # Zip it up - preserve Media/ folder structure
+            # Match ProPresenter's format (DEFLATED with unicode filenames)
             print(f"   Zipping bundle to {output_path}...")
             with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(work_dir):
                     for file in files:
                         file_path = Path(root) / file
-                        # Preserve relative path from work_dir
-                        arcname = str(file_path.relative_to(work_dir))
+                        # Preserve relative path from work_dir, use forward slashes
+                        arcname = str(file_path.relative_to(work_dir)).replace('\\', '/')
                         zipf.write(file_path, arcname)
                         
         else:
