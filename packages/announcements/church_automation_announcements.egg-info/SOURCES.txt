@@ -4,9 +4,8 @@ announcements_app/__init__.py
 announcements_app/gmail_utils.py
 announcements_app/html_parser.py
 announcements_app/main.py
-announcements_app/main_probundle.py
 announcements_app/ppt_generator.py
-announcements_app/probundle_generator.py
+announcements_app/pro_generator.py
 announcements_app/settings.py
 announcements_app/summarize.py
 church_automation_announcements.egg-info/PKG-INFO

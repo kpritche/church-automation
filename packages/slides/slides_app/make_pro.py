@@ -48,7 +48,7 @@ from .slide_utils import slice_into_slides
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from .attach_images import attach_images_to_announcements
+from attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
