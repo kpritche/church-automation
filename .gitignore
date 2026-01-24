@@ -1,4 +1,5 @@
 *.json
+!*slides_config.json
 *.pickle
 *.pptx
 config.py
