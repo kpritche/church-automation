@@ -8,6 +8,7 @@ Requirements:
 import os
 import sys
 import uuid
+import hashlib
 from copy import deepcopy
 
 from datetime import date, timedelta
@@ -48,7 +49,7 @@ from .slide_utils import slice_into_slides
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from attach_images import attach_images_to_announcements
+from .attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:", "Pastor:")
@@ -243,7 +244,17 @@ def make_pro_for_items(
     out_path = out_dir / filename
     with open(out_path, 'wb') as wf:
         wf.write(final_pres.SerializeToString())
-        
+
+
+def _generate_content_hash(text_chunks: List[str], title: str) -> str:
+    """Generate a hash of the content for caching duplicate items.
+    
+    Returns a hash string based on the item title and text chunks,
+    so items with the same content across services will have the same hash.
+    """
+    content_str = f"{title}|" + "|".join(text_chunks)
+    return hashlib.sha256(content_str.encode()).hexdigest()[:8]
+
 
 def main():
     cfg = load_config(CONFIG_PATH)
@@ -257,6 +268,10 @@ def main():
     # Initialize Pypco client
     pco = PCO(application_id=config.client_id, secret=config.secret)
     processed_dates = set()
+    
+    # Cache: maps content hash -> (file_path, plan_date, parsed_data)
+    # This prevents generating duplicate .pro files for items that appear in multiple services
+    content_cache: Dict[str, tuple] = {}
 
     for stid in service_ids:
         print(f"Processing service type ID: {stid}")
@@ -374,36 +389,76 @@ def main():
 
                 slides.append({'text': '', 'style': 'blank', 'is_bold': False})
 
+                # Generate a content hash for caching
+                content_hash = _generate_content_hash(parsed.get("text_chunks", []), parsed["title"])
+                
                 safe_title = parsed["title"].strip().replace(" ", "_").replace("/", "_")
-                filename = f"{plan_date}-{service_name}-{safe_title}.pro"
-                out_dir = SLIDES_OUTPUTS_DIR / plan_date
-                out_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Check if we've already generated this content
+                if content_hash in content_cache:
+                    cached_file, cached_date, _ = content_cache[content_hash]
+                    print(f"[CACHE HIT] Reusing {cached_file.name} (first generated on {cached_date})")
+                    out_dir = SLIDES_OUTPUTS_DIR / plan_date
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    
+                    # Verify cached file still exists
+                    if cached_file.exists():
+                        # Upload the existing cached file to this item
+                        upload_resp = pco.upload(str(cached_file))
+                        upload_id = upload_resp["data"][0]["id"]
+                        attach_payload = {
+                            "data": {
+                                "attributes": {
+                                    "file_upload_identifier": upload_id,
+                                    "filename": cached_file.name
+                                }
+                            }
+                        }
+                        pco.post(
+                            f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+                            payload=attach_payload
+                        )
+                        print(f"  > Uploaded cached file; upload_id={upload_id}")
+                    else:
+                        print(f"  [WARN] Cached file not found, regenerating...")
+                        content_cache.pop(content_hash, None)
+                else:
+                    # Generate new file
+                    # Use a generic filename without service name for shared items
+                    filename = f"{plan_date}-{safe_title}-{content_hash}.pro"
+                    out_dir = SLIDES_OUTPUTS_DIR / plan_date
+                    out_dir.mkdir(parents=True, exist_ok=True)
 
-                make_pro_for_items(
-                    slides,
-                    parsed,
-                    filename,
-                    scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
-                    plan_date=plan_date
-                )
-                print(f"Generated slides for service type ID {stid} into {filename}")
+                    make_pro_for_items(
+                        slides,
+                        parsed,
+                        filename,
+                        scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
+                        plan_date=plan_date
+                    )
+                    print(f"Generated slides for service type ID {stid} into {filename}")
+                    
+                    out_path = out_dir / filename
+                    
+                    # Cache this file
+                    content_cache[content_hash] = (out_path, plan_date, parsed)
 
-                # Upload the generated .pro file to its item
-                uplaod_resp = pco.upload(str(out_dir / filename))
-                upload_id = uplaod_resp["data"][0]["id"]
-                attach_payload = {
-                    "data": {
-                        "attributes": {
-                            "file_upload_identifier": upload_id,
-                            "filename": filename
+                    # Upload the generated .pro file to its item
+                    upload_resp = pco.upload(str(out_path))
+                    upload_id = upload_resp["data"][0]["id"]
+                    attach_payload = {
+                        "data": {
+                            "attributes": {
+                                "file_upload_identifier": upload_id,
+                                "filename": filename
+                            }
                         }
                     }
-                }
-                pco.post(
-                    f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
-                    payload=attach_payload
-                )
-                print(f"  > Uploaded file; upload_id={upload_id}")
+                    pco.post(
+                        f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+                        payload=attach_payload
+                    )
+                    print(f"  > Uploaded file; upload_id={upload_id}")
 
             processed_dates.add(plan_date)
 
