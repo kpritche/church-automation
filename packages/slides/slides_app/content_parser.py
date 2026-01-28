@@ -27,6 +27,12 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover
     PyPDF2 = None  # type: ignore
     BytesIO = None  # type: ignore
+try:  # pragma: no cover - optional dependency
+    from PyPDF2 import PdfReader  # type: ignore
+    import io  # type: ignore
+except Exception:  # pragma: no cover
+    PdfReader = None  # type: ignore
+    io = None  # type: ignore
 
 # Titles to ignore entirely (various name variants)
 SKIP_TITLES = {
@@ -259,7 +265,8 @@ def extract_items_from_pypco(
     # Identify type flags
     stripped_title = title.strip()
     is_scripture = stripped_title in SCRIPTURE_TITLES
-    is_song = stripped_title in SONG_TITLES
+    # Check both title (for "Song"/"Hymn") and item_type from Planning Center
+    is_song = stripped_title in SONG_TITLES or item_type.lower() == "song"
     is_prelude_postlude = stripped_title in PRELUDE_POSTLUDE_TITLES
     scripture_reference: Optional[str] = None
     text_chunks: List[str] = []
@@ -359,3 +366,190 @@ def extract_items_from_pypco(
         'scripture_reference': scripture_reference,
         'is_song': is_song
     }
+
+
+def fetch_lyrics_attachments(
+    pco,
+    lyrics_items: List[Dict[str, object]],
+    service_type_id: int,
+    plan_id: str,
+    included: Optional[List[Dict[str, object]]] = None,
+) -> List[Dict[str, object]]:
+    """Fetch lyrics PDF attachments for song items.
+    
+    Returns list of dicts with 'title' and 'attachment_obj' for lyrics PDFs.
+    """
+    lyrics_attachments: List[Dict[str, object]] = []
+    
+    for song_info in lyrics_items:
+        item_obj = song_info["item_obj"]
+        title = song_info["title"]
+        item_id = str(item_obj.get("id", ""))
+        
+        # Try to get all attachments for this item
+        attachments_url = (
+            f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+        )
+        try:
+            resp = pco.get(attachments_url)
+            attachments = resp.get("data") or []
+            
+            # Find the lyrics PDF (filename ends with 'lyrics.pdf')
+            for att in attachments:
+                att_attrs = att.get("attributes") or {}
+                filename = (att_attrs.get("filename") or "").lower()
+                if filename.endswith("lyrics.pdf"):
+                    att_id = str(att.get("id"))
+                    lyrics_attachments.append({
+                        "title": title,
+                        "attachment_obj": att,
+                        "item_id": item_id,
+                    })
+                    break
+        except Exception as exc:
+            print(f"[warn] Unable to fetch attachments for song '{title}': {exc}")
+    
+    return lyrics_attachments
+
+
+def download_lyrics_pdf(
+    attachment_obj: Dict[str, object],
+    pco,
+    service_type_id: int,
+    plan_id: str,
+    item_id: str
+) -> Optional[bytes]:
+    """Download a lyrics PDF using the attachment object.
+    
+    Uses the Planning Center API's attachment open endpoint to get a direct download URL.
+    
+    Returns PDF bytes or None if download fails.
+    """
+    if requests is None:
+        print("[WARN] requests module not available; cannot download lyrics PDF")
+        return None
+    
+    att_id = str(attachment_obj.get("id", ""))
+    att_attrs = attachment_obj.get("attributes") or {}
+    filename = att_attrs.get("filename", "")
+    
+    # Use the full path to open the attachment via PCO API
+    open_endpoint = (
+        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/"
+        f"items/{item_id}/attachments/{att_id}/open"
+    )
+    
+    try:
+        # Make a POST request to the open endpoint (following the same pattern as cover attachments)
+        resp = pco.post(open_endpoint)
+        
+        # Extract the actual download URL from the response
+        attachment_url: Optional[str] = None
+        if isinstance(resp, dict):
+            attachment_url = (
+                resp.get("data", {}).get("attributes", {}).get("attachment_url")
+                or resp.get("attachment_url")
+            )
+        
+        if not attachment_url:
+            print(f"[WARN] Could not resolve attachment_url for {att_id}; response: {resp}")
+            return None
+        
+        # Download the file from the resolved URL (no auth needed, it's a signed URL)
+        file_resp = requests.get(attachment_url)
+        file_resp.raise_for_status()
+        content = file_resp.content
+        
+        # Verify it's a PDF
+        if content[:4].upper() == b"%PDF":
+            return content
+        else:
+            print(f"[WARN] Downloaded content is not a PDF for attachment {att_id}")
+            return None
+            
+    except Exception as exc:
+        print(f"[WARN] Failed to download lyrics PDF for attachment {att_id}: {exc}")
+        return None
+
+
+def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
+    """Extract and clean text from a lyrics PDF.
+    
+    Removes common headers, footers, formatting artifacts, and text in square brackets.
+    
+    Returns cleaned lyrics text or None if extraction fails.
+    """
+    if PdfReader is None or io is None:
+        print("[WARN] PyPDF2 module not available; cannot extract lyrics from PDF")
+        return None
+    
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        all_text = ""
+        
+        # Extract text from all pages
+        for page_num, page in enumerate(reader.pages):
+            text = page.extract_text()
+            if text:
+                all_text += text + "\n"
+        
+        if not all_text.strip():
+            print(f"[WARN] No text extracted from lyrics PDF for '{song_title}'")
+            return None
+        
+        # Remove text in square brackets [like this]
+        all_text = re.sub(r'\[.*?\]', '', all_text)
+        
+        # Clean up the text
+        lines = all_text.split("\n")
+        cleaned_lines: List[str] = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Skip arrangement information (like "Intro, V1, C, Inter, V2, C, Inst, C, Rf, C, Tag, Outro, E")
+            # These lines typically have multiple commas and common arrangement abbreviations
+            if ',' in line:
+                lower_line = line.lower()
+                arrangement_markers = ['intro', 'outro', 'inst', 'inter', 'tag', ' v1', ' v2', ' v3', ' v4', ' c,', ',c,', ',c']
+                if any(marker in lower_line for marker in arrangement_markers):
+                    # Additional check: if line has many commas relative to its length, it's likely arrangement info
+                    comma_count = line.count(',')
+                    if comma_count >= 3:  # Lines with 3+ commas are likely arrangement lines
+                        continue
+            
+            # Skip common headers/footers (page numbers, URLs, copyright lines, etc.)
+            lower_line = line.lower()
+            
+            # Skip lines that are just numbers (page numbers)
+            if line.isdigit():
+                continue
+            
+            # Skip URLs
+            if "http" in lower_line or "www." in lower_line:
+                continue
+            
+            # Skip copyright/licensing lines and admin lines
+            if any(x in lower_line for x in ["copyright", "ccli", "license", "©", "®", "admin", "administered"]):
+                continue
+            
+            # Skip very short lines that might be artifacts (less than 3 chars, unless it's a verse marker)
+            if len(line) < 3 and not any(c.isalpha() for c in line):
+                continue
+            
+            cleaned_lines.append(line)
+        
+        # Remove leading/trailing empty lines
+        while cleaned_lines and not cleaned_lines[0].strip():
+            cleaned_lines.pop(0)
+        while cleaned_lines and not cleaned_lines[-1].strip():
+            cleaned_lines.pop()
+        
+        result = "\n".join(cleaned_lines)
+        return result if result.strip() else None
+        
+    except Exception as exc:
+        print(f"[WARN] Failed to extract lyrics from PDF for '{song_title}': {exc}")
+        return None
