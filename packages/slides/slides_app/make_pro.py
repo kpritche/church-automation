@@ -52,7 +52,7 @@ import json
 from .attach_images import attach_images_to_announcements
 
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
-CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:")
+CALL_MARKERS = ("Leader:", "L:", "Presider:", "One:", "Pastor:")
 RESPONSE_MARKERS = ("People:", "P:", "All:", "Many:")
 
 # Paths to templates
