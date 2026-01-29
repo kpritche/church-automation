@@ -368,6 +368,35 @@ def extract_items_from_pypco(
     }
 
 
+def has_pro_attachment(
+    pco,
+    service_type_id: int,
+    plan_id: str,
+    item_id: str,
+) -> bool:
+    """Check if an item already has a .pro file attached.
+    
+    Returns True if a .pro file is already attached to the item, False otherwise.
+    """
+    try:
+        attachments_url = (
+            f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+        )
+        resp = pco.get(attachments_url)
+        attachments = resp.get("data") or []
+        
+        # Check if any attachment is a .pro file
+        for att in attachments:
+            att_attrs = att.get("attributes") or {}
+            filename = (att_attrs.get("filename") or "").lower()
+            if filename.endswith(".pro"):
+                return True
+    except Exception as exc:
+        print(f"[warn] Unable to check attachments for item {item_id}: {exc}")
+    
+    return False
+
+
 def fetch_lyrics_attachments(
     pco,
     lyrics_items: List[Dict[str, object]],

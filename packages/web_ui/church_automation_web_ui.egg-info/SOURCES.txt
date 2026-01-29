@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+church_automation_web_ui.egg-info/PKG-INFO
+church_automation_web_ui.egg-info/SOURCES.txt
+church_automation_web_ui.egg-info/dependency_links.txt
+church_automation_web_ui.egg-info/entry_points.txt
+church_automation_web_ui.egg-info/requires.txt
+church_automation_web_ui.egg-info/top_level.txt
+web_ui_app/__init__.py
+web_ui_app/main.py
+web_ui_app/server.py
+web_ui_app/tasks.py

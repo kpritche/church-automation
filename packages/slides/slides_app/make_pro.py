@@ -44,6 +44,7 @@ from .content_parser import (
     fetch_lyrics_attachments,
     download_lyrics_pdf,
     extract_lyrics_text,
+    has_pro_attachment,
 )
 from .slide_utils import slice_into_slides
 import requests
@@ -311,6 +312,11 @@ def main():
 
                 # Skip if no HTML content, unless it's a song (which we'll try to fetch lyrics for)
                 if not parsed["html_present"] and not parsed.get("is_song"):
+                    continue
+
+                # Check if a .pro file is already attached to this item
+                if has_pro_attachment(pco, stid, plan_id, parsed['item_id']):
+                    print(f"[SKIP] Item already has .pro file attached: {parsed['title']}")
                     continue
 
                 # Build raw and bold-aware slides

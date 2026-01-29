@@ -1,12 +1,12 @@
 # Church Automation Suite
 
-A modular Python monorepo for automating church presentation and bulletin workflows using Planning Center Online and Gmail integration.
+A modular Python monorepo for automating church presentation and bulletin workflows using Planning Center Online and web scraping.
 
 ## 🎯 What This Does
 
 This suite provides three independent tools that work together to automate common church media production tasks:
 
-- **📢 Announcements** - Generate ProPresenter `.probundle` files from Gmail announcement emails
+- **📢 Announcements** - Generate ProPresenter `.probundle` files from website announcement pages
 - **🖼️ Slides** - Generate ProPresenter `.pro` slides from Planning Center liturgy items
 - **📄 Bulletins** - Generate PDF bulletins from Planning Center service plans
 
@@ -18,7 +18,7 @@ This is a **multi-package monorepo** where each tool can be installed and used i
 church-automation/
 ├── packages/
 │   ├── shared/                     # Common utilities (required by all)
-│   ├── announcements/              # Gmail → ProPresenter announcements
+│   ├── announcements/              # Website → ProPresenter announcements
 │   ├── bulletins/                  # Planning Center → PDF bulletins
 │   └── slides/                     # Planning Center → ProPresenter slides
 ├── examples/                       # Configuration templates
@@ -48,16 +48,13 @@ cp examples/.env.example .env
 
 # Edit .env and add your credentials:
 # - PCO_CLIENT_ID and PCO_SECRET (get from Planning Center)
-# - GMAIL_ANNOUNCEMENTS_QUERY (customize for your church)
+# - ANNOUNCEMENTS_WEBSITE_URL (your church's weekly events page)
 ```
 
-### 3. Set Up Gmail OAuth (for announcements)
+### 3. Set Up GCP Credentials (optional - for AI summarization)
 
-Place these files in `~/.church-automation/`:
-- `credentials.json` - Gmail API OAuth credentials from Google Cloud Console
-- `gcp-credentials.json` - GCP service account (optional, for AI summarization)
-
-The first run will create `announcements_token.pickle` automatically.
+Place this file in `~/.church-automation/`:
+- `gcp-credentials.json` - GCP service account for Vertex AI text summarization
 
 ### 4. Configure Service Types
 
@@ -93,16 +90,16 @@ Common functionality used by all tools:
 
 ### Announcements (`church-automation-announcements`)
 
-Fetches weekly emails from Gmail, parses announcements, generates summarized ProPresenter bundles with QR codes.
+Fetches announcements from your church website, parses content, generates summarized ProPresenter bundles with QR codes.
 
 **Key Features:**
-- Gmail API integration with OAuth2
-- HTML email parsing
+- Web scraping to automatically fetch latest announcements
+- HTML parsing for titles, body text, links, and images
 - AI-powered text summarization (Google Vertex AI)
 - QR code generation
 - ProPresenter protobuf serialization
 
-**Dependencies:** `google-api-python-client`, `google-genai`, `beautifulsoup4`, `qrcode`, `pillow`, `protobuf`
+**Dependencies:** `requests`, `google-genai`, `beautifulsoup4`, `qrcode`, `pillow`, `protobuf`
 
 **CLI Command:** `make-announcements`
 
@@ -148,8 +145,8 @@ PCO_CLIENT_ID=your_planning_center_client_id
 PCO_SECRET=your_planning_center_secret
 
 # Optional
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 GCP_CREDENTIALS_FILENAME=gcp-credentials.json
-GMAIL_ANNOUNCEMENTS_QUERY=from:"Your Church" subject:"Announcements"
 CHURCH_AUTOMATION_SECRETS_DIR=/custom/secrets/path
 ```
 
@@ -161,13 +158,15 @@ CHURCH_AUTOMATION_SECRETS_DIR=/custom/secrets/path
 4. Find your service type IDs in Planning Center (Services → Service Types → URL)
 5. Add them to `packages/slides/slides_config.json`
 
-### Gmail API Setup
+### Website Configuration
 
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable Gmail API
-3. Create OAuth 2.0 credentials (Desktop application)
-4. Download `credentials.json` to `~/.church-automation/`
-5. Run announcements tool - it will open a browser for OAuth consent
+The announcements tool fetches content from your church's website. Configure the URL in your `.env` file:
+
+```bash
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
+```
+
+The tool will automatically find and fetch the most recent announcement link.
 
 ## 📂 Directory Structure
 
@@ -181,8 +180,8 @@ packages/
 ├── announcements/
 │   ├── announcements_app/
 │   │   ├── main_probundle.py     # Main entry point
-│   │   ├── gmail_utils.py        # Gmail API
-│   │   ├── html_parser.py        # Email parsing
+│   │   ├── web_fetcher.py        # Website scraping
+│   │   ├── html_parser.py        # HTML parsing
 │   │   ├── summarize.py          # AI summarization
 │   │   └── probundle_generator.py # ProPresenter generation
 │   ├── output/                    # Generated files
@@ -244,7 +243,7 @@ mypy packages/announcements/announcements_app/
 
 - **Never commit `.env`** - it contains sensitive credentials
 - All credentials are loaded from environment variables
-- Gmail OAuth tokens are stored in `~/.church-automation/`
+- GCP credentials for AI summarization are stored in `~/.church-automation/`
 - Use `.gitignore` to protect sensitive files
 
 ## 📝 ProPresenter Protocol Buffers
