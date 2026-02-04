@@ -150,7 +150,7 @@ def main() -> None:
         'https://www.fumcwl.org/weekly-events/'
     )
     
-    # Fetch announcements from website
+    # Fetch from website
     print("\n1. Fetching announcements from website...")
     html_content = fetch_latest_announcement_html(website_url)
     
@@ -164,7 +164,7 @@ def main() -> None:
     for idx, ann in enumerate(announcements, 1):
         print(f"   {idx}. {ann['title'][:50]}...")
         if "body" in ann:
-            ann["summary"] = summarize_text(ann["body"], max_chars=250)
+            ann["summary"] = summarize_text(ann["body"], max_chars=180)
         else:
             ann["summary"] = "No summary available."
 

@@ -641,46 +641,74 @@ def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
         # Remove text in square brackets [like this]
         all_text = re.sub(r'\[.*?\]', '', all_text)
         
-        # Clean up the text
+        # Clean up the text - preserve empty lines initially for line break detection
         lines = all_text.split("\n")
         cleaned_lines: List[str] = []
+        found_footer = False
         
         for line in lines:
-            line = line.strip()
-            if not line:
+            line_stripped = line.strip()
+            
+            # Skip completely blank lines early, but preserve them for structure
+            if not line_stripped:
+                # Only add empty lines if we haven't hit footer text yet
+                if not found_footer:
+                    cleaned_lines.append("")
                 continue
+            
+            # Detect footer sections (multiple consecutive lines with parentheses, commas, Admin, etc.)
+            # These are typically licensing/copyright footers
+            lower_line = line_stripped.lower()
+            
+            # Check for footer markers: lines containing both parentheses and "admin" or "license" or "publishing"
+            has_paren = '(' in line_stripped or ')' in line_stripped
+            has_footer_keyword = any(x in lower_line for x in ["admin", "license", "publishing", "ccli", "©", "®"])
+            
+            if has_paren and has_footer_keyword:
+                found_footer = True
+                continue
+            
+            # Once we detect footer start, skip subsequent lines with similar patterns
+            if found_footer:
+                # Footer usually contains multiple commas or just administrative text
+                if ',' in line_stripped or any(x in lower_line for x in ["admin", "publishing", "license", "©", "®"]):
+                    continue
+                # If we hit a line that looks like real lyrics (short, simple), footer is probably over
+                if len(line_stripped) < 50 and line_stripped.count(',') == 0:
+                    found_footer = False
             
             # Skip arrangement information (like "Intro, V1, C, Inter, V2, C, Inst, C, Rf, C, Tag, Outro, E")
             # These lines typically have multiple commas and common arrangement abbreviations
-            if ',' in line:
-                lower_line = line.lower()
+            if ',' in line_stripped:
+                lower_line = line_stripped.lower()
                 arrangement_markers = ['intro', 'outro', 'inst', 'inter', 'tag', ' v1', ' v2', ' v3', ' v4', ' c,', ',c,', ',c']
                 if any(marker in lower_line for marker in arrangement_markers):
                     # Additional check: if line has many commas relative to its length, it's likely arrangement info
-                    comma_count = line.count(',')
+                    comma_count = line_stripped.count(',')
                     if comma_count >= 3:  # Lines with 3+ commas are likely arrangement lines
                         continue
             
             # Skip common headers/footers (page numbers, URLs, copyright lines, etc.)
-            lower_line = line.lower()
+            lower_line = line_stripped.lower()
             
             # Skip lines that are just numbers (page numbers)
-            if line.isdigit():
+            if line_stripped.isdigit():
                 continue
             
             # Skip URLs
             if "http" in lower_line or "www." in lower_line:
                 continue
             
-            # Skip copyright/licensing lines and admin lines
-            if any(x in lower_line for x in ["copyright", "ccli", "license", "©", "®", "admin", "administered"]):
-                continue
+            # Skip copyright/licensing lines with multiple keywords
+            if any(x in lower_line for x in ["copyright", "ccli", "license", "©", "®"]):
+                if line_stripped.count(',') > 0 or len(line_stripped) > 80:
+                    continue
             
             # Skip very short lines that might be artifacts (less than 3 chars, unless it's a verse marker)
-            if len(line) < 3 and not any(c.isalpha() for c in line):
+            if len(line_stripped) < 3 and not any(c.isalpha() for c in line_stripped):
                 continue
             
-            cleaned_lines.append(line)
+            cleaned_lines.append(line_stripped)
         
         # Remove leading/trailing empty lines
         while cleaned_lines and not cleaned_lines[0].strip():
@@ -1502,9 +1530,6 @@ class BulletinRenderer:
         # Calculate optimal uniform font scale for all lyrics
         font_scale = self._calculate_optimal_font_scale()
         
-        # Start rendering lyrics on a new page
-        self._new_page()
-        
         # Render each song's lyrics with the same font scale
         for idx, (song_title, lyrics_text) in enumerate(self.lyrics_data):
             # Add extra spacing between songs (but not before the first one)
@@ -1591,9 +1616,8 @@ class BulletinRenderer:
         available_height = PAGE_HEIGHT - self.cursor_y - MARGIN_Y
         total_needed = title_height + (estimated_height / 2) + 8  # Divide by 2 for two columns, plus spacing after
         
-        # Only start new page if very little space available (< 50% of what's needed)
-        # This allows better space utilization while still keeping songs reasonably together
-        if available_height < (total_needed * 0.5) or available_height < 100:
+        # Start a new page if the full song (title + lyrics) won't fit
+        if total_needed > available_height:
             self._new_page()
         
         # Render song title with artist info (always at normal size)

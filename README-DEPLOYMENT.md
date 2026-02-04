@@ -34,21 +34,51 @@ brew install podman
 
 ## Deployment Structure
 
-Set up your deployment directory structure:
+Set up your deployment directory structure with the entire repository:
 
 ```
 ~/church-automation-deployment/
-├── docker compose.yml          (symlink or copy from repo)
-├── Dockerfile                  (symlink or copy from repo)
-├── .env                        (environment variables - see Step 1)
-├── secrets/                    (create manually)
+├── packages/                   (required - entire packages directory)
+│   ├── shared/
+│   ├── announcements/
+│   ├── bulletins/
+│   ├── slides/
+│   └── web_ui/
+├── assets/                     (required - fonts and assets)
+│   └── fonts/
+├── docker-compose.yml          (required - copy from repo)
+├── Dockerfile                  (required - copy from repo)
+├── .dockerignore               (optional - copy from repo)
+├── .env                        (required - you create this)
+├── secrets/                    (required - you create)
 │   ├── gcp-credentials.json    (optional - for AI summarization)
-│   └── slides_config.json      (service type IDs and prayer list config)
+│   └── slides_config.json      (optional - service configuration)
 └── output/                     (auto-created on first run)
     ├── announcements/
     ├── slides/
     └── bulletins/
 ```
+
+### 🚀 Quick Setup with Script
+
+Use the provided setup script to automatically copy all required files:
+
+**On Linux/macOS:**
+```bash
+./setup-deployment-dir.sh ~/church-automation-deployment
+```
+
+**On Windows:**
+```powershell
+.\setup-deployment-dir.bat C:\church-automation-deployment
+```
+
+This script will:
+1. ✅ Create the deployment directory
+2. ✅ Copy packages/, assets/, and Docker files
+3. ✅ Create secrets/ directory
+4. ✅ Create template .env file
+5. ✅ Display next steps
 
 ## Step 1: Prepare Environment Variables
 
@@ -135,19 +165,57 @@ chmod 600 ~/church-automation-deployment/secrets/slides_config.json
 
 **Prayer lists:** Configure the prayer list IDs from your Planning Center instance. You can customize or remove lists as needed.
 
-## Step 3: Copy Docker Compose Files
+## Step 3: Copy Repository Files
+
+The container build requires the entire repository structure, not just Docker files. The Dockerfile references `packages/` and `assets/` directories.
 
 ```bash
 cd ~/church-automation-deployment
 
-# Option A: Copy from repo
-cp /path/to/church-automation/docker compose.yml .
-cp /path/to/church-automation/Dockerfile .
+# Copy the ENTIRE repository to your deployment directory
+cp -r /path/to/church-automation/* .
 
-# Option B: Create symlinks (recommended for dev)
-ln -s /path/to/church-automation/docker compose.yml .
-ln -s /path/to/church-automation/Dockerfile .
+# This copies:
+# - packages/       (all 4+ packages)
+# - assets/         (fonts and other assets)
+# - docker-compose.yml
+# - Dockerfile
+# - .dockerignore
+# - and other repo files
 ```
+
+**Alternative: Use Git Clone**
+
+If you prefer a clean checkout:
+
+```bash
+cd ~/church-automation-deployment
+
+# Clone the repo into current directory
+git clone https://github.com/FUMCWL/church-automation.git .
+```
+
+**Verify your deployment directory contains:**
+
+```
+~/church-automation-deployment/
+├── packages/          ← REQUIRED (all packages)
+│   ├── shared/
+│   ├── announcements/
+│   ├── bulletins/
+│   ├── slides/
+│   └── web_ui/
+├── assets/            ← REQUIRED (fonts, etc.)
+│   └── fonts/
+├── docker-compose.yml ← REQUIRED
+├── Dockerfile         ← REQUIRED
+├── .env               ← REQUIRED (you create this)
+└── secrets/           ← REQUIRED (you create this)
+    ├── slides_config.json (optional)
+    └── gcp-credentials.json (optional)
+```
+
+If any of these directories are missing, the Docker build will fail with "no such file or directory" error.
 
 ## Step 4: Build Container Image
 
@@ -273,7 +341,35 @@ cp ~/church-automation-deployment/output/announcements/2026-02-01/*.pptx ~/Downl
 
 ## Troubleshooting
 
-### Container won't start
+### Docker build fails: "no such file or directory" for packages/ or assets/
+
+```
+Error: executing ... docker-compose.exe up -d: exit status 1
+COPY packages/ ./packages/: stat: "/packages": no such file or directory
+```
+
+**Cause**: You didn't copy the required `packages/` and `assets/` directories to your deployment directory.
+
+**Solution**: 
+
+```bash
+# Make sure your deployment directory contains the ENTIRE repository
+cd ~/church-automation-deployment
+
+# Verify these directories exist:
+ls -la packages/
+ls -la assets/
+
+# If missing, copy from the repo:
+cp -r /path/to/church-automation/packages ./
+cp -r /path/to/church-automation/assets ./
+
+# Then rebuild:
+docker compose build --no-cache
+docker compose up -d
+```
+
+**Remember**: Docker builds in isolation and needs ALL referenced files in the build context. You can't use symlinks for `packages/` and `assets/` - they must be real directories.
 
 ```bash
 # Check for errors

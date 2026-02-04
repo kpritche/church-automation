@@ -74,8 +74,13 @@ from typing import List, Dict, Optional
 # Aliases
 Presentation = rv_presentation.Presentation
 
-def _rtf_escape_text(value: str) -> str:
-    """Return an RTF-safe string for the given plain text."""
+def _rtf_escape_text(value: str, formatting_codes: str = "") -> str:
+    """Return an RTF-safe string for the given plain text.
+    
+    Args:
+        value: The plain text to escape
+        formatting_codes: RTF formatting codes to reapply after each line break
+    """
 
     def _escape_codepoint(cp: int) -> str:
         return '\\u' + str(cp) + '?'
@@ -92,7 +97,8 @@ def _rtf_escape_text(value: str) -> str:
         elif ch == "\r":
             continue
         elif ch == "\n":
-            parts.append("\\line ")
+            # After a line break, reapply formatting codes to maintain styling
+            parts.append("\\line\n" + formatting_codes)
         elif ch == "\t":
             parts.append("\\tab ")
         elif 32 <= codepoint <= 126:
@@ -207,7 +213,42 @@ def make_pro_for_items(
         if len(parts) != 2:
             raise ValueError("Template missing 'replace_me' placeholder in RTF data.")
 
-        rtf_text = _rtf_escape_text(text.upper())
+        # Extract formatting codes from the template
+        # The template has formatting codes on the line before replace_me, like:
+        # \f0\b\fs160 \cf2 \kerning1\expnd10\expndtw50
+        # replace_me}
+        # We need to extract these codes and reapply them after each \line command
+        prefix = parts[0]
+        last_newline_idx = prefix.rfind('\n')
+        
+        if last_newline_idx != -1 and last_newline_idx > 0:
+            # Find the previous newline (or start of string)
+            prev_newline_idx = prefix.rfind('\n', 0, last_newline_idx)
+            if prev_newline_idx != -1:
+                # Extract everything between the two newlines (the formatting line)
+                formatting_codes = prefix[prev_newline_idx + 1:last_newline_idx].strip()
+            else:
+                # No previous newline, so extract from start to last newline
+                formatting_codes = prefix[:last_newline_idx].strip()
+                # Get only the last line of formatting codes if there are multiple lines
+                formatting_lines = formatting_codes.split('\n')
+                formatting_codes = formatting_lines[-1] if formatting_lines else ""
+        else:
+            # Fallback: try to find RTF commands at the end of prefix
+            formatting_codes = ""
+            tokens = prefix.split()
+            # Find the last sequence of RTF commands (starting with backslash)
+            for i in range(len(tokens) - 1, -1, -1):
+                if tokens[i].startswith('\\') and not tokens[i].startswith('\\pard'):
+                    # Found start of formatting commands
+                    formatting_codes = ' '.join(tokens[i:])
+                    break
+
+        # Add newline after formatting codes for proper RTF structure
+        if formatting_codes and not formatting_codes.endswith('\n'):
+            formatting_codes += '\n'
+
+        rtf_text = _rtf_escape_text(text.upper(), formatting_codes)
         new_rtf = (parts[0] + rtf_text + parts[1]).encode('utf-8')
         new_cue.actions[0].slide.presentation.base_slide.elements[0].element.text.rtf_data = new_rtf
         

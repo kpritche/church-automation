@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from io import BytesIO
 import textwrap
 
@@ -11,7 +12,16 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 import requests
 from PIL import Image
-from win32com.client import Dispatch
+
+# Windows-only: COM automation for PowerPoint export
+# Only import if running on Windows; on Linux/Docker this will be skipped
+if sys.platform == "win32":
+    try:
+        from win32com.client import Dispatch
+    except ImportError:
+        Dispatch = None
+else:
+    Dispatch = None
 
 from .settings import (
     TITLE_MAX_CHARS,
@@ -68,7 +78,16 @@ def fetch_image_from_url(url: str):
 
 
 def export_pptx_to_jpg(pptx_path: str, output_dir: str):
-    """Open the PPTX in PowerPoint via COM and export each slide as JPG."""
+    """Open the PPTX in PowerPoint via COM and export each slide as JPG.
+    
+    Note: This function only works on Windows with Microsoft PowerPoint installed.
+    On Linux/Docker, this function is a no-op.
+    """
+    if Dispatch is None:
+        print(f"⚠️  PPTX to JPG export is only available on Windows with PowerPoint installed.")
+        print(f"   Skipping export for: {pptx_path}")
+        return
+    
     os.makedirs(output_dir, exist_ok=True)
     ppt_app = Dispatch("PowerPoint.Application")
     ppt_app.Visible = True
@@ -110,11 +129,15 @@ def create_pptx_with_qr(announcements, output_path, use_summary: bool = False):
         title_text = "\n".join(wrapped) if wrapped else short
 
         title_frame.text = title_text
-        title_frame.paragraphs[0].font.size = Pt(42)
-        title_frame.paragraphs[0].font.bold = True
-        title_frame.paragraphs[0].font.color.rgb = RGBColor(*BRAND_COLOR_1)
-        title_frame.paragraphs[0].font.name = "Source Sans Pro Black"
-        title_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+        
+        # Apply formatting to ALL paragraphs (each line after \n creates a new paragraph)
+        for paragraph in title_frame.paragraphs:
+            paragraph.font.size = Pt(42)
+            paragraph.font.bold = True
+            paragraph.font.color.rgb = RGBColor(*BRAND_COLOR_1)
+            paragraph.font.name = "Source Sans Pro Black"
+            paragraph.alignment = PP_ALIGN.CENTER
+        
         title_frame.word_wrap = True
 
         # Body
@@ -127,9 +150,13 @@ def create_pptx_with_qr(announcements, output_path, use_summary: bool = False):
         body_box = slide.shapes.add_textbox(Inches(0.5), Inches(2), Inches(8), Inches(2.5))
         body_frame = body_box.text_frame
         body_frame.text = body_text
-        body_frame.paragraphs[0].font.size = Pt(font_size)
-        body_frame.paragraphs[0].font.name = "Source Sans Pro"
-        body_frame.paragraphs[0].font.color.rgb = RGBColor(0, 0, 0)
+        
+        # Apply formatting to ALL paragraphs in body text
+        for paragraph in body_frame.paragraphs:
+            paragraph.font.size = Pt(font_size)
+            paragraph.font.name = "Source Sans Pro"
+            paragraph.font.color.rgb = RGBColor(0, 0, 0)
+        
         body_frame.word_wrap = True
 
         # Image dynamically scaled
@@ -160,8 +187,8 @@ def create_pptx_with_qr(announcements, output_path, use_summary: bool = False):
         if ann.get("link"):
             qr_img = generate_qr_code(ann["link"])
             left = Inches(5.6)
-            top = Inches(4.3)
-            height = Inches(2.75)
+            top = Inches(4.8)
+            height = Inches(2.0)
             slide.shapes.add_picture(qr_img, left, top, height=height)
 
             caption = ann.get("button_text", "Scan for more info")
