@@ -239,6 +239,36 @@ def safe_slug(value: str) -> str:
     return slug or "service"
 
 
+def build_role_replacement_map(team_members_by_position: Dict[str, List[str]]) -> Dict[str, str]:
+    """Build a mapping of role names to person names for description replacement.
+    
+    Args:
+        team_members_by_position: Dict mapping position name (e.g., "Lead Pastor") to list of person names.
+    
+    Returns:
+        Dict mapping role name to formatted person name:
+        - For pastor roles: "Pastor FirstName LastName" (title normalized to "Pastor")
+        - For other roles: "FirstName LastName" (no title)
+        Only includes roles that have at least one person assigned.
+    """
+    role_map: Dict[str, str] = {}
+    for role_name, people in team_members_by_position.items():
+        if people and people[0].strip():
+            # Use the first person assigned to this role
+            person_name = people[0].strip()
+            
+            # Check if this is a pastor role
+            is_pastor = "pastor" in role_name.lower()
+            
+            if is_pastor:
+                # For pastors, normalize title to just "Pastor"
+                role_map[role_name] = f"Pastor {person_name}"
+            else:
+                # For other roles, just use the person's name without title
+                role_map[role_name] = person_name
+    return role_map
+
+
 def format_human_date(date_str: str) -> str:
     try:
         dt = datetime.strptime(date_str, "%Y-%m-%d")
@@ -821,7 +851,7 @@ def build_sections(
         if is_preservice or is_postservice:
             continue
 
-        if title == "Get Involved":
+        if title == "Invitation to Generosity":
             get_involved_item = item_obj
             continue
 
@@ -867,7 +897,7 @@ def build_sections(
 
 
 class BulletinRenderer:
-    def __init__(self, fonts: FontBundle) -> None:
+    def __init__(self, fonts: FontBundle, role_replacement_map: Optional[Dict[str, str]] = None) -> None:
         self.fonts = fonts
         self.buffer = io.BytesIO()
         self.canvas = Canvas(self.buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
@@ -877,6 +907,7 @@ class BulletinRenderer:
         self.lyrics_data: List[Tuple[str, str]] = []  # List of (song_title, lyrics_text)
         self.sheet_music_pages: List[object] = []  # List of PDF pages for sheet music
         self.get_involved_pages: List[object] = []  # List of PDF pages for Get Involved attachment
+        self.role_replacement_map = role_replacement_map or {}  # Dict mapping role name to replacement text
 
     def _set_cursor(self, value: float, note: str = "") -> None:
         self.cursor_y = float(value)
@@ -914,6 +945,22 @@ class BulletinRenderer:
             # Linear interpolation between 20% and 85%
             progress = (fullness - 0.2) / 0.65
             return base_gap - (base_gap - min_gap) * progress
+
+    def _apply_role_replacements(self, text: str) -> str:
+        """Replace role names in text with actual person names.
+        
+        Uses case-sensitive matching to find roles in the text and replaces them
+        with the formatted person name (e.g., "Lead Pastor" -> "Lead Pastor John Smith").
+        """
+        if not self.role_replacement_map or not text:
+            return text
+        
+        result = text
+        for role_name, replacement_text in self.role_replacement_map.items():
+            # Use word boundaries to avoid partial replacements
+            # For example, don't replace "Pastor" within "Associate Pastor"
+            result = re.sub(r'\b' + re.escape(role_name) + r'\b', replacement_text, result)
+        return result
 
     @property
     def PARAGRAPH_GAP(self) -> float:
@@ -1049,7 +1096,9 @@ class BulletinRenderer:
 
     def draw_item(self, item: Dict[str, object]) -> None:
         title = item.get("title", "")
-        description = item.get("description") or ""
+        description = (item.get("description") or "")
+        # Apply role replacements to description
+        description = self._apply_role_replacements(description)
         paragraphs = item.get("html_paragraphs") or []
         is_song = bool(item.get("is_song"))
 
@@ -2134,7 +2183,9 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         print("  ↺ Using cached 'Get Involved' PDF")
 
     fonts = FontBundle()
-    renderer = BulletinRenderer(fonts)
+    # Build role replacement map from worship team assignments
+    role_replacement_map = build_role_replacement_map(worship_team)
+    renderer = BulletinRenderer(fonts, role_replacement_map)
     renderer.add_cover(cover_img, cover_pdf_bytes)
     renderer.draw_sections(sections, service_name, plan_date)
     

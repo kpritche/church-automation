@@ -14,6 +14,14 @@ from copy import deepcopy
 from datetime import date, timedelta
 from pathlib import Path
 
+# Allow running this file directly (python path/to/make_pro.py)
+if __name__ == "__main__" and __package__ is None:
+    _THIS_DIR = Path(__file__).resolve().parent
+    _PKG_PARENT = _THIS_DIR.parent
+    if str(_PKG_PARENT) not in sys.path:
+        sys.path.insert(0, str(_PKG_PARENT))
+    __package__ = "slides_app"
+
 try:
     from church_automation_shared.paths import (
         ANNOUNCEMENTS_OUTPUT_DIR,
@@ -114,8 +122,18 @@ def _rtf_escape_text(value: str, formatting_codes: str = "") -> str:
     return ''.join(parts)
 
 
-def get_next_seven_day_window() -> tuple[str, str]:
-    """Return (start_date, end_date) ISO strings covering today through 7 days ahead inclusive."""
+def get_next_seven_day_window(target_date: Optional[str] = None) -> tuple[str, str]:
+    """Return (start_date, end_date) ISO strings covering today through 7 days ahead inclusive.
+
+    If target_date is provided (YYYY-MM-DD), return a window for that single date.
+    """
+    if target_date:
+        try:
+            date.fromisoformat(target_date)
+        except ValueError as exc:
+            raise ValueError(f"Invalid SLIDES_TARGET_DATE: {target_date}") from exc
+        return (target_date, target_date)
+
     today = date.today()
     end = today + timedelta(days=7)
     return (today.isoformat(), end.isoformat())
@@ -304,8 +322,12 @@ def main():
     if not service_ids:
         raise ValueError(f"No service_type_ids in config: {CONFIG_PATH}")
     
-    start_date, end_date = get_next_seven_day_window()
-    print(f"Generating slides for services between {start_date} and {end_date}")
+    target_date = os.getenv("SLIDES_TARGET_DATE")
+    start_date, end_date = get_next_seven_day_window(target_date)
+    if target_date:
+        print(f"Generating slides for services on {target_date}")
+    else:
+        print(f"Generating slides for services between {start_date} and {end_date}")
 
     # Initialize Pypco client
     pco = PCO(application_id=config.client_id, secret=config.secret)
