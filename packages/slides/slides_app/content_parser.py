@@ -15,6 +15,10 @@ fetching lyrics from a lyrics.txt attachment first, then fallback to html_detail
 import re
 import html as html_mod
 from typing import Any, Dict, List, Optional
+try:  # pragma: no cover - optional dependency
+    from bs4 import BeautifulSoup  # type: ignore
+except Exception:  # pragma: no cover
+    BeautifulSoup = None  # type: ignore
 # Optional imports only needed for attachment/PDF features. Make them lazy-safe
 # so ad-hoc tests can run without installing extras.
 try:  # pragma: no cover - optional dependency
@@ -72,6 +76,67 @@ PRELUDE_POSTLUDE_TITLES = {
     "Postlude",
     "The Postlude"
 }
+
+
+def _is_red_style(style: str) -> bool:
+    return bool(
+        re.search(
+            r"color\s*:\s*(red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))",
+            style,
+            re.IGNORECASE,
+        )
+    )
+
+
+def _strip_highlight_and_red_text(html_content: str) -> str:
+    """Remove highlighted and red-colored text regions from HTML content."""
+    if not html_content:
+        return ""
+
+    if BeautifulSoup is not None:
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        for tag in soup.find_all(["mark"]):
+            tag.decompose()
+
+        for span in soup.find_all("span"):
+            style = (span.get("style") or "").lower()
+            cls = " ".join(span.get("class") or []).lower()
+            if "background" in style or "highlight" in style or "marker" in cls:
+                span.decompose()
+
+        for tag in list(soup.find_all(True)):
+            attrs = getattr(tag, "attrs", None)
+            if not isinstance(attrs, dict):
+                continue
+            style = (attrs.get("style") or "")
+            color_attr = (attrs.get("color") or "")
+            if _is_red_style(style) or re.search(r"^red$", color_attr, re.IGNORECASE):
+                tag.decompose()
+
+        return str(soup)
+
+    # Fallback when bs4 is unavailable
+    cleaned = re.sub(r'<mark[^>]*>.*?</mark>', '', html_content, flags=re.IGNORECASE | re.DOTALL)
+    cleaned = re.sub(
+        r'<span[^>]*style="[^"]*(?:background|highlight|marker)[^"]*"[^>]*>.*?</span>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(
+        r'<[^>]*style="[^"]*color\s*:\s*(?:red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))[^"]*"[^>]*>.*?</[^>]+>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    cleaned = re.sub(
+        r'<font[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</font>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return cleaned
 
 
 def _parse_html_details(html_content: str) -> List[dict]:
@@ -185,11 +250,7 @@ def _parse_html_details(html_content: str) -> List[dict]:
 
     # 1) Basic cleanup and normalisation
     content = html_mod.unescape(html_content or "")
-    content = re.sub(
-        r'<span[^>]*style="[^"]*(?:color\s*:\s*red|background-color)[^"]*"[^>]*>.*?</span>',
-        '', content, flags=re.IGNORECASE | re.DOTALL
-    )
-    content = re.sub(r'<mark[^>]*>.*?</mark>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = _strip_highlight_and_red_text(content)
     content = re.sub(r'<br\s*/?>', '</p>', content, flags=re.IGNORECASE)
 
     chunks: List[dict] = []
