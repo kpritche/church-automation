@@ -1,2 +1,0 @@
-[console_scripts]
-make-bulletins = bulletins_app.make_bulletins:main
