@@ -1,5 +1,4 @@
 *.json
-!*slides_config.json
 *.pickle
 *.pptx
 config.py
@@ -15,6 +14,8 @@ deprecated/
 __pycache__/
 *.pyc
 .venv/
+build/
+*.egg-info/
 
 # Generated outputs
 packages/announcements/output/
