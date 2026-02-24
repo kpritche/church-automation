@@ -9,6 +9,7 @@ config.py
 !blank.pro
 .env
 deprecated/
+mailmap
 
 # Python cache and envs
 __pycache__/
