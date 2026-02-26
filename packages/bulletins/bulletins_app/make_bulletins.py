@@ -253,6 +253,8 @@ def remove_highlighted_text(soup: BeautifulSoup) -> None:
     for tag in soup.find_all(["mark"]):
         tag.decompose()
     for span in soup.find_all("span"):
+        if span.attrs is None:
+            continue
         style = (span.get("style") or "").lower()
         cls = " ".join(span.get("class") or []).lower()
         if "background" in style or "highlight" in style or "marker" in cls:
@@ -793,7 +795,7 @@ def build_sections(
         if is_preservice or is_postservice:
             continue
 
-        if title == "Get Involved":
+        if title == "Invitation to Generosity" or title == "Get Involved":
             get_involved_item = item_obj
             continue
 
