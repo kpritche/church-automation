@@ -17,6 +17,26 @@ cd church-automation
 
 ## Step 2: Install Python Packages
 
+### Option A: Using uv (Recommended)
+
+`uv` is a significantly faster alternative to `pip` and handles workspace dependencies automatically.
+
+1. **Install uv**:
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   # or
+   pip install uv
+   ```
+
+2. **Sync dependencies**:
+   Run this from the root directory:
+   ```bash
+   uv sync --all-extras
+   ```
+   This will create a single `.venv` in the root and install all packages in editable mode.
+
+### Option B: Using pip
+
 Install packages in the correct order (shared first, then others):
 
 ```bash

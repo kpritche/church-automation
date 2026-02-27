@@ -22,17 +22,15 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover
     requests = None  # type: ignore
 try:  # pragma: no cover - optional dependency
-    import PyPDF2  # type: ignore
-    from io import BytesIO  # type: ignore
-except Exception:  # pragma: no cover
-    PyPDF2 = None  # type: ignore
-    BytesIO = None  # type: ignore
-try:  # pragma: no cover - optional dependency
-    from PyPDF2 import PdfReader  # type: ignore
-    import io  # type: ignore
-except Exception:  # pragma: no cover
-    PdfReader = None  # type: ignore
-    io = None  # type: ignore
+    import pypdf
+    from pypdf import PdfReader
+    from io import BytesIO
+    import io
+except ImportError:  # pragma: no cover
+    pypdf = None
+    PdfReader = None
+    BytesIO = None
+    io = None
 
 # Titles to ignore entirely (various name variants)
 SKIP_TITLES = {
@@ -480,7 +478,7 @@ def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
     Returns cleaned lyrics text or None if extraction fails.
     """
     if PdfReader is None or io is None:
-        print("[WARN] PyPDF2 module not available; cannot extract lyrics from PDF")
+        print("[WARN] pypdf module not available; cannot extract lyrics from PDF")
         return None
     
     try:

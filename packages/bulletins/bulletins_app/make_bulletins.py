@@ -28,7 +28,7 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from requests.auth import HTTPBasicAuth
 from PIL import Image
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 from pypco.pco import PCO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader

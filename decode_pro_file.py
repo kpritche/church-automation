@@ -66,10 +66,20 @@ def decode_pro_file(file_path: str):
                     action_type = "slide"
                 elif action.HasField('clear_group'):
                     action_type = "clear_group"
-                elif action.HasField('stage_display'):
-                    action_type = "stage_display"
+                elif action.HasField('stage'):
+                    action_type = "stage"
                 elif action.HasField('prop'):
                     action_type = "prop"
+                elif action.HasField('media'):
+                    action_type = "media"
+                elif action.HasField('timer'):
+                    action_type = "timer"
+                elif action.HasField('clear'):
+                    action_type = "clear"
+                elif action.HasField('message'):
+                    action_type = "message"
+                elif action.HasField('macro'):
+                    action_type = "macro"
                 
                 print(f"    Action {action_idx}: {action_type}")
                 
