@@ -1,0 +1,16 @@
+[project]
+name = "church-automation-suite"
+version = "0.1.0"
+description = "Monorepo for church automation tools"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+church-automation-shared = { workspace = true }
+church-automation-announcements = { workspace = true }
+church-automation-bulletins = { workspace = true }
+church-automation-slides = { workspace = true }

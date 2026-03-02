@@ -1,5 +1,4 @@
 *.json
-!*slides_config.json
 *.pickle
 *.pptx
 config.py
@@ -10,11 +9,14 @@ config.py
 !blank.pro
 .env
 deprecated/
+mailmap
 
 # Python cache and envs
 __pycache__/
 *.pyc
 .venv/
+build/
+*.egg-info/
 
 # Generated outputs
 packages/announcements/output/
