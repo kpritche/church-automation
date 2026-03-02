@@ -100,6 +100,9 @@ def _strip_highlight_and_red_text(html_content: str) -> str:
             tag.decompose()
 
         for span in soup.find_all("span"):
+            attrs = getattr(span, "attrs", None)
+            if not isinstance(attrs, dict):
+                continue
             style = (span.get("style") or "").lower()
             cls = " ".join(span.get("class") or []).lower()
             if "background" in style or "highlight" in style or "marker" in cls:

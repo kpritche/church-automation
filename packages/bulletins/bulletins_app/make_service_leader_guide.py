@@ -96,6 +96,8 @@ def remove_highlighted_text(soup: BeautifulSoup) -> None:
     for tag in soup.find_all(["mark"]):
         tag.decompose()
     for span in soup.find_all("span"):
+        if not isinstance(span, Tag) or span.attrs is None:
+            continue
         style = (span.get("style") or "").lower()
         cls = " ".join(span.get("class") or []).lower()
         if "background" in style or "highlight" in style or "marker" in cls:
