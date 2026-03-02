@@ -18,7 +18,7 @@ if str(_ANNOUNCEMENTS_PARENT) not in sys.path:
 
 from church_automation_shared.paths import ANNOUNCEMENTS_OUTPUT_DIR, SLIDES_SLIDES_CONFIG
 from church_automation_shared import config
-from announcements_app.gmail_utils import authenticate_gmail, fetch_latest_announcement_html
+from announcements_app.web_fetcher import fetch_latest_announcement_html
 from announcements_app.html_parser import parse_announcements
 from announcements_app.ppt_generator import create_pptx_with_qr
 from announcements_app.pro_generator import generate_pro_file
@@ -144,19 +144,15 @@ def main() -> None:
     print("PPTX Announcements Generator")
     print("=" * 60)
     
-    # Get Gmail query from environment or use default
-    gmail_query = os.getenv(
-        'GMAIL_ANNOUNCEMENTS_QUERY',
-        'from:"First United Methodist Church" subject:"The Latest FUMC News for You!"'
+    # Get website URL from environment or use default
+    website_url = os.getenv(
+        'ANNOUNCEMENTS_WEBSITE_URL',
+        'https://www.fumcwl.org/weekly-events/'
     )
     
-    # Authenticate and fetch
-    print("\n1. Fetching announcements from Gmail...")
-    service = authenticate_gmail()
-    html_content = fetch_latest_announcement_html(
-        service,
-        query=gmail_query,
-    )
+    # Fetch from website
+    print("\n1. Fetching announcements from website...")
+    html_content = fetch_latest_announcement_html(website_url)
     
     # Parse announcements
     print("\n2. Parsing announcements...")
@@ -168,7 +164,7 @@ def main() -> None:
     for idx, ann in enumerate(announcements, 1):
         print(f"   {idx}. {ann['title'][:50]}...")
         if "body" in ann:
-            ann["summary"] = summarize_text(ann["body"], max_chars=250)
+            ann["summary"] = summarize_text(ann["body"], max_chars=180)
         else:
             ann["summary"] = "No summary available."
 

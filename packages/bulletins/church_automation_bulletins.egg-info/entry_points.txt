@@ -1,0 +1,3 @@
+[console_scripts]
+make-bulletins = bulletins_app.make_bulletins:main
+make-service-leader-guide = bulletins_app.make_service_leader_guide:main

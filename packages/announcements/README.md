@@ -1,6 +1,6 @@
 # Church Automation - Announcements Generator
 
-Generate ProPresenter announcement slides from Gmail emails.
+Generate ProPresenter announcement slides from your church's website.
 
 ## Installation
 
@@ -14,24 +14,17 @@ pip install -e .
 
 ## Setup
 
-### 1. Gmail API Credentials
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable Gmail API
-3. Create OAuth 2.0 credentials (Desktop application type)
-4. Download `credentials.json` to `~/.church-automation/`
-
-### 2. GCP Service Account (Optional - for AI summarization)
+### 1. GCP Service Account (Optional - for AI summarization)
 
 1. Create a service account in Google Cloud Console
 2. Grant Vertex AI permissions
 3. Download JSON key to `~/.church-automation/gcp-credentials.json`
 
-### 3. Configure Environment
+### 2. Configure Environment
 
 Add to your `.env` file:
 ```bash
-GMAIL_ANNOUNCEMENTS_QUERY=from:"Your Church" subject:"Weekly Announcements"
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 GCP_CREDENTIALS_FILENAME=gcp-credentials.json
 ```
 
@@ -55,8 +48,8 @@ The `.probundle` files are automatically uploaded to Planning Center "Announceme
 
 ## Features
 
-- **Gmail Integration** - OAuth2 authentication with automatic token refresh
-- **HTML Parsing** - Extracts titles, body text, links, and images from announcement emails
+- **Website Scraping** - Automatically fetches the most recent announcement from your church website
+- **HTML Parsing** - Extracts titles, body text, links, and images from announcement pages
 - **AI Summarization** - Condenses long text using Google Vertex AI
 - **QR Code Generation** - Creates QR codes for links and buttons
 - **ProPresenter Generation** - Builds `.probundle` files using protobuf serialization
@@ -64,13 +57,15 @@ The `.probundle` files are automatically uploaded to Planning Center "Announceme
 
 ## Configuration
 
-### Gmail Query
+### Website URL
 
-Customize the Gmail search query to match your church's announcement emails:
+Configure the URL of your church's weekly events page:
 
 ```bash
-GMAIL_ANNOUNCEMENTS_QUERY=from:"communications@church.org" subject:"This Week"
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 ```
+
+The tool will automatically find and fetch the most recent "View Weekly Events" link.
 
 ### Text Limits
 
@@ -80,9 +75,8 @@ Configured in `announcements_app/settings.py`:
 
 ## Dependencies
 
-- `google-api-python-client` - Gmail API
-- `google-auth-oauthlib` - OAuth2 flow
-- `google-genai` - Vertex AI text generation
+- `requests` - HTTP requests for web scraping
+- `google-genai` - Vertex AI text generation (optional)
 - `beautifulsoup4` - HTML parsing
 - `qrcode[pil]` - QR code generation
 - `pillow` - Image processing

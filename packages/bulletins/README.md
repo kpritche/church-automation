@@ -108,7 +108,7 @@ Required fonts: Source Sans Pro (Regular, Bold, Italic, Bold Italic)
 - `pypco` - Planning Center Online API
 - `reportlab` - PDF generation
 - `pillow` - Image processing
-- `pypdf` - PDF manipulation
+- `PyPDF2` - PDF manipulation
 - `beautifulsoup4` - HTML parsing
 - `requests` - HTTP client
 - `church-automation-shared` - Common utilities

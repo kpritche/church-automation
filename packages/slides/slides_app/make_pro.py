@@ -14,6 +14,14 @@ from copy import deepcopy
 from datetime import date, timedelta
 from pathlib import Path
 
+# Allow running this file directly (python path/to/make_pro.py)
+if __name__ == "__main__" and __package__ is None:
+    _THIS_DIR = Path(__file__).resolve().parent
+    _PKG_PARENT = _THIS_DIR.parent
+    if str(_PKG_PARENT) not in sys.path:
+        sys.path.insert(0, str(_PKG_PARENT))
+    __package__ = "slides_app"
+
 try:
     from church_automation_shared.paths import (
         ANNOUNCEMENTS_OUTPUT_DIR,
@@ -44,6 +52,7 @@ from .content_parser import (
     fetch_lyrics_attachments,
     download_lyrics_pdf,
     extract_lyrics_text,
+    has_pro_attachment,
 )
 from .slide_utils import slice_into_slides
 import requests
@@ -73,8 +82,13 @@ from typing import List, Dict, Optional
 # Aliases
 Presentation = rv_presentation.Presentation
 
-def _rtf_escape_text(value: str) -> str:
-    """Return an RTF-safe string for the given plain text."""
+def _rtf_escape_text(value: str, formatting_codes: str = "") -> str:
+    """Return an RTF-safe string for the given plain text.
+    
+    Args:
+        value: The plain text to escape
+        formatting_codes: RTF formatting codes to reapply after each line break
+    """
 
     def _escape_codepoint(cp: int) -> str:
         return '\\u' + str(cp) + '?'
@@ -91,7 +105,8 @@ def _rtf_escape_text(value: str) -> str:
         elif ch == "\r":
             continue
         elif ch == "\n":
-            parts.append("\\line ")
+            # After a line break, reapply formatting codes to maintain styling
+            parts.append("\\line\n" + formatting_codes)
         elif ch == "\t":
             parts.append("\\tab ")
         elif 32 <= codepoint <= 126:
@@ -107,8 +122,18 @@ def _rtf_escape_text(value: str) -> str:
     return ''.join(parts)
 
 
-def get_next_seven_day_window() -> tuple[str, str]:
-    """Return (start_date, end_date) ISO strings covering today through 7 days ahead inclusive."""
+def get_next_seven_day_window(target_date: Optional[str] = None) -> tuple[str, str]:
+    """Return (start_date, end_date) ISO strings covering today through 7 days ahead inclusive.
+
+    If target_date is provided (YYYY-MM-DD), return a window for that single date.
+    """
+    if target_date:
+        try:
+            date.fromisoformat(target_date)
+        except ValueError as exc:
+            raise ValueError(f"Invalid SLIDES_TARGET_DATE: {target_date}") from exc
+        return (target_date, target_date)
+
     today = date.today()
     end = today + timedelta(days=7)
     return (today.isoformat(), end.isoformat())
@@ -206,7 +231,42 @@ def make_pro_for_items(
         if len(parts) != 2:
             raise ValueError("Template missing 'replace_me' placeholder in RTF data.")
 
-        rtf_text = _rtf_escape_text(text.upper())
+        # Extract formatting codes from the template
+        # The template has formatting codes on the line before replace_me, like:
+        # \f0\b\fs160 \cf2 \kerning1\expnd10\expndtw50
+        # replace_me}
+        # We need to extract these codes and reapply them after each \line command
+        prefix = parts[0]
+        last_newline_idx = prefix.rfind('\n')
+        
+        if last_newline_idx != -1 and last_newline_idx > 0:
+            # Find the previous newline (or start of string)
+            prev_newline_idx = prefix.rfind('\n', 0, last_newline_idx)
+            if prev_newline_idx != -1:
+                # Extract everything between the two newlines (the formatting line)
+                formatting_codes = prefix[prev_newline_idx + 1:last_newline_idx].strip()
+            else:
+                # No previous newline, so extract from start to last newline
+                formatting_codes = prefix[:last_newline_idx].strip()
+                # Get only the last line of formatting codes if there are multiple lines
+                formatting_lines = formatting_codes.split('\n')
+                formatting_codes = formatting_lines[-1] if formatting_lines else ""
+        else:
+            # Fallback: try to find RTF commands at the end of prefix
+            formatting_codes = ""
+            tokens = prefix.split()
+            # Find the last sequence of RTF commands (starting with backslash)
+            for i in range(len(tokens) - 1, -1, -1):
+                if tokens[i].startswith('\\') and not tokens[i].startswith('\\pard'):
+                    # Found start of formatting commands
+                    formatting_codes = ' '.join(tokens[i:])
+                    break
+
+        # Add newline after formatting codes for proper RTF structure
+        if formatting_codes and not formatting_codes.endswith('\n'):
+            formatting_codes += '\n'
+
+        rtf_text = _rtf_escape_text(text.upper(), formatting_codes)
         new_rtf = (parts[0] + rtf_text + parts[1]).encode('utf-8')
         new_cue.actions[0].slide.presentation.base_slide.elements[0].element.text.rtf_data = new_rtf
         
@@ -262,8 +322,12 @@ def main():
     if not service_ids:
         raise ValueError(f"No service_type_ids in config: {CONFIG_PATH}")
     
-    start_date, end_date = get_next_seven_day_window()
-    print(f"Generating slides for services between {start_date} and {end_date}")
+    target_date = os.getenv("SLIDES_TARGET_DATE")
+    start_date, end_date = get_next_seven_day_window(target_date)
+    if target_date:
+        print(f"Generating slides for services on {target_date}")
+    else:
+        print(f"Generating slides for services between {start_date} and {end_date}")
 
     # Initialize Pypco client
     pco = PCO(application_id=config.client_id, secret=config.secret)
@@ -311,6 +375,11 @@ def main():
 
                 # Skip if no HTML content, unless it's a song (which we'll try to fetch lyrics for)
                 if not parsed["html_present"] and not parsed.get("is_song"):
+                    continue
+
+                # Check if a .pro file is already attached to this item
+                if has_pro_attachment(pco, stid, plan_id, parsed['item_id']):
+                    print(f"[SKIP] Item already has .pro file attached: {parsed['title']}")
                     continue
 
                 # Build raw and bold-aware slides

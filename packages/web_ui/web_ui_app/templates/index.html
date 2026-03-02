@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Church Automation - Media Generation</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>First Church Automation</h1>
+            <p class="subtitle">Generate media for worship services</p>
+        </header>
+
+        <main>
+            <div class="cards-grid">
+                <!-- Announcements Card -->
+                <div class="card" id="announcements-card">
+                    <div class="card-header">
+                        <h2>📢 Announcements</h2>
+                        <span class="status-badge" id="announcements-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate ProPresenter slides from weekly email announcements.</p>
+                        <button class="btn btn-primary" onclick="triggerJob('announcements')">
+                            Generate Announcements
+                        </button>
+                        <div class="progress-container" id="announcements-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="announcements-error" style="display: none;"></div>
+                        <div class="success-message" id="announcements-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('announcements'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slides Card -->
+                <div class="card" id="slides-card">
+                    <div class="card-header">
+                        <h2>📖 Service Slides</h2>
+                        <span class="status-badge" id="slides-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate ProPresenter slides from Planning Center liturgy.</p>
+                        <button class="btn btn-primary" onclick="triggerJob('slides')">
+                            Generate Slides
+                        </button>
+                        <div class="progress-container" id="slides-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="slides-error" style="display: none;"></div>
+                        <div class="success-message" id="slides-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('slides'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulletins Card -->
+                <div class="card" id="bulletins-card">
+                    <div class="card-header">
+                        <h2>📄 Bulletins</h2>
+                        <span class="status-badge" id="bulletins-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate PDF bulletins from Planning Center service plans.</p>
+                        <button class="btn btn-primary" onclick="triggerJob('bulletins')">
+                            Generate Bulletins
+                        </button>
+                        <div class="progress-container" id="bulletins-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="bulletins-error" style="display: none;"></div>
+                        <div class="success-message" id="bulletins-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('bulletins'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Section -->
+            <div class="files-section" id="files-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Generated Files</h2>
+                    <button class="btn btn-secondary" onclick="hideFiles()">Close</button>
+                </div>
+                <div id="files-list" class="files-list">
+                    <!-- Files will be populated here -->
+                </div>
+            </div>
+
+            <!-- Recent Jobs -->
+            <div class="jobs-section">
+                <div class="section-header">
+                    <h2>Recent Jobs</h2>
+                    <button class="btn btn-secondary" onclick="refreshJobs()">Refresh</button>
+                </div>
+                <div id="jobs-list" class="jobs-list">
+                    <p class="no-jobs">No recent jobs</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Church Automation v0.1.0</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

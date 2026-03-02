@@ -28,7 +28,7 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from requests.auth import HTTPBasicAuth
 from PIL import Image
-from pypdf import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter
 from pypco.pco import PCO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
@@ -239,6 +239,36 @@ def safe_slug(value: str) -> str:
     return slug or "service"
 
 
+def build_role_replacement_map(team_members_by_position: Dict[str, List[str]]) -> Dict[str, str]:
+    """Build a mapping of role names to person names for description replacement.
+    
+    Args:
+        team_members_by_position: Dict mapping position name (e.g., "Lead Pastor") to list of person names.
+    
+    Returns:
+        Dict mapping role name to formatted person name:
+        - For pastor roles: "Pastor FirstName LastName" (title normalized to "Pastor")
+        - For other roles: "FirstName LastName" (no title)
+        Only includes roles that have at least one person assigned.
+    """
+    role_map: Dict[str, str] = {}
+    for role_name, people in team_members_by_position.items():
+        if people and people[0].strip():
+            # Use the first person assigned to this role
+            person_name = people[0].strip()
+            
+            # Check if this is a pastor role
+            is_pastor = "pastor" in role_name.lower()
+            
+            if is_pastor:
+                # For pastors, normalize title to just "Pastor"
+                role_map[role_name] = f"Pastor {person_name}"
+            else:
+                # For other roles, just use the person's name without title
+                role_map[role_name] = person_name
+    return role_map
+
+
 def format_human_date(date_str: str) -> str:
     try:
         dt = datetime.strptime(date_str, "%Y-%m-%d")
@@ -253,8 +283,6 @@ def remove_highlighted_text(soup: BeautifulSoup) -> None:
     for tag in soup.find_all(["mark"]):
         tag.decompose()
     for span in soup.find_all("span"):
-        if span.attrs is None:
-            continue
         style = (span.get("style") or "").lower()
         cls = " ".join(span.get("class") or []).lower()
         if "background" in style or "highlight" in style or "marker" in cls:
@@ -643,46 +671,74 @@ def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
         # Remove text in square brackets [like this]
         all_text = re.sub(r'\[.*?\]', '', all_text)
         
-        # Clean up the text
+        # Clean up the text - preserve empty lines initially for line break detection
         lines = all_text.split("\n")
         cleaned_lines: List[str] = []
+        found_footer = False
         
         for line in lines:
-            line = line.strip()
-            if not line:
+            line_stripped = line.strip()
+            
+            # Skip completely blank lines early, but preserve them for structure
+            if not line_stripped:
+                # Only add empty lines if we haven't hit footer text yet
+                if not found_footer:
+                    cleaned_lines.append("")
                 continue
+            
+            # Detect footer sections (multiple consecutive lines with parentheses, commas, Admin, etc.)
+            # These are typically licensing/copyright footers
+            lower_line = line_stripped.lower()
+            
+            # Check for footer markers: lines containing both parentheses and "admin" or "license" or "publishing"
+            has_paren = '(' in line_stripped or ')' in line_stripped
+            has_footer_keyword = any(x in lower_line for x in ["admin", "license", "publishing", "ccli", "©", "®"])
+            
+            if has_paren and has_footer_keyword:
+                found_footer = True
+                continue
+            
+            # Once we detect footer start, skip subsequent lines with similar patterns
+            if found_footer:
+                # Footer usually contains multiple commas or just administrative text
+                if ',' in line_stripped or any(x in lower_line for x in ["admin", "publishing", "license", "©", "®"]):
+                    continue
+                # If we hit a line that looks like real lyrics (short, simple), footer is probably over
+                if len(line_stripped) < 50 and line_stripped.count(',') == 0:
+                    found_footer = False
             
             # Skip arrangement information (like "Intro, V1, C, Inter, V2, C, Inst, C, Rf, C, Tag, Outro, E")
             # These lines typically have multiple commas and common arrangement abbreviations
-            if ',' in line:
-                lower_line = line.lower()
+            if ',' in line_stripped:
+                lower_line = line_stripped.lower()
                 arrangement_markers = ['intro', 'outro', 'inst', 'inter', 'tag', ' v1', ' v2', ' v3', ' v4', ' c,', ',c,', ',c']
                 if any(marker in lower_line for marker in arrangement_markers):
                     # Additional check: if line has many commas relative to its length, it's likely arrangement info
-                    comma_count = line.count(',')
+                    comma_count = line_stripped.count(',')
                     if comma_count >= 3:  # Lines with 3+ commas are likely arrangement lines
                         continue
             
             # Skip common headers/footers (page numbers, URLs, copyright lines, etc.)
-            lower_line = line.lower()
+            lower_line = line_stripped.lower()
             
             # Skip lines that are just numbers (page numbers)
-            if line.isdigit():
+            if line_stripped.isdigit():
                 continue
             
             # Skip URLs
             if "http" in lower_line or "www." in lower_line:
                 continue
             
-            # Skip copyright/licensing lines and admin lines
-            if any(x in lower_line for x in ["copyright", "ccli", "license", "©", "®", "admin", "administered"]):
-                continue
+            # Skip copyright/licensing lines with multiple keywords
+            if any(x in lower_line for x in ["copyright", "ccli", "license", "©", "®"]):
+                if line_stripped.count(',') > 0 or len(line_stripped) > 80:
+                    continue
             
             # Skip very short lines that might be artifacts (less than 3 chars, unless it's a verse marker)
-            if len(line) < 3 and not any(c.isalpha() for c in line):
+            if len(line_stripped) < 3 and not any(c.isalpha() for c in line_stripped):
                 continue
             
-            cleaned_lines.append(line)
+            cleaned_lines.append(line_stripped)
         
         # Remove leading/trailing empty lines
         while cleaned_lines and not cleaned_lines[0].strip():
@@ -795,7 +851,7 @@ def build_sections(
         if is_preservice or is_postservice:
             continue
 
-        if title == "Invitation to Generosity" or title == "Get Involved":
+        if title == "Invitation to Generosity":
             get_involved_item = item_obj
             continue
 
@@ -841,7 +897,7 @@ def build_sections(
 
 
 class BulletinRenderer:
-    def __init__(self, fonts: FontBundle) -> None:
+    def __init__(self, fonts: FontBundle, role_replacement_map: Optional[Dict[str, str]] = None) -> None:
         self.fonts = fonts
         self.buffer = io.BytesIO()
         self.canvas = Canvas(self.buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
@@ -851,6 +907,7 @@ class BulletinRenderer:
         self.lyrics_data: List[Tuple[str, str]] = []  # List of (song_title, lyrics_text)
         self.sheet_music_pages: List[object] = []  # List of PDF pages for sheet music
         self.get_involved_pages: List[object] = []  # List of PDF pages for Get Involved attachment
+        self.role_replacement_map = role_replacement_map or {}  # Dict mapping role name to replacement text
 
     def _set_cursor(self, value: float, note: str = "") -> None:
         self.cursor_y = float(value)
@@ -888,6 +945,22 @@ class BulletinRenderer:
             # Linear interpolation between 20% and 85%
             progress = (fullness - 0.2) / 0.65
             return base_gap - (base_gap - min_gap) * progress
+
+    def _apply_role_replacements(self, text: str) -> str:
+        """Replace role names in text with actual person names.
+        
+        Uses case-sensitive matching to find roles in the text and replaces them
+        with the formatted person name (e.g., "Lead Pastor" -> "Lead Pastor John Smith").
+        """
+        if not self.role_replacement_map or not text:
+            return text
+        
+        result = text
+        for role_name, replacement_text in self.role_replacement_map.items():
+            # Use word boundaries to avoid partial replacements
+            # For example, don't replace "Pastor" within "Associate Pastor"
+            result = re.sub(r'\b' + re.escape(role_name) + r'\b', replacement_text, result)
+        return result
 
     @property
     def PARAGRAPH_GAP(self) -> float:
@@ -1023,7 +1096,9 @@ class BulletinRenderer:
 
     def draw_item(self, item: Dict[str, object]) -> None:
         title = item.get("title", "")
-        description = item.get("description") or ""
+        description = (item.get("description") or "")
+        # Apply role replacements to description
+        description = self._apply_role_replacements(description)
         paragraphs = item.get("html_paragraphs") or []
         is_song = bool(item.get("is_song"))
 
@@ -1504,9 +1579,6 @@ class BulletinRenderer:
         # Calculate optimal uniform font scale for all lyrics
         font_scale = self._calculate_optimal_font_scale()
         
-        # Start rendering lyrics on a new page
-        self._new_page()
-        
         # Render each song's lyrics with the same font scale
         for idx, (song_title, lyrics_text) in enumerate(self.lyrics_data):
             # Add extra spacing between songs (but not before the first one)
@@ -1593,9 +1665,8 @@ class BulletinRenderer:
         available_height = PAGE_HEIGHT - self.cursor_y - MARGIN_Y
         total_needed = title_height + (estimated_height / 2) + 8  # Divide by 2 for two columns, plus spacing after
         
-        # Only start new page if very little space available (< 50% of what's needed)
-        # This allows better space utilization while still keeping songs reasonably together
-        if available_height < (total_needed * 0.5) or available_height < 100:
+        # Start a new page if the full song (title + lyrics) won't fit
+        if total_needed > available_height:
             self._new_page()
         
         # Render song title with artist info (always at normal size)
@@ -2112,7 +2183,9 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         print("  ↺ Using cached 'Get Involved' PDF")
 
     fonts = FontBundle()
-    renderer = BulletinRenderer(fonts)
+    # Build role replacement map from worship team assignments
+    role_replacement_map = build_role_replacement_map(worship_team)
+    renderer = BulletinRenderer(fonts, role_replacement_map)
     renderer.add_cover(cover_img, cover_pdf_bytes)
     renderer.draw_sections(sections, service_name, plan_date)
     

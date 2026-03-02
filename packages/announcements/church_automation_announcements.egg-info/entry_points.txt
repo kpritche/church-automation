@@ -1,0 +1,2 @@
+[console_scripts]
+make-announcements = announcements_app.main:main

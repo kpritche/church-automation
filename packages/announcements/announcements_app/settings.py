@@ -22,7 +22,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _DEFAULTS = {
     "TITLE_MAX_CHARS": 120,
-    "TITLE_WRAP_WIDTH": 32,
+    "TITLE_WRAP_WIDTH": 70,
     "MAX_BODY_CHARS": 900,
     "BASE_FONT_SIZE": 28,
     "MIN_FONT_SIZE": 16,
