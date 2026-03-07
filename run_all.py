@@ -7,6 +7,8 @@ Runs both:
 2. ProPresenter slides generation (slides_app)
 
 Note: Packages must be installed first. Run:
+  uv sync
+  # or
   pip install -e ./packages/shared
   pip install -e ./packages/announcements
   pip install -e ./packages/slides

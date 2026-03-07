@@ -7,10 +7,12 @@ This document provides detailed instructions for an AI agent to refactor and ext
 2. **Bundle Support:** Generate `.probundle` files for announcement slides containing media.
 3. **PCO Integration:** Automatically upload generated files to specific PCO Service Items.
 4. **Typography & Styling:** Enforce strict branding (Source Sans Pro, Uppercase, specific palette).
+5. **Device Control:** Trigger external hardware via RossTalk custom commands injected into the first slide.
 
 ## 🛠 Technical Requirements
 - **Target Version:** Strictly ProPresenter 7.21.2 (schemas in `packages/slides/ProPresenter7_Proto/proto7.21.2/`).
 - **Generation Strategy:** Hybrid approach—load minimal templates, clear existing `cues`, and inject new `Cue` messages by cloning prototypes.
+- **Action Mapping:** Use a provided mapping (Service Item type -> RossTalk command) to determine which action to attach.
 - **PCO API:** Use `pypco` for Service Item attachments.
 - **RTF Generation:** Binary RTF blobs in `rtf_data` must be uppercase and single-style per slide.
 
@@ -19,8 +21,12 @@ This document provides detailed instructions for an AI agent to refactor and ext
 - **Case:** All text MUST be converted to `UPPERCASE`.
 - **Palette:** #000000, #16463e, #51bf9b, #ff7f30, #6fcfeb, #cda787, #ffffff.
 - **Templates:**
-  - `white_template_mac.pro`: For Leader/Call lines (typically Black text).
-  - `yellow_template_mac.pro`: For All/Response/Bold lines (typically White or Orange text).
+  - `white_template_mac.pro`: For Leader/Call lines (typically White text).
+  - `yellow_template_mac.pro`: For All/Response/Bold lines (typically Yellow text).
+  - `song_template.pro`: For initializing a song presentation.
+  - `prayer_template.pro`: For initializing a prayer presentation.
+  - `blank_template_mac.pro`: A blank slide.
+  - `rosstalk_template.pro`: A slide with a Rosstalk action.
 
 ---
 
@@ -35,7 +41,7 @@ This document provides detailed instructions for an AI agent to refactor and ext
 1. **RTF Utility:** In `packages/slides/slides_app/slide_utils.py`, implement a function to generate binary RTF blobs.
    - Force `UPPERCASE`.
    - Set font to "Source Sans Pro" (Bold for yellow template, Regular/Semibold for white).
-   - Apply a single color per slide from the brand palette.
+   - Apply a single per slide according to the template determined by information parsed from Planning Center.
 2. **Message Injection:** Refactor `make_pro.py` to:
    - Load a template `.pro` file using the generated bindings.
    - Clear the `cues` list in the `Presentation` message.
@@ -44,6 +50,10 @@ This document provides detailed instructions for an AI agent to refactor and ext
      - Load/Clone a prototype `Cue` from the corresponding template file.
      - Replace the `rtf_data` in the cloned element with the new RTF blob.
      - Append the cloned `Cue` to the active `Presentation`.
+3. **Action Injection:** 
+   - On the first slide (`Cue`) of most presentations, inject a custom RossTalk Action.
+   - Use a provided formatting example from the templates to understand the Protobuf structure for RossTalk actions.
+   - Implement a mapping-based logic to select the correct RossTalk command based on the Service Item's context.
 
 ### Phase 3: Announcement ProBundles
 1. **BundlePackager:** Create a utility to package `.pro` files and media.

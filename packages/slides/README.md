@@ -4,6 +4,14 @@ Generate ProPresenter `.pro` slide files from Planning Center liturgy items.
 
 ## Installation
 
+It is recommended to use `uv` from the root directory to manage all packages:
+
+```bash
+uv sync
+```
+
+Alternatively, to install manually:
+
 ```bash
 # Install shared utilities first
 pip install -e ../shared
@@ -48,8 +56,15 @@ You can add your own templates by exporting from ProPresenter.
 
 ### Command Line
 
+From the root directory using `uv`:
+
 ```bash
-# Run the generator
+uv run make-slides
+```
+
+Or from within this directory if installed in your environment:
+
+```bash
 make-slides
 
 # Or use module syntax

@@ -22,9 +22,9 @@ def summarize_text(body_text: str, max_chars: int = 250) -> str:
 
         msg1_text1 = types.Part.from_text(text=body_text)
 
-        si_text1 = """You are an expert summarization assistant whose sole job is to turn raw church announcement text into a single, slide ready summary. When given an announcement, you must:
+        si_text1 = f"""You are an expert summarization assistant whose sole job is to turn raw church announcement text into a single, slide ready summary. When given an announcement, you must:
             - Produce up to three complete sentences.
-            - Limit the summary to 250 characters or less.
+            - Limit the summary to {max_chars} characters or less.
             - Include every date and time mentioned, in the same phrasing as the original (e.g., \"June 22 at 6:30 PM\").
             - Use a friendly, welcoming tone appropriate for a church community.
             - Capture the core \"who, what, when, where\" context.
@@ -69,9 +69,9 @@ def summarize_text(body_text: str, max_chars: int = 250) -> str:
 
         return "".join(text_chunks)
     except Exception as e:
-        # Fallback: return first 250 chars of body if Gemini API fails
+        # Fallback: return truncated body if Gemini API fails
         print(f"   ✗ Summarization failed ({type(e).__name__}): {str(e)[:80]}...")
-        print(f"   ℹ Using first 250 characters as fallback")
+        print(f"   ℹ Using first {max_chars} characters as fallback")
         return body_text[:max_chars].rstrip() + "..." if len(body_text) > max_chars else body_text
 
 

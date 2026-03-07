@@ -11,7 +11,11 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 import requests
 from PIL import Image
-from win32com.client import Dispatch
+
+try:
+    from win32com.client import Dispatch
+except ImportError:
+    Dispatch = None
 
 from .settings import (
     TITLE_MAX_CHARS,
@@ -69,6 +73,10 @@ def fetch_image_from_url(url: str):
 
 def export_pptx_to_jpg(pptx_path: str, output_dir: str):
     """Open the PPTX in PowerPoint via COM and export each slide as JPG."""
+    if Dispatch is None:
+        print("   [WARN] export_pptx_to_jpg is only available on Windows with PowerPoint installed")
+        return
+        
     os.makedirs(output_dir, exist_ok=True)
     ppt_app = Dispatch("PowerPoint.Application")
     ppt_app.Visible = True

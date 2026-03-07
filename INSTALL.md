@@ -17,7 +17,7 @@ cd church-automation
 
 ## Step 2: Install Python Packages
 
-### Option A: Using uv (Recommended)
+### Recommended: Using uv
 
 `uv` is a significantly faster alternative to `pip` and handles workspace dependencies automatically.
 
@@ -31,11 +31,11 @@ cd church-automation
 2. **Sync dependencies**:
    Run this from the root directory:
    ```bash
-   uv sync --all-extras
+   uv sync
    ```
    This will create a single `.venv` in the root and install all packages in editable mode.
 
-### Option B: Using pip
+### Alternative: Using pip
 
 Install packages in the correct order (shared first, then others):
 
@@ -97,39 +97,26 @@ GCP_CREDENTIALS_FILENAME=your-gcp-credentials.json
 CHURCH_AUTOMATION_SECRETS_DIR=/path/to/custom/secrets
 ```
 
-## Step 4: Set Up Gmail API (For Announcements Only)
+## Step 4: Configure Announcements Website Source
 
-### Create Google Cloud Project
+The announcements generator fetches content directly from the church website.
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (e.g., "Church Automation")
-3. Enable the Gmail API:
-   - Navigate to "APIs & Services" → "Library"
-   - Search for "Gmail API"
-   - Click "Enable"
+### Configure Environment
 
-### Create OAuth Credentials
-
-1. Go to "APIs & Services" → "Credentials"
-2. Click "Create Credentials" → "OAuth client ID"
-3. Choose "Desktop application"
-4. Download the JSON file
-5. Rename it to `credentials.json`
-6. Move it to `~/.church-automation/credentials.json`
+Add to your `.env` file:
+```bash
+# URL of the weekly events or announcements page
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
+```
 
 ### (Optional) Set Up Vertex AI for Summarization
 
-1. In Google Cloud Console, enable "Vertex AI API"
-2. Create a service account:
-   - Navigate to "IAM & Admin" → "Service Accounts"
-   - Click "Create Service Account"
-   - Grant "Vertex AI User" role
-3. Create a key:
-   - Click on your service account
-   - Go to "Keys" tab
-   - Click "Add Key" → "Create new key"
-   - Choose JSON format
-4. Download and save to `~/.church-automation/gcp-credentials.json`
+To use AI summarization for long announcements:
+1. In [Google Cloud Console](https://console.cloud.google.com/), enable "Vertex AI API".
+2. Create a service account ("IAM & Admin" → "Service Accounts").
+3. Grant "Vertex AI User" role to the service account.
+4. Create and download a JSON key.
+5. Save the key to `~/.church-automation/gcp-credentials.json`.
 
 ## Step 5: Configure Planning Center Service Types
 

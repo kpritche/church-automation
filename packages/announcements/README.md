@@ -1,8 +1,16 @@
 # Church Automation - Announcements Generator
 
-Generate ProPresenter announcement slides from Gmail emails.
+Generate ProPresenter announcement slides from church website content.
 
 ## Installation
+
+It is recommended to use `uv` from the root directory to manage all packages:
+
+```bash
+uv sync
+```
+
+Alternatively, to install manually:
 
 ```bash
 # Install shared utilities first
@@ -14,37 +22,37 @@ pip install -e .
 
 ## Setup
 
-### 1. Gmail API Credentials
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable Gmail API
-3. Create OAuth 2.0 credentials (Desktop application type)
-4. Download `credentials.json` to `~/.church-automation/`
-
-### 2. GCP Service Account (Optional - for AI summarization)
-
-1. Create a service account in Google Cloud Console
-2. Grant Vertex AI permissions
-3. Download JSON key to `~/.church-automation/gcp-credentials.json`
-
-### 3. Configure Environment
+### 1. Configure Environment
 
 Add to your `.env` file:
 ```bash
-GMAIL_ANNOUNCEMENTS_QUERY=from:"Your Church" subject:"Weekly Announcements"
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 GCP_CREDENTIALS_FILENAME=gcp-credentials.json
 ```
+
+### 2. GCP Service Account (Optional - for AI summarization)
+
+1. Create a service account in [Google Cloud Console](https://console.cloud.google.com/)
+2. Grant Vertex AI permissions
+3. Download JSON key to `~/.church-automation/gcp-credentials.json`
 
 ## Usage
 
 ### Command Line
 
+From the root directory using `uv`:
+
 ```bash
-# Run the generator
+uv run make-announcements
+```
+
+Or from within this directory if installed in your environment:
+
+```bash
 make-announcements
 
 # Or use module syntax
-python -m announcements_app.main_probundle
+python -m announcements_app.main
 ```
 
 ### Output
@@ -55,21 +63,21 @@ The `.probundle` files are automatically uploaded to Planning Center "Announceme
 
 ## Features
 
-- **Gmail Integration** - OAuth2 authentication with automatic token refresh
-- **HTML Parsing** - Extracts titles, body text, links, and images from announcement emails
-- **AI Summarization** - Condenses long text using Google Vertex AI
-- **QR Code Generation** - Creates QR codes for links and buttons
-- **ProPresenter Generation** - Builds `.probundle` files using protobuf serialization
-- **Planning Center Upload** - Automatically attaches generated files to service plans
+- **Website Fetching** - Automatically identifies and retrieves the most recent announcement page from the church website.
+- **HTML Parsing** - Extracts titles, body text, links, and images from announcement HTML.
+- **AI Summarization** - Condenses long text using Google Vertex AI.
+- **QR Code Generation** - Creates QR codes for links and buttons.
+- **ProPresenter Generation** - Builds `.probundle` files using protobuf serialization.
+- **Planning Center Upload** - Automatically attaches generated files to service plans.
 
 ## Configuration
 
-### Gmail Query
+### Website URL
 
-Customize the Gmail search query to match your church's announcement emails:
+Customize the source URL in your `.env` file:
 
 ```bash
-GMAIL_ANNOUNCEMENTS_QUERY=from:"communications@church.org" subject:"This Week"
+ANNOUNCEMENTS_WEBSITE_URL=https://yourchurch.org/announcements
 ```
 
 ### Text Limits
@@ -80,11 +88,12 @@ Configured in `announcements_app/settings.py`:
 
 ## Dependencies
 
-- `google-api-python-client` - Gmail API
-- `google-auth-oauthlib` - OAuth2 flow
+- `google-api-python-client` - Google API access
 - `google-genai` - Vertex AI text generation
 - `beautifulsoup4` - HTML parsing
 - `qrcode[pil]` - QR code generation
 - `pillow` - Image processing
 - `protobuf` - ProPresenter file generation
+- `python-pptx` - PowerPoint backup generation
+- `py7zr` - Archive handling
 - `church-automation-shared` - Common utilities

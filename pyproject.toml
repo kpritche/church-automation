@@ -4,7 +4,14 @@ version = "0.1.0"
 description = "Monorepo for church automation tools"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "church-automation-shared",
+    "church-automation-announcements",
+    "church-automation-bulletins",
+    "church-automation-slides",
+    "python-pptx>=0.6.0",
+    "py7zr>=0.20.0",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]

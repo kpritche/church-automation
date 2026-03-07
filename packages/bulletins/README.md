@@ -4,6 +4,14 @@ Generate PDF church bulletins from Planning Center service plans.
 
 ## Installation
 
+It is recommended to use `uv` from the root directory to manage all packages:
+
+```bash
+uv sync
+```
+
+Alternatively, to install manually:
+
 ```bash
 # Install shared utilities first
 pip install -e ../shared
@@ -35,8 +43,15 @@ These will be printed three across on the last page of each bulletin.
 
 ### Command Line
 
+From the root directory using `uv`:
+
 ```bash
-# Run the generator
+uv run make-bulletins
+```
+
+Or from within this directory if installed in your environment:
+
+```bash
 make-bulletins
 
 # Or use module syntax

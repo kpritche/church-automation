@@ -1,24 +1,29 @@
-*.json
+# Workspace files
+.env
 *.pickle
 *.pptx
-config.py
 *.jpg
 *.pro
 !*_template.pro
 !*_template_mac.pro
 !blank.pro
-.env
-deprecated/
-mailmap
+!blank_template_mac.pro
 
-# Python cache and envs
+# Ignore JSON files by default but allow key ones
+*.json
+!pyproject.toml
+!packages/*/pyproject.toml
+!examples/*.json
+!packages/slides/slides_config.json
+
+# Environment and cache
 __pycache__/
 *.pyc
 .venv/
 build/
 *.egg-info/
 
-# Generated outputs
+# Package outputs
 packages/announcements/output/
 packages/bulletins/output/
 packages/slides/output/
@@ -26,13 +31,8 @@ packages/slides/outputs/
 packages/slides/output_pros/
 packages/slides/exported_plans/
 
-# Auth tokens / credentials
-announcements/token.pickle
-announcements/credentials.json
-announcements/gmail-pptx-tool-*.json
+# Local configuration
+slides_config.json
 
-# Proto generated artifacts
-slides/ProPresenter7_Proto/generated/
-
-# OS cruft
+# OS files
 .DS_Store
