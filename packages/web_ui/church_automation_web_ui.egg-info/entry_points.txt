@@ -1,2 +1,0 @@
-[console_scripts]
-serve-web-ui = web_ui_app.server:run

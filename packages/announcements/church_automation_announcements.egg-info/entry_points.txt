@@ -1,2 +1,0 @@
-[console_scripts]
-make-announcements = announcements_app.main_probundle:main
