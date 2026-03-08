@@ -44,8 +44,7 @@ except ModuleNotFoundError:
     except ModuleNotFoundError as e:
         raise RuntimeError(
             "church_automation_shared not found. Install packages with:\n"
-            "  pip install -e ./packages/shared\n"
-            "  pip install -e ./packages/bulletins"
+            "  uv sync --all-extras"
         ) from e
 
 # Import renderer with fallback for direct script execution

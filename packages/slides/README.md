@@ -5,11 +5,8 @@ Generate ProPresenter `.pro` slide files from Planning Center liturgy items.
 ## Installation
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install slides package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup

@@ -5,11 +5,8 @@ Generate ProPresenter announcement slides from your church's website.
 ## Installation
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install announcements package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup

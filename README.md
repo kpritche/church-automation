@@ -73,3 +73,4 @@ Maintain code quality by using the following tools from the root directory:
 * Do not commit `.env` files or any files containing API secrets.
 * Gmail OAuth tokens and GCP service account keys should be stored in the configured secrets directory (defaulting to `~/.church-automation/`).
 * Ensure that the `.gitignore` file is respected to prevent accidental disclosure of sensitive information.
+* Use `uv sync` for package installation (not pip).
