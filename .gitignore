@@ -17,6 +17,14 @@ __pycache__/
 .venv/
 build/
 *.egg-info/
+requirements.txt
+
+# Decoded/inspection artifacts (dev debugging outputs)
+decoded_*.txt
+*_decoded.txt
+Welcome.json
+Welcome.pro
+Welcome.txt
 
 # Generated outputs
 packages/announcements/output/

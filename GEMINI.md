@@ -15,12 +15,9 @@ This is a **multi-package monorepo** using `setuptools` and `pyproject.toml` for
 ## 🚀 Development Workflow
 
 ### Installation
-Install all packages in editable mode to enable cross-package development:
+Install all packages using uv:
 ```bash
-pip install -e ./packages/shared
-pip install -e ./packages/announcements
-pip install -e ./packages/bulletins
-pip install -e ./packages/slides
+uv sync --all-extras
 ```
 
 ### Configuration

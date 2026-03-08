@@ -5,11 +5,8 @@ Generate PDF church bulletins from Planning Center service plans.
 ## Installation
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install bulletins package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup

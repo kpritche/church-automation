@@ -13,7 +13,8 @@ Web interface for running church automation workflows.
 ## Installation
 
 ```bash
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Usage
@@ -21,21 +22,13 @@ pip install -e .
 Start the web server:
 
 ```bash
-serve-web-ui
+uv run serve-web-ui
 ```
 
 Or using uvicorn directly:
 
 ```bash
-uvicorn web_ui_app.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn web_ui_app.main:app --host 0.0.0.0 --port 8000
 ```
 
 Access the UI at: http://localhost:8000
-
-## Development
-
-Install with dev dependencies:
-
-```bash
-pip install -e ".[dev]"
-```

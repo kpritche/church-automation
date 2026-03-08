@@ -80,6 +80,29 @@ This script will:
 4. ✅ Create template .env file
 5. ✅ Display next steps
 
+### Verify Your Setup
+
+After running the setup script, verify your deployment directory is correctly configured:
+
+**On Linux/macOS:**
+```bash
+./verify-deployment.sh ~/church-automation-deployment
+```
+
+**On Windows:**
+```powershell
+.\verify-deployment.bat C:\church-automation-deployment
+```
+
+This script checks:
+- ✅ All required directories exist
+- ✅ Core package files are present
+- ✅ Docker files are copied
+- ✅ `.env` file exists
+- ✅ No build artifacts (`.egg-info`, `build/`) were accidentally copied
+
+**Note**: Build artifacts like `*.egg-info/` and `build/` directories are auto-generated during development and should **never** be committed to the repository or copied to deployment. The `.gitignore` file properly excludes them, but if you manually copied repository files, ensure these directories aren't present in your deployment folder.
+
 ## Step 1: Prepare Environment Variables
 
 Create a `.env` file in your deployment directory with your Planning Center API credentials:
