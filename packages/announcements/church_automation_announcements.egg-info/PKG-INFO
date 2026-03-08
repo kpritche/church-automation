@@ -1,11 +1,15 @@
 Metadata-Version: 2.4
 Name: church-automation-announcements
 Version: 0.1.0
-Summary: Generate ProPresenter announcement slides from website
+Summary: Generate ProPresenter announcement slides from Gmail
 Author-email: Church Automation <contact@example.com>
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 Requires-Dist: church-automation-shared
+Requires-Dist: google-api-python-client>=2.0.0
+Requires-Dist: google-auth>=2.0.0
+Requires-Dist: google-auth-httplib2>=0.1.0
+Requires-Dist: google-auth-oauthlib>=1.0.0
 Requires-Dist: google-genai>=0.1.0
 Requires-Dist: beautifulsoup4>=4.12.0
 Requires-Dist: qrcode[pil]>=7.4.0

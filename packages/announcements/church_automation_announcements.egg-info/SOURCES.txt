@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 announcements_app/__init__.py
+announcements_app/gmail_utils.py
 announcements_app/html_parser.py
 announcements_app/main.py
 announcements_app/ppt_generator.py

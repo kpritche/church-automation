@@ -44,11 +44,10 @@ BULLETINS_OUTPUT_DIR = BULLETINS_DIR / "output"
 BULLETINS_QR_DIR = BULLETINS_DIR / "qr_codes"
 
 # Leader Guide (service leader guide PDFs)
-_LEADER_GUIDE_DEFAULT = Path(os.getenv(
+LEADER_GUIDE_OUTPUT_DIR = Path(os.getenv(
     'LEADER_GUIDE_OUTPUT_DIR',
-    r"C:\Users\Kory's PC\OneDrive - First United Methodist Church of West Lafayette\Scripts"
+    str(BULLETINS_OUTPUT_DIR)
 ))
-LEADER_GUIDE_OUTPUT_DIR = _LEADER_GUIDE_DEFAULT
 
 # Assets
 ASSETS_DIR = REPO_ROOT / "assets"

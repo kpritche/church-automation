@@ -2,6 +2,7 @@ church-automation-shared
 pypco<1.3.0,>=1.2.0
 protobuf>=4.0.0
 requests>=2.31.0
+pypdf>=3.0.0
 
 [dev]
 pytest>=7.0.0
