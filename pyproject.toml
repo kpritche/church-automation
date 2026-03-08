@@ -7,6 +7,18 @@ requires-python = ">=3.9"
 dependencies = [
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
+    "church-automation-shared",
+    "church-automation-announcements",
+    "church-automation-slides",
+    "church-automation-bulletins",
+    "church-automation-web-ui",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
 ]
 
 [tool.uv.workspace]
@@ -17,3 +29,4 @@ church-automation-shared = { workspace = true }
 church-automation-announcements = { workspace = true }
 church-automation-bulletins = { workspace = true }
 church-automation-slides = { workspace = true }
+church-automation-web-ui = { workspace = true }

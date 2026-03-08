@@ -5,53 +5,58 @@ all: announcements slides
 
 # Run announcements generation workflow
 announcements:
-	@echo "🎯 Generating announcements..."
+	@echo "Generating announcements..."
 	uv run make-announcements
 
 # Run service slides generation workflow
 slides:
-	@echo "📊 Generating service slides..."
+	@echo "Generating service slides..."
 	uv run make-slides
 
 # Run bulletin generation workflow
 bulletins:
-	@echo "📄 Generating bulletins..."
+	@echo "Generating bulletins..."
 	uv run make-bulletins
 
 # Start web UI server
 web-ui:
-	@echo "🌐 Starting web UI server..."
+	@echo "Starting web UI server..."
 	uv run serve-web-ui
 
 # Install/sync all dependencies
 install:
-	@echo "📦 Installing dependencies with uv..."
+	@echo "Installing dependencies with uv..."
 	uv sync --all-extras
 
 # Clean build artifacts, cache, and generated files
 clean:
-	@echo "🧹 Cleaning build artifacts..."
+	@echo "Cleaning build artifacts..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name "build" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@echo "✨ Clean complete"
+	@echo "Clean complete"
 
 # Run tests (if they exist)
 test:
-	@echo "🧪 Running tests..."
+	@echo "Running tests..."
 	uv run pytest
 
 # Decode a ProPresenter file for inspection
 # Usage: make decode FILE=path/to/file.pro
 decode:
 	@if [ -z "$(FILE)" ]; then \
-		echo "❌ Error: FILE parameter required"; \
+		echo "Error: FILE parameter required"; \
 		echo "Usage: make decode FILE=path/to/file.pro"; \
 		exit 1; \
 	fi
-	@echo "🔍 Decoding $(FILE)..."
+	@echo "Decoding $(FILE)..."
 	uv run python decode_pro_file.py $(FILE)
+
+# Test PCO API connectivity (useful for debugging)
+test-api:
+	@echo "Testing PCO API connectivity..."
+	uv run python utils/test_pco_api.py
 
 # Show available make targets
 help:

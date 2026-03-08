@@ -136,6 +136,14 @@ FONT_FILES = {
 
 FONT_SEARCH_PATHS = list(SHARED_FONT_PATHS)
 
+REQUEST_TIMEOUT = (10, 60)
+LYRICS_REQUEST_TIMEOUT_SECONDS = 180
+LYRICS_DOWNLOAD_RETRIES = 3
+
+
+def log_progress(message: str) -> None:
+    print(f"[DEBUG {time.strftime('%H:%M:%S')}] {message}")
+
 
 def find_font_file(options: List[str]) -> Optional[Path]:
     for base in FONT_SEARCH_PATHS:
@@ -282,6 +290,8 @@ def remove_highlighted_text(soup: BeautifulSoup) -> None:
     for tag in soup.find_all(["mark"]):
         tag.decompose()
     for span in soup.find_all("span"):
+        if not isinstance(span, Tag) or span.attrs is None:
+            continue
         style = (span.get("style") or "").lower()
         cls = " ".join(span.get("class") or []).lower()
         if "background" in style or "highlight" in style or "marker" in cls:
@@ -607,43 +617,112 @@ def download_lyrics_pdf(attachment_obj: Dict[str, object], pco: PCO, service_typ
     filename = att_attrs.get("filename", "")
     
     
-    # Use the full path to open the attachment via PCO API
-    open_endpoint = (
-        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/"
-        f"items/{item_id}/attachments/{att_id}/open"
-    )
+    # Candidate open endpoints (item-specific first, then global attachment open)
+    open_urls = [
+        (
+            "https://api.planningcenteronline.com/services/v2/"
+            f"service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments/{att_id}/open"
+        ),
+        f"https://api.planningcenteronline.com/services/v2/attachments/{att_id}/open",
+    ]
     
-    try:
-        # Make a POST request to the open endpoint (following the same pattern as cover attachments)
-        resp = pco.post(open_endpoint)
-        
-        # Extract the actual download URL from the response
-        attachment_url: Optional[str] = None
-        if isinstance(resp, dict):
-            attachment_url = (
-                resp.get("data", {}).get("attributes", {}).get("attachment_url")
-                or resp.get("attachment_url")
+    for attempt in range(1, LYRICS_DOWNLOAD_RETRIES + 1):
+        try:
+            # Open attachment via PCO API using explicit timeout (avoid pypco default timeout)
+            attachment_url: Optional[str] = None
+            open_response_text: str = ""
+            open_succeeded = False
+
+            for open_url in open_urls:
+                try:
+                    open_resp = requests.post(
+                        open_url,
+                        auth=HTTPBasicAuth(config.client_id, config.secret),
+                        timeout=LYRICS_REQUEST_TIMEOUT_SECONDS,
+                        allow_redirects=False,
+                    )
+                    open_response_text = open_resp.text[:400]
+                    if open_resp.status_code >= 400:
+                        continue
+
+                    # Some endpoints may redirect and provide location header
+                    if open_resp.headers.get("location"):
+                        attachment_url = open_resp.headers["location"]
+                        open_succeeded = True
+                        break
+
+                    # Most endpoints return JSON with attachment_url
+                    try:
+                        payload = open_resp.json()
+                    except Exception:
+                        payload = {}
+
+                    if isinstance(payload, dict):
+                        attachment_url = (
+                            payload.get("data", {}).get("attributes", {}).get("attachment_url")
+                            or payload.get("attachment_url")
+                        )
+                        if attachment_url:
+                            open_succeeded = True
+                            break
+
+                    # In rare cases endpoint can return file bytes directly
+                    content = open_resp.content
+                    if content[:4].upper() == b"%PDF":
+                        return content
+
+                except Exception:
+                    continue
+
+            if not open_succeeded:
+                print(
+                    f"[WARN] Could not open lyrics attachment {att_id} ({filename}); "
+                    f"last response preview: {open_response_text}"
+                )
+                return None
+
+            # Download the file from the resolved signed URL (no auth needed)
+            file_resp = requests.get(attachment_url, timeout=LYRICS_REQUEST_TIMEOUT_SECONDS)
+            file_resp.raise_for_status()
+            content = file_resp.content
+
+            # Verify it's a PDF
+            if content[:4].upper() == b"%PDF":
+                return content
+
+            print(f"[WARN] Downloaded content is not a PDF for lyrics attachment {att_id} ({filename})")
+            return None
+
+        except requests.exceptions.Timeout as exc:
+            if attempt < LYRICS_DOWNLOAD_RETRIES:
+                wait_seconds = attempt * 2
+                print(
+                    f"[WARN] Timeout downloading lyrics attachment {att_id} ({filename}), "
+                    f"attempt {attempt}/{LYRICS_DOWNLOAD_RETRIES}. Retrying in {wait_seconds}s..."
+                )
+                time.sleep(wait_seconds)
+                continue
+            print(
+                f"[WARN] Failed to download lyrics attachment {att_id} ({filename}) after "
+                f"{LYRICS_DOWNLOAD_RETRIES} attempts: {exc}"
             )
-        
-        if not attachment_url:
-            print(f"[WARN] Could not resolve attachment_url for {att_id}; response: {resp}")
             return None
-        
-        # Download the file from the resolved URL (no auth needed, it's a signed URL)
-        file_resp = requests.get(attachment_url)
-        file_resp.raise_for_status()
-        content = file_resp.content
-        
-        # Verify it's a PDF
-        if content[:4].upper() == b"%PDF":
-            return content
-        else:
-            print(f"[WARN] Downloaded content is not a PDF for attachment {att_id}")
+        except Exception as exc:
+            if attempt < LYRICS_DOWNLOAD_RETRIES:
+                wait_seconds = attempt
+                print(
+                    f"[WARN] Error downloading lyrics attachment {att_id} ({filename}), "
+                    f"attempt {attempt}/{LYRICS_DOWNLOAD_RETRIES}: {exc}. Retrying in {wait_seconds}s..."
+                )
+                time.sleep(wait_seconds)
+                continue
+            print(
+                f"[WARN] Failed to download lyrics attachment {att_id} ({filename}) after "
+                f"{LYRICS_DOWNLOAD_RETRIES} attempts: {exc}"
+            )
             return None
-            
-    except Exception as exc:
-        print(f"[WARN] Failed to download lyrics PDF for attachment {att_id}: {exc}")
-        return None
+
+    return None
 
 
 def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
@@ -761,7 +840,7 @@ def download_attachment_image(attachment_id: str) -> Tuple[Optional[Image.Image]
     is an image, pdf_bytes is None.
     """
     open_url = f"https://api.planningcenteronline.com/services/v2/attachments/{attachment_id}/open"
-    resp = requests.post(open_url, auth=HTTPBasicAuth(config.client_id, config.secret))
+    resp = requests.post(open_url, auth=HTTPBasicAuth(config.client_id, config.secret), timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
 
     attachment_url: Optional[str] = None
@@ -781,7 +860,7 @@ def download_attachment_image(attachment_id: str) -> Tuple[Optional[Image.Image]
         print(f"[warn] Could not resolve attachment_url for {attachment_id}; response content: {resp.text[:200]}")
         return None, None
 
-    file_resp = requests.get(attachment_url)
+    file_resp = requests.get(attachment_url, timeout=REQUEST_TIMEOUT)
     file_resp.raise_for_status()
     content = file_resp.content
     if content[:4].upper() == b"%PDF":
@@ -1142,6 +1221,12 @@ class BulletinRenderer:
         if available < minimum_height:
             self._new_page()
 
+        item_label = str(title or "(untitled)")
+        log_progress(
+            f"render item start: title='{item_label[:80]}' paragraphs={len(paragraphs)} "
+            f"description_len={len(description)}"
+        )
+
         if title:
             self.current_item = title or "(untitled)"
             heading_text = "Song" if is_song else str(title)
@@ -1217,12 +1302,18 @@ class BulletinRenderer:
                 self._bump_cursor(self.PARAGRAPH_GAP)
 
         self._bump_cursor(self.ITEM_GAP)
+        log_progress(f"render item done: title='{item_label[:80]}'")
 
     def draw_sections(self, sections: List[Dict[str, object]], service_name: str, plan_date: str) -> None:
         self.start_content()
         self.draw_service_header(service_name, plan_date)
-        for section in sections:
+        for section_index, section in enumerate(sections, start=1):
             items = section.get("items", [])
+            section_title = section.get("title") or "(untitled section)"
+            log_progress(
+                f"render section start: {section_index}/{len(sections)} "
+                f"title='{str(section_title)[:80]}' items={len(items)}"
+            )
             if items:
                 reserve = (
                     self._line_height(self.fonts.section_size, leading=1.1)
@@ -1234,6 +1325,7 @@ class BulletinRenderer:
             self.draw_section_header(section.get("title"))
             for item in items:
                 self.draw_item(item)
+            log_progress(f"render section done: {section_index}/{len(sections)}")
 
     def _draw_list_in_columns(self, items: List[str], num_columns: int = 3) -> None:
         if not items:
@@ -1828,7 +1920,7 @@ class BulletinRenderer:
                 for page in reader.pages:
                     self.sheet_music_pages.append(page)
             except Exception as exc:
-                print(f"  ⚠ Could not read sheet music PDF for '{song_title}': {exc}")
+                print(f"[WARN] Could not read sheet music PDF for '{song_title}': {exc}")
                 continue
 
     def save(self, path: Path) -> None:
@@ -1991,7 +2083,8 @@ def _get_people_lists_index(pco: PCO) -> Dict[str, Dict[str, str]]:
             if name:
                 by_name[name] = lid
             by_id[lid] = name
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] Could not fetch People Lists: {type(e).__name__}. Prayer lists will be skipped.")
         pass
     return {"by_name": by_name, "by_id": by_id}
 
@@ -2020,7 +2113,8 @@ def _ensure_list_refreshed(pco: PCO, list_id: str, timeout_seconds: int = 10) ->
         # Brief wait; robust polling requires inspecting list result status which
         # may not be available in all accounts. Keep it simple and fast.
         time.sleep(2)
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] Could not refresh People List {list_id}: {type(e).__name__}")
         # Non-fatal; we can still read the current results
         pass
 
@@ -2041,7 +2135,8 @@ def _fetch_people_names_from_list(pco: PCO, list_id: str) -> List[str]:
                 name = (first + " " + last).strip()
                 if name:
                     names.append(name)
-    except Exception:
+    except Exception as e:
+        print(f"[WARN] Could not fetch people from list {list_id}: {type(e).__name__}")
         pass
     return sorted(names)
 
@@ -2052,6 +2147,7 @@ def fetch_prayer_lists_from_pco(pco: PCO, cfg: Dict[str, object]) -> Dict[str, L
     Config structure (in slides_config.json):
     {
       "prayer_lists": {
+        "enabled": false,
         "refresh_before_fetch": true,
         "timeout_seconds": 10,
         "military_first_name_only": false,
@@ -2063,6 +2159,11 @@ def fetch_prayer_lists_from_pco(pco: PCO, cfg: Dict[str, object]) -> Dict[str, L
     """
     result: Dict[str, List[str]] = {"concerns": [], "memory_care": [], "military": []}
     pcfg = (cfg or {}).get("prayer_lists", {}) or {}
+
+    # Check if prayer lists are disabled (useful if PCO People API is unavailable)
+    if not pcfg.get("enabled", True):
+        print("[INFO] Prayer lists disabled in config.prayer_lists.enabled")
+        return result
 
     refresh = bool(pcfg.get("refresh_before_fetch", True))
     timeout_s = int(pcfg.get("timeout_seconds", 10))
@@ -2095,11 +2196,15 @@ def fetch_prayer_lists_from_pco(pco: PCO, cfg: Dict[str, object]) -> Dict[str, L
 
 
 def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, service_name: str) -> None:
+    plan_start = time.perf_counter()
+    log_progress(f"process_plan start: service_type_id={service_type_id} plan_id={plan_id} date={plan_date}")
+
     items_resp = pco.get(
         f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items",
         include="attachments",
     )
     items = items_resp.get("data", [])
+    log_progress(f"items fetched: {len(items)} items")
 
     sections, cover_attachment_id, lyrics_items, get_involved_item = build_sections(
         items,
@@ -2108,11 +2213,19 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         service_type_id=service_type_id,
         plan_id=plan_id,
     )
+    total_section_items = sum(len(section.get("items", [])) for section in sections)
+    log_progress(
+        f"sections built: {len(sections)} sections, {total_section_items} items, "
+        f"lyrics_candidates={len(lyrics_items)}, cover_attachment={'yes' if cover_attachment_id else 'no'}"
+    )
     if not sections:
         print(f"[info] No items with html/description found for plan {plan_id} ({plan_date}); skipping.")
         return
 
     worship_team, position_to_team_map = fetch_team_members(pco, service_type_id, plan_id)
+    log_progress(
+        f"team members fetched: positions={len(worship_team)}, mapped_teams={len(position_to_team_map)}"
+    )
     
     # Check if this service type uses sheet music instead of lyrics
     cfg = load_config(CONFIG_PATH)
@@ -2121,10 +2234,12 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
     
     # Fetch and process sheet music or lyrics based on config
     if uses_sheet_music:
+        log_progress("mode: sheet_music")
         # Fetch sheet music PDFs
         sheet_music_attachments = fetch_sheet_music_attachments(
             pco, lyrics_items, service_type_id, plan_id, items_resp.get("included")
         )
+        log_progress(f"sheet music attachments resolved: {len(sheet_music_attachments)}")
         sheet_music_pdfs: List[Tuple[str, bytes]] = []
         for sheet_info in sheet_music_attachments:
             title = sheet_info["title"]
@@ -2133,11 +2248,14 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
             pdf_bytes = download_lyrics_pdf(attachment_obj, pco, service_type_id, plan_id, item_id)
             if pdf_bytes:
                 sheet_music_pdfs.append((title, pdf_bytes))
+        log_progress(f"sheet music PDFs downloaded: {len(sheet_music_pdfs)}")
     else:
+        log_progress("mode: lyrics")
         # Fetch and download lyrics PDFs
         lyrics_attachments = fetch_lyrics_attachments(
             pco, lyrics_items, service_type_id, plan_id, items_resp.get("included")
         )
+        log_progress(f"lyrics attachments resolved: {len(lyrics_attachments)}")
         lyrics_pdfs: List[Tuple[str, bytes]] = []
         for lyrics_info in lyrics_attachments:
             title = lyrics_info["title"]
@@ -2148,11 +2266,16 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
                 lyrics_pdfs.append((title, pdf_bytes))
             else:
                 print(f"[warn] Failed to download lyrics for '{title}'")
+        log_progress(f"lyrics PDFs downloaded: {len(lyrics_pdfs)}")
 
     cover_img: Optional[Image.Image] = None
     cover_pdf_bytes: Optional[bytes] = None
     if cover_attachment_id:
+        log_progress(f"downloading cover attachment id={cover_attachment_id}")
         cover_img, cover_pdf_bytes = download_attachment_image(cover_attachment_id)
+        log_progress(
+            f"cover attachment processed: image={'yes' if cover_img else 'no'}, pdf={'yes' if cover_pdf_bytes else 'no'}"
+        )
     else:
         print(f"[warn] No cover attachment found for plan {plan_id}.")
     
@@ -2164,40 +2287,53 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         )
         if get_involved_attachment_id:
             try:
+                log_progress(f"downloading Get Involved attachment id={get_involved_attachment_id}")
                 _, get_involved_pdf_bytes = download_attachment_image(get_involved_attachment_id)
                 if get_involved_pdf_bytes:
-                    print("  ✓ Found Get Involved PDF attachment")
+                    print("[INFO] Found Get Involved PDF attachment")
                     # Cache for reuse in other services during this run
                     global _GET_INVOLVED_PDF_CACHE
                     _GET_INVOLVED_PDF_CACHE = get_involved_pdf_bytes
                 else:
-                    print("  ⚠ Get Involved attachment is not a PDF")
+                    print("[WARN] Get Involved attachment is not a PDF")
             except Exception as exc:
-                print(f"  ⚠ Failed to download Get Involved attachment: {exc}")
+                print(f"[WARN] Failed to download Get Involved attachment: {exc}")
         else:
-            print("  ℹ No attachment found for Get Involved item")
+            print("[INFO] No attachment found for Get Involved item")
     # Fallback to prefetched cache if current plan lacks it
     if not get_involved_pdf_bytes and _GET_INVOLVED_PDF_CACHE:
         get_involved_pdf_bytes = _GET_INVOLVED_PDF_CACHE
-        print("  ↺ Using cached 'Get Involved' PDF")
+        print("[INFO] Using cached 'Get Involved' PDF")
 
     fonts = FontBundle()
     # Build role replacement map from worship team assignments
     role_replacement_map = build_role_replacement_map(worship_team)
     renderer = BulletinRenderer(fonts, role_replacement_map)
+    log_progress("renderer created")
+
     renderer.add_cover(cover_img, cover_pdf_bytes)
+    log_progress("cover added to renderer")
+
     renderer.draw_sections(sections, service_name, plan_date)
+    log_progress("sections rendered")
     
     # Add sheet music or lyrics pages based on config
     if uses_sheet_music:
         if sheet_music_pdfs:
             print(f"[info] Adding {len(sheet_music_pdfs)} sheet music file(s)...")
             renderer.draw_sheet_music_pages(sheet_music_pdfs)
+            log_progress("sheet music pages appended")
     else:
         renderer.draw_lyrics_pages(lyrics_pdfs)
+        log_progress("lyrics pages rendered")
     
-    # Load dynamic prayer lists from PCO People
-    prayer_lists = fetch_prayer_lists_from_pco(pco, cfg)
+    # Load dynamic prayer lists from PCO People (with error handling)
+    prayer_lists: Dict[str, List[str]] = {"concerns": [], "memory_care": [], "military": []}
+    try:
+        prayer_lists = fetch_prayer_lists_from_pco(pco, cfg)
+    except Exception as e:
+        print(f"[WARN] Could not load prayer lists: {type(e).__name__}: {e}")
+        # Continue with empty prayer lists
 
     renderer.draw_prayers_and_worship_page(
         load_qr_codes(),
@@ -2205,6 +2341,7 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         position_to_team_map,
         prayer_lists=prayer_lists,
     )
+    log_progress("prayers and worship page rendered")
     
     # Add Get Involved PDF pages if present
     if get_involved_pdf_bytes:
@@ -2212,17 +2349,23 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
             reader = PdfReader(io.BytesIO(get_involved_pdf_bytes))
             for page in reader.pages:
                 renderer.get_involved_pages.append(page)
-            print(f"  ✓ Added {len(reader.pages)} Get Involved page(s)")
+            print(f"[INFO] Added {len(reader.pages)} Get Involved page(s)")
         except Exception as exc:
-            print(f"  ⚠ Failed to process Get Involved PDF: {exc}")
+            print(f"[WARN] Failed to process Get Involved PDF: {exc}")
 
     safe_service = safe_slug(service_name)
     filename = f"Bulletin-{plan_date}-{safe_service}.pdf"
     output_path = OUTPUT_DIR / filename
+    log_progress(f"saving bulletin to {output_path}")
     renderer.save(output_path)
+    elapsed = time.perf_counter() - plan_start
+    log_progress(f"process_plan complete in {elapsed:.2f}s")
 
 
 def main() -> None:
+    run_start = time.perf_counter()
+    log_progress("make-bulletins main start")
+
     cfg = load_config(CONFIG_PATH)
     service_type_ids = cfg.get("service_type_ids", [])
     if not service_type_ids:
@@ -2231,17 +2374,24 @@ def main() -> None:
     start_date, end_date = get_next_seven_day_window()
 
     pco = PCO(application_id=config.client_id, secret=config.secret)
+    log_progress(f"PCO client initialized; service_type_ids={service_type_ids}")
 
     # Prefetch a single 'Get Involved' PDF to reuse across services
     # This ensures bulletins still include the page even if some plans omit it.
     try:
+        log_progress("prefetching Get Involved PDF")
         prefetch_get_involved_pdf(pco, service_type_ids, start_date, end_date)
+        log_progress("prefetch Get Involved complete")
     except Exception:
         pass
 
     for stid in service_type_ids:
+        stid_start = time.perf_counter()
+        log_progress(f"processing service type {stid}")
         service_name = fetch_service_name(pco, stid)
+        log_progress(f"service type {stid} name resolved: {service_name}")
         plans = find_plans_in_range(pco, stid, start_date, end_date)
+        log_progress(f"service type {stid} plans in window: {len(plans)}")
         if not plans:
             print(f"[INFO] No plans for service type {stid} ({service_name}) in window; skipping.")
             continue
@@ -2252,6 +2402,11 @@ def main() -> None:
             plan_id = plan_obj["data"]["id"]
             print(f"[INFO] Processing plan {plan_id} ({service_name}) on {plan_date}")
             process_plan(pco, stid, plan_id, plan_date, service_name)
+        stid_elapsed = time.perf_counter() - stid_start
+        log_progress(f"service type {stid} complete in {stid_elapsed:.2f}s")
+
+    total_elapsed = time.perf_counter() - run_start
+    log_progress(f"make-bulletins main complete in {total_elapsed:.2f}s")
 
 
 if __name__ == "__main__":
