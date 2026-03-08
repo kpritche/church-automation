@@ -18,10 +18,11 @@ Common utilities and configuration management for all church automation tools.
 ## Installation
 
 ```bash
-pip install -e .
+# From repository root
+uv sync
 ```
 
-This package must be installed before any other church automation packages.
+This package is installed automatically as part of the workspace.
 
 ## What's Included
 

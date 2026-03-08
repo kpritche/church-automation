@@ -21,7 +21,7 @@ def main() -> None:
     print("Listing Planning Center People Lists:\n")
     try:
         for lst in pco.iterate("/people/v2/lists"):
-            lid = lst["id"]
+            lid = lst["data"]["id"]
             name = lst.get("attributes", {}).get("name", "")
             last_run = lst.get("attributes", {}).get("last_run_at")
             print(f"- {name} (id={lid}) last_run={last_run}")

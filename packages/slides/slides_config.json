@@ -2,7 +2,8 @@
   "service_type_ids": [1041663, 78127, 1145553],
   "sheet_music_service_type_ids": [78127],
   "prayer_lists": {
-    "refresh_before_fetch": true,
+    "enabled": false,
+    "refresh_before_fetch": false,
     "timeout_seconds": 10,
     "military_first_name_only": false,
     "concerns": {"id":4688551, "name": "Prayer List" },
