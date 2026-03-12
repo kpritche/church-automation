@@ -79,13 +79,31 @@ PRELUDE_POSTLUDE_TITLES = {
 
 
 def _is_red_style(style: str) -> bool:
-    return bool(
-        re.search(
-            r"color\s*:\s*(red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))",
-            style,
-            re.IGNORECASE,
-        )
-    )
+    """Check if a style string contains red color definition.
+    
+    Detects various red color formats:
+    - Named: 'red'
+    - Hex short: '#f00'
+    - Hex long: '#ff0000', '#ff0000ff'
+    - RGB: 'rgb(255, 0, 0)'
+    - RGBA: 'rgba(255, 0, 0, ...)'
+    """
+    if not style:
+        return False
+    
+    # Check for named color 'red'
+    if re.search(r"\bred\b", style, re.IGNORECASE):
+        return True
+    
+    # Check for hex colors: #f00, #ff0000, #ff0000ff, #FF0000
+    if re.search(r"#(?:f00|ff0000|ff0000ff)\b", style, re.IGNORECASE):
+        return True
+    
+    # Check for rgb/rgba formats: rgb(255,0,0) or rgba(255,0,0,x)
+    if re.search(r"rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\)", style, re.IGNORECASE):
+        return True
+    
+    return False
 
 
 def _strip_highlight_and_red_text(html_content: str) -> str:
@@ -114,12 +132,14 @@ def _strip_highlight_and_red_text(html_content: str) -> str:
                 continue
             style = (attrs.get("style") or "")
             color_attr = (attrs.get("color") or "")
+            # Remove any tag with red color styling or color attribute
             if _is_red_style(style) or re.search(r"^red$", color_attr, re.IGNORECASE):
                 tag.decompose()
 
         return str(soup)
 
     # Fallback when bs4 is unavailable
+    # Remove highlighted/marked text
     cleaned = re.sub(r'<mark[^>]*>.*?</mark>', '', html_content, flags=re.IGNORECASE | re.DOTALL)
     cleaned = re.sub(
         r'<span[^>]*style="[^"]*(?:background|highlight|marker)[^"]*"[^>]*>.*?</span>',
@@ -127,18 +147,32 @@ def _strip_highlight_and_red_text(html_content: str) -> str:
         cleaned,
         flags=re.IGNORECASE | re.DOTALL,
     )
+    
+    # Remove red text with various formats:
+    # Style attribute with color:red or hex variants
     cleaned = re.sub(
         r'<[^>]*style="[^"]*color\s*:\s*(?:red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))[^"]*"[^>]*>.*?</[^>]+>',
         '',
         cleaned,
         flags=re.IGNORECASE | re.DOTALL,
     )
+    
+    # Remove red named color attribute
     cleaned = re.sub(
         r'<font[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</font>',
         '',
         cleaned,
         flags=re.IGNORECASE | re.DOTALL,
     )
+    
+    # Remove any tags with color="red" attribute
+    cleaned = re.sub(
+        r'<[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</[^>]+>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    
     return cleaned
 
 

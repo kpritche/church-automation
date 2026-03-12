@@ -275,8 +275,6 @@ def make_pro_for_items(
         new_cue_id = final_pres.cue_groups[0].cue_identifiers.add()
         new_cue_id.string = new_cue.uuid.string
     
-    current_color = "white"  # Start with white slides
-    
     if scripture_reference:
         # Add scripture reference slide
         add_text_slide(scripture_reference, "white")
@@ -289,14 +287,18 @@ def make_pro_for_items(
             add_text_slide('', 'white')
             continue
 
+        # Determine color for THIS slide based on its content
         # 1) Lead-speaker lines remain white…
         if any(text.startswith(m) for m in CALL_MARKERS):
-            current_color = "white"
+            slide_color = "white"
         # 2) Response markers OR bolded text become yellow…
         elif any(text.startswith(m) for m in RESPONSE_MARKERS) or slide.get("is_bold", False):
-            current_color = "yellow"
+            slide_color = "yellow"
+        # 3) All other text is white (default)
+        else:
+            slide_color = "white"
         
-        add_text_slide(text, current_color)
+        add_text_slide(text, slide_color)
     
     # Write out
     out_dir = SLIDES_OUTPUTS_DIR / plan_date
