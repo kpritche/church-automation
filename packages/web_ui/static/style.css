@@ -131,6 +131,13 @@ main {
     color: var(--text-light);
 }
 
+.card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 /* Buttons */
 .btn {
     padding: 12px 24px;
@@ -309,6 +316,85 @@ main {
     color: var(--text-light);
     padding: 40px;
     font-style: italic;
+}
+
+/* Leader Guide columns layout */
+.leader-guide-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.leader-guide-column {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.leader-guide-column-header {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.leader-guide-service-name {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.leader-guide-date {
+    font-size: 0.78rem;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+
+.leader-guide-variant {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
+}
+
+.leader-guide-variant:hover {
+    background-color: var(--accent-color);
+}
+
+.leader-guide-variant-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.leader-guide-variant-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.leader-guide-variant-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.leader-guide-variant-meta {
+    font-size: 0.78rem;
+    color: var(--text-light);
+}
+
+@media (max-width: 768px) {
+    .leader-guide-columns {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Footer */

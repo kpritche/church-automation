@@ -334,6 +334,7 @@ def main():
     # Initialize Pypco client
     pco = PCO(application_id=config.client_id, secret=config.secret)
     processed_dates = set()
+    uploaded_files = []
     
     # Cache: maps content hash -> (file_path, plan_date, parsed_data)
     # This prevents generating duplicate .pro files for items that appear in multiple services
@@ -490,6 +491,7 @@ def main():
                             payload=attach_payload
                         )
                         print(f"  > Uploaded cached file; upload_id={upload_id}")
+                        uploaded_files.append(cached_file.name)
                     else:
                         print(f"  [WARN] Cached file not found, regenerating...")
                         content_cache.pop(content_hash, None)
@@ -529,14 +531,16 @@ def main():
                         f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
                         payload=attach_payload
                     )
-                    print(f"  > Uploaded file; upload_id={upload_id}")
+                        print(f"  > Uploaded file; upload_id={upload_id}")
+                        uploaded_files.append(filename)
 
-            processed_dates.add(plan_date)
+                    processed_dates.add(plan_date)
 
     # # Attach images for each processed date
     # for d in sorted(processed_dates):
     #     attach_images_to_announcements(JPG_FOLDER + f"/{d}")
     # print("All slides generated and uploaded successfully for the next 7 days.")
+    return uploaded_files
 
 
 

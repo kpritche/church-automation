@@ -1,4 +1,4 @@
-.PHONY: all announcements slides bulletins web-ui install clean help test
+.PHONY: all announcements slides bulletins leader-guides bulletins-email bulletins-email-only web-ui install clean help test
 
 # Default target - runs main workflows (announcements + slides)
 all: announcements slides
@@ -17,6 +17,21 @@ slides:
 bulletins:
 	@echo "Generating bulletins..."
 	uv run make-bulletins
+
+# Run leader guide generation workflow
+leader-guides:
+	@echo "Generating leader guides..."
+	uv run make-service-leader-guide
+
+# Generate bulletins, then email recent bulletin PDFs
+bulletins-email:
+	@echo "Generating and emailing bulletins..."
+	./scripts/run_and_email_bulletins.sh
+
+# Send email for recently generated bulletin PDFs only
+bulletins-email-only:
+	@echo "Emailing recently generated bulletins..."
+	BULLETINS_EMAIL_SKIP_GENERATION=1 ./scripts/run_and_email_bulletins.sh
 
 # Start web UI server
 web-ui:
@@ -68,6 +83,8 @@ help:
 	@echo "  make announcements - Generate ProPresenter announcement slides"
 	@echo "  make slides        - Generate ProPresenter service slides"
 	@echo "  make bulletins     - Generate PDF bulletins"
+	@echo "  make bulletins-email - Generate bulletins, then email PDFs"
+	@echo "  make bulletins-email-only - Email recent bulletins only"
 	@echo "  make web-ui        - Start the web UI server"
 	@echo ""
 	@echo "Development:"

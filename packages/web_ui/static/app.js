@@ -93,7 +93,20 @@ function pollJobStatus(jobId, jobType) {
                 progress.style.display = 'none';
                 successDiv.style.display = 'block';
                 button.disabled = false;
-                
+
+                // For slides, show uploaded files list instead of download links
+                if (jobType === 'slides') {
+                    const uploadedFilesDiv = document.getElementById('slides-uploaded-files');
+                    if (uploadedFilesDiv) {
+                        if (job.uploaded_files && job.uploaded_files.length > 0) {
+                            uploadedFilesDiv.innerHTML = '<strong>Uploaded to Planning Center:</strong><ul style="margin: 4px 0 0 16px;">' +
+                                job.uploaded_files.map(f => `<li>${escapeHtml(f)}</li>`).join('') + '</ul>';
+                        } else {
+                            uploadedFilesDiv.innerHTML = '<em>No new files uploaded (all items already up to date).</em>';
+                        }
+                    }
+                }
+
                 // Refresh recent jobs list
                 refreshJobs();
                 
@@ -154,7 +167,12 @@ async function showFiles(jobType) {
             return;
         }
 
-        // Render files
+        if (jobType === 'leader_guide') {
+            renderLeaderGuideFiles(data.files);
+            return;
+        }
+
+        // Render files (generic flat list)
         filesList.innerHTML = data.files.map(file => `
             <div class="file-item">
                 <div class="file-info">
@@ -179,6 +197,83 @@ async function showFiles(jobType) {
         console.error('Error loading files:', error);
         filesList.innerHTML = `<p class="error-message">Error loading files: ${error.message}</p>`;
     }
+}
+
+/**
+ * Render leader guide files grouped by service in columns.
+ */
+function renderLeaderGuideFiles(files) {
+    const filesList = document.getElementById('files-list');
+
+    // Group by service slug, preserving discovery order (already sorted newest-first by mtime)
+    const serviceOrder = [];
+    const byService = {};
+    for (const file of files) {
+        const key = file.service || 'unknown';
+        if (!byService[key]) {
+            byService[key] = { service_name: file.service_name || key, variants: {} };
+            serviceOrder.push(key);
+        }
+        // Keep only the most-recent file for each variant within this service
+        const variant = file.variant || 'unknown';
+        if (!byService[key].variants[variant]) {
+            byService[key].variants[variant] = file;
+        }
+    }
+
+    if (serviceOrder.length === 0) {
+        filesList.innerHTML = '<p class="no-jobs">No leader guide files found.</p>';
+        return;
+    }
+
+    const VARIANT_ORDER = ['sheet_music', 'chord_charts'];
+    const VARIANT_ICONS = { sheet_music: '🎼', chord_charts: '🎸' };
+
+    const columnsHtml = serviceOrder.map(serviceKey => {
+        const svc = byService[serviceKey];
+
+        // Determine a shared date label from any variant
+        const anyFile = Object.values(svc.variants)[0];
+        const dateLabel = anyFile ? anyFile.date : '';
+
+        // Render each variant as a row inside the column
+        const allVariants = VARIANT_ORDER.filter(v => svc.variants[v])
+            .concat(Object.keys(svc.variants).filter(v => !VARIANT_ORDER.includes(v)));
+
+        const variantRows = allVariants.map(variantKey => {
+            const file = svc.variants[variantKey];
+            const icon = VARIANT_ICONS[variantKey] || '📄';
+            const label = file.variant_label || variantKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            return `
+                <div class="leader-guide-variant">
+                    <div class="leader-guide-variant-info">
+                        <span class="leader-guide-variant-icon">${icon}</span>
+                        <div>
+                            <div class="leader-guide-variant-label">${escapeHtml(label)}</div>
+                            <div class="leader-guide-variant-meta">${formatBytes(file.size)}</div>
+                        </div>
+                    </div>
+                    <a href="${API_BASE}/api/files/leader_guide/${encodeURIComponent(file.date)}/${encodeURIComponent(file.filename)}"
+                       class="btn btn-primary btn-small"
+                       download="${escapeHtml(file.filename)}">
+                        Download
+                    </a>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="leader-guide-column">
+                <div class="leader-guide-column-header">
+                    <span class="leader-guide-service-name">${escapeHtml(svc.service_name)}</span>
+                    ${dateLabel ? `<span class="leader-guide-date">${escapeHtml(dateLabel)}</span>` : ''}
+                </div>
+                ${variantRows}
+            </div>
+        `;
+    }).join('');
+
+    filesList.innerHTML = `<div class="leader-guide-columns">${columnsHtml}</div>`;
 }
 
 /**

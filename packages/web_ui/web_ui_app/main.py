@@ -8,9 +8,12 @@ from fastapi.requests import Request
 from pydantic import BaseModel
 from pathlib import Path
 from datetime import datetime
+import re
 import uuid
 import os
 import sys
+
+_LEADER_GUIDE_RE = re.compile(r'^(.+?)_(.+?)_leader_guide_(.+)\.pdf$')
 
 # Ensure church_automation_shared is importable
 try:
@@ -18,6 +21,7 @@ try:
         ANNOUNCEMENTS_OUTPUT_DIR,
         SLIDES_OUTPUTS_DIR,
         BULLETINS_OUTPUT_DIR,
+        LEADER_GUIDE_OUTPUT_DIR,
         REPO_ROOT,
     )
 except ModuleNotFoundError:
@@ -30,6 +34,7 @@ except ModuleNotFoundError:
         ANNOUNCEMENTS_OUTPUT_DIR,
         SLIDES_OUTPUTS_DIR,
         BULLETINS_OUTPUT_DIR,
+        LEADER_GUIDE_OUTPUT_DIR,
         REPO_ROOT,
     )
 from web_ui_app.tasks import run_job_async, get_job_status, list_jobs, clear_completed_jobs
@@ -104,10 +109,10 @@ async def trigger_job(request: JobRequest) -> JobResponse:
     Raises:
         HTTPException: If job_type is invalid
     """
-    if request.job_type not in ["announcements", "slides", "bulletins"]:
+    if request.job_type not in ["announcements", "slides", "bulletins", "leader_guide"]:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid job_type. Must be one of: announcements, slides, bulletins"
+            detail=f"Invalid job_type. Must be one of: announcements, slides, bulletins, leader_guide"
         )
     
     job_id = str(uuid.uuid4())
@@ -192,6 +197,42 @@ async def list_files(job_type: str):
         output_dir = BULLETINS_OUTPUT_DIR
         extension = ".pdf"
         use_subdirs = False  # Bulletins are flat
+    elif job_type == "leader_guide":
+        if not LEADER_GUIDE_OUTPUT_DIR.exists():
+            return {"files": []}
+        files = []
+        for file_path in sorted(
+            LEADER_GUIDE_OUTPUT_DIR.glob("*.pdf"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        ):
+            if not file_path.is_file():
+                continue
+            filename = file_path.name
+            m = _LEADER_GUIDE_RE.match(filename)
+            if m:
+                service_slug = m.group(1)
+                date_str = m.group(2)
+                variant_key = m.group(3)
+                service_name = service_slug.replace("-", " ").title()
+                variant_label = variant_key.replace("_", " ").title()
+            else:
+                service_slug = "unknown"
+                service_name = "Unknown Service"
+                date_str = "unknown"
+                variant_key = "unknown"
+                variant_label = "Unknown"
+            files.append({
+                "date": date_str,
+                "filename": filename,
+                "size": file_path.stat().st_size,
+                "modified": datetime.fromtimestamp(file_path.stat().st_mtime).isoformat(),
+                "service": service_slug,
+                "service_name": service_name,
+                "variant": variant_key,
+                "variant_label": variant_label,
+            })
+        return {"files": files}
     else:
         raise HTTPException(status_code=400, detail="Invalid job_type")
     
@@ -264,6 +305,10 @@ async def download_file(job_type: str, date: str, filename: str):
     elif job_type == "bulletins":
         output_dir = BULLETINS_OUTPUT_DIR
         # Bulletins are flat in the output directory, not in subdirs
+        file_path = output_dir / filename
+    elif job_type == "leader_guide":
+        output_dir = LEADER_GUIDE_OUTPUT_DIR
+        # Leader guides are flat in the output directory, not in subdirs
         file_path = output_dir / filename
     else:
         raise HTTPException(status_code=400, detail="Invalid job_type")

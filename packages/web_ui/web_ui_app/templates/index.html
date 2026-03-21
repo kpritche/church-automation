@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Church Automation - Media Generation</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=20260319b">
 </head>
 <body>
     <div class="container">
@@ -22,10 +22,15 @@
                         <span class="status-badge" id="announcements-status">Ready</span>
                     </div>
                     <div class="card-body">
-                        <p>Generate ProPresenter slides from weekly email announcements.</p>
-                        <button class="btn btn-primary" onclick="triggerJob('announcements')">
-                            Generate Announcements
-                        </button>
+                        <p>Generate PowerPoint slides from weekly email announcements.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('announcements')">
+                                Generate Announcements
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('announcements')">
+                                View Existing Files
+                            </button>
+                        </div>
                         <div class="progress-container" id="announcements-progress" style="display: none;">
                             <div class="spinner"></div>
                             <span class="progress-text">Processing...</span>
@@ -41,22 +46,27 @@
                 <!-- Slides Card -->
                 <div class="card" id="slides-card">
                     <div class="card-header">
-                        <h2>📖 Service Slides</h2>
+                        <h2>🖥️ Service Slides</h2>
                         <span class="status-badge" id="slides-status">Ready</span>
                     </div>
                     <div class="card-body">
                         <p>Generate ProPresenter slides from Planning Center liturgy.</p>
-                        <button class="btn btn-primary" onclick="triggerJob('slides')">
-                            Generate Slides
-                        </button>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('slides')">
+                                Generate Slides
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('slides')">
+                                View Existing Files
+                            </button>
+                        </div>
                         <div class="progress-container" id="slides-progress" style="display: none;">
                             <div class="spinner"></div>
                             <span class="progress-text">Processing...</span>
                         </div>
                         <div class="error-message" id="slides-error" style="display: none;"></div>
                         <div class="success-message" id="slides-success" style="display: none;">
-                            ✓ Completed! 
-                            <a href="#" onclick="showFiles('slides'); return false;">View Files</a>
+                            ✓ Slides uploaded to Planning Center!
+                            <div id="slides-uploaded-files" style="margin-top: 8px; font-size: 0.9em;"></div>
                         </div>
                     </div>
                 </div>
@@ -69,9 +79,14 @@
                     </div>
                     <div class="card-body">
                         <p>Generate PDF bulletins from Planning Center service plans.</p>
-                        <button class="btn btn-primary" onclick="triggerJob('bulletins')">
-                            Generate Bulletins
-                        </button>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('bulletins')">
+                                Generate Bulletins
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('bulletins')">
+                                View Existing Files
+                            </button>
+                        </div>
                         <div class="progress-container" id="bulletins-progress" style="display: none;">
                             <div class="spinner"></div>
                             <span class="progress-text">Processing...</span>
@@ -80,6 +95,34 @@
                         <div class="success-message" id="bulletins-success" style="display: none;">
                             ✓ Completed! 
                             <a href="#" onclick="showFiles('bulletins'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leader Guides Card -->
+                <div class="card" id="leader_guide-card">
+                    <div class="card-header">
+                        <h2>📋 Leader Guides</h2>
+                        <span class="status-badge" id="leader_guide-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate PDF leader guides with service items and attachments from Planning Center.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('leader_guide')">
+                                Generate Leader Guides
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('leader_guide')">
+                                View Existing Files
+                            </button>
+                        </div>
+                        <div class="progress-container" id="leader_guide-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="leader_guide-error" style="display: none;"></div>
+                        <div class="success-message" id="leader_guide-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('leader_guide'); return false;">View Files</a>
                         </div>
                     </div>
                 </div>
@@ -113,6 +156,6 @@
         </footer>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=20260319b"></script>
 </body>
 </html>

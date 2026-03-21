@@ -28,13 +28,13 @@ RUN mkdir -p /secrets /app/output
 # Environment variables
 ENV CHURCH_AUTOMATION_SECRETS_DIR=/secrets \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:8080/health')" || exit 1
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Run web UI by default
-CMD ["uvicorn", "web_ui_app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "web_ui_app.main:app", "--host", "0.0.0.0", "--port", "8080"]

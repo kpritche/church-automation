@@ -1,8 +1,8 @@
 """
-Generate service leader guide PDF from Planning Center Online service.
+Generate service leader guide PDFs from a Planning Center Online service.
 
-The leader guide contains all service items (names, descriptions, details) in order,
-with attached PDFs (lyrics, sheet music) embedded for easy reference during worship.
+Each service produces multiple leader guide variants with the same base item content
+but different song attachment rules.
 
 Usage:
     python -m bulletins_app.make_service_leader_guide
@@ -56,6 +56,25 @@ except ModuleNotFoundError:
 # Configuration
 CONFIG_PATH = os.getenv("SLIDES_CONFIG", str(SLIDES_SLIDES_CONFIG))
 OUTPUT_DIR = LEADER_GUIDE_OUTPUT_DIR
+UPLOAD_TO_PCO = os.getenv("LEADER_GUIDE_UPLOAD_TO_PCO", "1").strip().lower() not in {
+    "0",
+    "false",
+    "no",
+    "off",
+}
+
+LEADER_GUIDE_VARIANTS: List[Dict[str, object]] = [
+    {
+        "key": "sheet_music",
+        "label": "sheet music",
+        "fallback_order": ("sheet_music", "chord_chart", "lyrics"),
+    },
+    {
+        "key": "chord_charts",
+        "label": "chord charts",
+        "fallback_order": ("chord_chart", "lyrics"),
+    },
+]
 
 
 def load_config(path: str) -> dict:
@@ -131,8 +150,7 @@ def parse_html_detail(html: str) -> List[Dict[str, object]]:
         return []
 
     soup = BeautifulSoup(html, "html.parser")
-    remove_highlighted_text(soup)
-    # Note: Keep red text for leader guide (unlike bulletins which remove it)
+    # Keep all text for leader guides, including highlighted and red content.
 
     def iter_text_with_style(node: Tag, bold: bool = False):
         for child in node.children:
@@ -300,6 +318,365 @@ def download_attachment(
     return None
 
 
+def attachment_filename(attachment_obj: Dict[str, object]) -> str:
+    """Return lowercase filename for an attachment."""
+    attrs = attachment_obj.get("attributes") or {}
+    return str(attrs.get("filename") or "").lower()
+
+
+def attachment_content_type(attachment_obj: Dict[str, object]) -> str:
+    """Return lowercase content type for an attachment."""
+    attrs = attachment_obj.get("attributes") or {}
+    return str(attrs.get("content_type") or "").lower()
+
+
+def is_pdf_attachment(attachment_obj: Dict[str, object]) -> bool:
+    """Return whether an attachment is a PDF."""
+    filename = attachment_filename(attachment_obj)
+    content_type = attachment_content_type(attachment_obj)
+    return filename.endswith(".pdf") or "pdf" in content_type
+
+
+def classify_song_attachment(attachment_obj: Dict[str, object]) -> Optional[str]:
+    """Classify a song PDF attachment for variant-specific fallback selection."""
+    if not is_pdf_attachment(attachment_obj):
+        return None
+
+    filename = attachment_filename(attachment_obj)
+
+    if "lyric" in filename:
+        return "lyrics"
+
+    if any(keyword in filename for keyword in ["chart", "chord", "chords"]):
+        return "chord_chart"
+
+    return "sheet_music"
+
+
+def song_attachment_priority(attachment_obj: Dict[str, object], attachment_kind: str) -> Tuple[int, str]:
+    """Return a sort key for attachment selection within a song attachment class."""
+    filename = attachment_filename(attachment_obj)
+
+    if attachment_kind == "sheet_music":
+        if "vocal" in filename:
+            return (0, filename)
+        if "lead" in filename:
+            return (1, filename)
+        return (2, filename)
+
+    if attachment_kind == "chord_chart":
+        if "chord" in filename:
+            return (0, filename)
+        if "chart" in filename:
+            return (1, filename)
+        return (2, filename)
+
+    return (0, filename)
+
+
+def choose_song_attachment(
+    attachments: List[Dict[str, object]],
+    fallback_order: Tuple[str, ...],
+) -> Tuple[Optional[Dict[str, object]], Optional[str]]:
+    """Choose a single song attachment using the variant fallback order."""
+    attachments_by_kind: Dict[str, List[Dict[str, object]]] = {
+        "sheet_music": [],
+        "chord_chart": [],
+        "lyrics": [],
+    }
+
+    for attachment in attachments:
+        kind = classify_song_attachment(attachment)
+        if kind:
+            attachments_by_kind[kind].append(attachment)
+
+    for kind in fallback_order:
+        candidates = attachments_by_kind.get(kind) or []
+        if candidates:
+            selected = sorted(candidates, key=lambda att: song_attachment_priority(att, kind))[0]
+            return selected, kind
+
+    return None, None
+
+
+def fetch_item_attachments(
+    pco: PCO,
+    service_type_id: int,
+    plan_id: str,
+    item_id: str,
+    title: str,
+) -> List[Dict[str, object]]:
+    """Fetch attachments for a single service item."""
+    attachments_url = (
+        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+    )
+    try:
+        attachments_resp = pco.get(attachments_url)
+        return attachments_resp.get("data", [])
+    except Exception as e:
+        print(f"  ⚠ Could not fetch attachments for '{title}': {e}")
+        return []
+
+
+def extract_leader_name(person_obj: Dict[str, object]) -> Optional[str]:
+    """Extract the preferred leader display name from a Person payload."""
+    attributes = person_obj.get("attributes") or {}
+    first_name = str(attributes.get("first_name") or "").strip()
+    last_name = str(attributes.get("last_name") or "").strip()
+    if first_name and last_name:
+        return f"{first_name} {last_name}"
+
+    full_name = str(attributes.get("full_name") or "").strip()
+    if full_name:
+        return full_name
+
+    if first_name:
+        return first_name
+    if last_name:
+        return last_name
+
+    return None
+
+
+def fetch_item_leaders(
+    pco: PCO,
+    service_type_id: int,
+    plan_id: str,
+    item_id: str,
+    title: str,
+) -> List[str]:
+    """Fetch assigned leader first names for a single service item."""
+    endpoint = (
+        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/item_assignments"
+    )
+
+    try:
+        resp = pco.get(endpoint, include="assignable")
+    except Exception as e:
+        print(f"  ⚠ Could not fetch item assignments for '{title}': {e}")
+        return []
+
+    included = resp.get("included") or []
+    people_by_id: Dict[str, Dict[str, object]] = {
+        str(person.get("id")): person
+        for person in included
+        if person.get("type") == "Person"
+    }
+
+    leaders: List[str] = []
+    seen: set[str] = set()
+
+    for assignment in resp.get("data") or []:
+        relationships = assignment.get("relationships") or {}
+        assignable = (relationships.get("assignable") or {}).get("data") or {}
+        if assignable.get("type") != "Person":
+            continue
+
+        person_id = str(assignable.get("id") or "")
+        person_obj = people_by_id.get(person_id)
+        if person_obj is None:
+            related_url = (relationships.get("assignable") or {}).get("links", {}).get("related")
+            if related_url:
+                try:
+                    person_resp = pco.get(related_url)
+                    person_obj = person_resp.get("data")
+                except Exception:
+                    person_obj = None
+
+        if not person_obj:
+            continue
+
+        leader_name = extract_leader_name(person_obj)
+        if leader_name and leader_name not in seen:
+            seen.add(leader_name)
+            leaders.append(leader_name)
+
+    return leaders
+
+
+def prepare_item_entries(
+    pco: PCO,
+    service_type_id: int,
+    plan_id: str,
+    items: List[Dict[str, object]],
+) -> List[Dict[str, object]]:
+    """Prepare item metadata and attachments once for all leader guide variants."""
+    prepared_items: List[Dict[str, object]] = []
+
+    for item_obj in items:
+        item_attrs = item_obj.get("attributes", {})
+        item_id = str(item_obj.get("id", ""))
+        title = item_attrs.get("title", "Untitled")
+        description = item_attrs.get("description")
+        html_details = parse_html_detail(item_attrs.get("html_details", ""))
+        item_type = str(item_attrs.get("item_type") or "").lower()
+
+        prepared_items.append(
+            {
+                "item_id": item_id,
+                "title": title,
+                "description": description,
+                "html_details": html_details,
+                "should_skip_details": title in {"Bulletin Cover", "Bulletin cover"},
+                "is_song": item_type == "song",
+                "leaders": fetch_item_leaders(
+                    pco,
+                    service_type_id=service_type_id,
+                    plan_id=plan_id,
+                    item_id=item_id,
+                    title=title,
+                ),
+                "attachments": fetch_item_attachments(
+                    pco,
+                    service_type_id=service_type_id,
+                    plan_id=plan_id,
+                    item_id=item_id,
+                    title=title,
+                ),
+            }
+        )
+
+    return prepared_items
+
+
+def get_attachment_bytes(
+    pco: PCO,
+    attachment_obj: Dict[str, object],
+    service_type_id: int,
+    plan_id: str,
+    item_id: str,
+    cache: Dict[str, bytes],
+) -> Optional[bytes]:
+    """Download attachment bytes with a simple in-memory cache."""
+    attachment_id = str(attachment_obj.get("id") or "")
+    if attachment_id in cache:
+        return cache[attachment_id]
+
+    attachment_bytes = download_attachment(
+        pco,
+        attachment_obj,
+        service_type_id=service_type_id,
+        plan_id=plan_id,
+        item_id=item_id,
+    )
+    if attachment_bytes:
+        cache[attachment_id] = attachment_bytes
+    return attachment_bytes
+
+
+def upload_leader_guide_to_plan(
+    pco: PCO,
+    service_type_id: int,
+    plan_id: str,
+    file_path: Path,
+) -> bool:
+    """Upload a generated leader guide PDF as a plan attachment in PCO."""
+    try:
+        upload_resp = pco.upload(str(file_path))
+        upload_id = upload_resp["data"][0]["id"]
+
+        attach_payload = {
+            "data": {
+                "attributes": {
+                    "file_upload_identifier": upload_id,
+                    "filename": file_path.name,
+                }
+            }
+        }
+
+        pco.post(
+            f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/attachments",
+            payload=attach_payload,
+        )
+        print(f"  [OK] Uploaded leader guide to plan: {file_path.name}")
+        return True
+    except Exception as e:
+        print(f"  ⚠ Failed to upload leader guide to plan '{plan_id}': {e}")
+        return False
+
+
+def render_leader_guide_variant(
+    pco: PCO,
+    service_type_id: int,
+    plan_id: str,
+    plan_date: str,
+    service_name: str,
+    prepared_items: List[Dict[str, object]],
+    variant: Dict[str, object],
+    attachment_cache: Dict[str, bytes],
+) -> None:
+    """Render one leader guide variant for a service."""
+    renderer = LeaderGuideRenderer()
+    variant_label = str(variant["label"])
+    fallback_order = tuple(variant["fallback_order"])
+
+    print(
+        f"[INFO] Rendering {variant_label} leader guide for {service_name} on {plan_date}"
+    )
+
+    for item in prepared_items:
+        title = str(item["title"])
+        item_id = str(item["item_id"])
+
+        if not item["should_skip_details"]:
+            renderer.draw_item(
+                title,
+                item.get("description"),
+                item.get("html_details"),
+                item.get("leaders"),
+            )
+
+        selected_attachments: List[Tuple[Dict[str, object], Optional[str]]] = []
+
+        if item["is_song"]:
+            selected_attachment, selected_kind = choose_song_attachment(
+                item["attachments"],
+                fallback_order=fallback_order,
+            )
+            if selected_attachment:
+                selected_attachments.append((selected_attachment, selected_kind))
+        else:
+            for attachment in item["attachments"]:
+                if is_pdf_attachment(attachment):
+                    selected_attachments.append((attachment, None))
+
+        for attachment_obj, selected_kind in selected_attachments:
+            attachment_bytes = get_attachment_bytes(
+                pco,
+                attachment_obj,
+                service_type_id=service_type_id,
+                plan_id=plan_id,
+                item_id=item_id,
+                cache=attachment_cache,
+            )
+            if not attachment_bytes:
+                continue
+
+            filename = (attachment_obj.get("attributes", {}) or {}).get("filename", "attachment")
+            renderer.add_attachment_pdf(attachment_bytes)
+            if selected_kind:
+                print(f"  [OK] Added {selected_kind} for '{title}': {filename}")
+            else:
+                print(f"  [OK] Added PDF for '{title}': {filename}")
+
+    safe_service = safe_slug(service_name)
+    variant_key = str(variant["key"])
+    filename = f"{safe_service}_{plan_date}_leader_guide_{variant_key}.pdf"
+    output_path = Path(OUTPUT_DIR) / filename
+
+    renderer.save(output_path)
+    print(f"  [OK] {variant_label.title()} leader guide saved to {output_path}")
+    if UPLOAD_TO_PCO:
+        upload_leader_guide_to_plan(
+            pco,
+            service_type_id=service_type_id,
+            plan_id=plan_id,
+            file_path=output_path,
+        )
+    else:
+        print(f"  [OK] Skipped PCO upload for local test: {output_path.name}")
+
+
 def get_next_seven_day_window() -> Tuple[str, str]:
     """Get date range for next 7 days."""
     today = date.today()
@@ -347,8 +724,8 @@ def generate_leader_guide(
     plan_date: str,
     service_name: str,
 ) -> None:
-    """Generate leader guide PDF for a service plan."""
-    print(f"[INFO] Generating leader guide for {service_name} on {plan_date}")
+    """Generate all leader guide PDF variants for a service plan."""
+    print(f"[INFO] Generating leader guide variants for {service_name} on {plan_date}")
 
     # Fetch all items
     items_resp = pco.get(
@@ -361,81 +738,30 @@ def generate_leader_guide(
         print(f"  ⚠ No items found for plan {plan_id}; skipping")
         return
 
-    # Initialize renderer
-    renderer = LeaderGuideRenderer()
-
-    # Draw title - commented out per user preference
-    # title = f"{service_name}\n{format_human_date(plan_date)}"
-    # renderer.draw_title(title)
-
     # Sort items by position
     sorted_items = sorted(
         items, key=lambda x: x.get("attributes", {}).get("item_position_order", 999)
     )
 
-    # Process each item
-    for item_obj in sorted_items:
-        item_attrs = item_obj.get("attributes", {})
-        item_id = item_obj.get("id", "")
+    prepared_items = prepare_item_entries(
+        pco,
+        service_type_id=service_type_id,
+        plan_id=plan_id,
+        items=sorted_items,
+    )
+    attachment_cache: Dict[str, bytes] = {}
 
-        title = item_attrs.get("title", "Untitled")
-        
-        # Skip drawing item details for Bulletin Cover, but still process attachments
-        skip_details_titles = {"Bulletin Cover", "Bulletin cover"}
-        should_skip_details = title in skip_details_titles
-        
-        description = item_attrs.get("description")
-        html_details_str = item_attrs.get("html_details", "")
-
-        # Parse HTML details
-        html_details = parse_html_detail(html_details_str)
-
-        # Draw item (unless skipped)
-        if not should_skip_details:
-            renderer.draw_item(title, description, html_details)
-
-        # Fetch attachments for this item
-        attachments_url = (
-            f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+    for variant in LEADER_GUIDE_VARIANTS:
+        render_leader_guide_variant(
+            pco,
+            service_type_id=service_type_id,
+            plan_id=plan_id,
+            plan_date=plan_date,
+            service_name=service_name,
+            prepared_items=prepared_items,
+            variant=variant,
+            attachment_cache=attachment_cache,
         )
-        try:
-            attachments_resp = pco.get(attachments_url)
-            attachments = attachments_resp.get("data", [])
-        except Exception as e:
-            print(f"  ⚠ Could not fetch attachments for '{title}': {e}")
-            attachments = []
-
-        # Download and add attachments
-        for att_obj in attachments:
-            att_id = att_obj.get("id")
-            att_attrs = att_obj.get("attributes", {})
-            filename = att_attrs.get("filename", "attachment")
-
-            # Determine file type - check content_type first, fall back to filename extension
-            content_type = (att_attrs.get("content_type", "") or "").lower()
-            filename_lower = filename.lower()
-            
-            is_pdf = "pdf" in content_type or filename_lower.endswith(".pdf")
-            is_image = "image" in content_type
-            
-            if not is_pdf and not is_image:
-                continue
-
-            att_bytes = download_attachment(
-                pco, att_obj, service_type_id, plan_id, item_id
-            )
-            if att_bytes:
-                if is_pdf:
-                    renderer.add_attachment_pdf(att_bytes)
-                    print(f"  [OK] Added PDF: {filename}")
-
-    # Save to output directory
-    safe_service = safe_slug(service_name)
-    filename = f"{safe_service}_{plan_date}_leader_guide.pdf"
-    output_path = Path(OUTPUT_DIR) / filename
-
-    renderer.save(output_path)
-    print(f"  [OK] Leader guide saved to {output_path}")
 
 
 def main() -> None:

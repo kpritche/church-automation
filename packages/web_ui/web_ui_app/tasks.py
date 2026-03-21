@@ -44,7 +44,8 @@ def run_job_async(job_id: str, job_type: str, params: dict = None) -> str:
             
             elif job_type == "slides":
                 from slides_app.make_pro import main as gen_slides
-                gen_slides()
+                uploaded_files = gen_slides()
+                _JOB_STATUS[job_id]["uploaded_files"] = uploaded_files or []
                 _JOB_STATUS[job_id]["status"] = "completed"
                 print(f"✓ Job {job_id} completed: slides")
             
@@ -53,6 +54,12 @@ def run_job_async(job_id: str, job_type: str, params: dict = None) -> str:
                 gen_bulletins()
                 _JOB_STATUS[job_id]["status"] = "completed"
                 print(f"✓ Job {job_id} completed: bulletins")
+            
+            elif job_type == "leader_guide":
+                from bulletins_app.make_service_leader_guide import main as gen_leader_guide
+                gen_leader_guide()
+                _JOB_STATUS[job_id]["status"] = "completed"
+                print(f"✓ Job {job_id} completed: leader_guide")
             
             else:
                 raise ValueError(f"Unknown job type: {job_type}")

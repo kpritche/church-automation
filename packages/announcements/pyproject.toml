@@ -23,6 +23,7 @@ dependencies = [
     "pillow>=10.0.0",
     "requests>=2.31.0",
     "protobuf>=4.0.0",
+    "python-pptx>=0.6.21",
 ]
 
 [project.optional-dependencies]
@@ -33,7 +34,7 @@ dev = [
 ]
 
 [project.scripts]
-make-announcements = "announcements_app.pro_generator:main"
+make-announcements = "announcements_app.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
