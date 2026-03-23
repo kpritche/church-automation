@@ -422,18 +422,12 @@ def extract_leader_name(person_obj: Dict[str, object]) -> Optional[str]:
     """Extract the preferred leader display name from a Person payload."""
     attributes = person_obj.get("attributes") or {}
     first_name = str(attributes.get("first_name") or "").strip()
-    last_name = str(attributes.get("last_name") or "").strip()
-    if first_name and last_name:
-        return f"{first_name} {last_name}"
+    if first_name:
+        return first_name
 
     full_name = str(attributes.get("full_name") or "").strip()
     if full_name:
         return full_name
-
-    if first_name:
-        return first_name
-    if last_name:
-        return last_name
 
     return None
 

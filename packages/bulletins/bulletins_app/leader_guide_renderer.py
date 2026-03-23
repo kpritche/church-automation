@@ -38,7 +38,7 @@ MARGIN_X = 30
 MARGIN_Y = 25
 BODY_WIDTH = PAGE_WIDTH - (MARGIN_X * 2)
 COLUMN_GUTTER = 28
-LEADER_COLUMN_WIDTH = 120
+LEADER_COLUMN_WIDTH = 80
 CONTENT_COLUMN_WIDTH = BODY_WIDTH - COLUMN_GUTTER - LEADER_COLUMN_WIDTH
 CONTENT_COLUMN_X = MARGIN_X
 LEADER_COLUMN_X = CONTENT_COLUMN_X + CONTENT_COLUMN_WIDTH + COLUMN_GUTTER
@@ -86,7 +86,7 @@ class FontBundle:
 
         self.title_size = 24
         self.heading_size = 14
-        self.body_size = 12
+        self.body_size = 16
         self.small_size = 10
         self.leader_size = 11
         self.column_label_size = 11

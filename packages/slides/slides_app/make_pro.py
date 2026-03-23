@@ -531,8 +531,8 @@ def main():
                         f"/services/v2/service_types/{stid}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
                         payload=attach_payload
                     )
-                        print(f"  > Uploaded file; upload_id={upload_id}")
-                        uploaded_files.append(filename)
+                    print(f"  > Uploaded file; upload_id={upload_id}")
+                    uploaded_files.append(filename)
 
                     processed_dates.add(plan_date)
 
