@@ -55,6 +55,7 @@ from .content_parser import (
     has_pro_attachment,
 )
 from .slide_utils import slice_into_slides
+from . import communication_actions
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -237,7 +238,8 @@ def make_pro_for_items(
     parsed: Dict[str, object],
     filename: str = "service_slides.pro",
     scripture_reference: Optional[str] = None,
-    plan_date: Optional[str] = None
+    plan_date: Optional[str] = None,
+    camera_config: Optional[Dict] = None
 ) -> None:
 
     wpres = load_template(WHITE_TEMPLATE)
@@ -246,6 +248,16 @@ def make_pro_for_items(
 
     final_pres = deepcopy(bpres)  # Start with the blank template
     final_pres.cue_groups[0].group.uuid.string = str(uuid.uuid4())  # Generate a new UUID for the cue group
+    
+    # Check if we should add a camera control action
+    camera_command = None
+    if camera_config and camera_config.get("enabled", False):
+        item_title = parsed.get("title", "")
+        camera_command = communication_actions.get_camera_command_for_item(item_title, camera_config)
+        if camera_command:
+            print(f"  [CAMERA] Mapped '{item_title}' -> {camera_command}")
+        else:
+            print(f"  [CAMERA] No mapping found for '{item_title}'")
 
     # Map bold flags by chunk text
     bold_map = {}
@@ -318,6 +330,16 @@ def make_pro_for_items(
         new_cue_id = final_pres.cue_groups[0].cue_identifiers.add()
         new_cue_id.string = new_cue.uuid.string
     
+    # Insert camera control action as first action in first cue (if applicable)
+    if camera_command and camera_config and len(final_pres.cues) > 0:
+        camera_action = communication_actions.create_communication_action(
+            camera_command, camera_config
+        )
+        # Insert at the beginning of the actions list
+        first_cue = final_pres.cues[0]
+        first_cue.actions.insert(0, camera_action)
+        print(f"  [CAMERA] Inserted communication action for {camera_command}")
+    
     if scripture_reference:
         # Add scripture reference slide
         add_text_slide(scripture_reference, "white")
@@ -366,6 +388,11 @@ def main():
     service_ids = cfg.get("service_type_ids", [])
     if not service_ids:
         raise ValueError(f"No service_type_ids in config: {CONFIG_PATH}")
+    
+    # Load camera control configuration
+    camera_config = communication_actions.load_camera_control_config(cfg)
+    if camera_config:
+        print(f"[CAMERA] Camera control enabled with {len(camera_config.get('mappings', []))} mappings")
     
     target_date = os.getenv("SLIDES_TARGET_DATE")
     start_date, end_date = get_next_seven_day_window(target_date)
@@ -565,7 +592,8 @@ def main():
                         parsed,
                         filename,
                         scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
-                        plan_date=plan_date
+                        plan_date=plan_date,
+                        camera_config=camera_config
                     )
                     print(f"Generated slides for service type ID {stid} into {filename}")
                     
