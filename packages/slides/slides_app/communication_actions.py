@@ -40,16 +40,24 @@ def load_camera_control_config(config: Dict[str, Any]) -> Optional[Dict[str, Any
     return camera_config
 
 
-def get_camera_command_for_item(title: str, camera_config: Dict[str, Any]) -> Optional[str]:
+def get_camera_command_for_item(
+    title: str, 
+    camera_config: Dict[str, Any],
+    service_type_id: Optional[int] = None,
+    is_song: bool = False
+) -> Optional[str]:
     """
     Match a PCO item title to a camera command.
     
     Supports multiple title variations per command mapping.
+    Supports service-specific "any_song" mappings.
     Matching is case-insensitive and strips whitespace.
     
     Args:
         title: The PCO item title
         camera_config: Camera control configuration
+        service_type_id: The service type ID (optional)
+        is_song: Whether the item is a song (optional)
     
     Returns:
         Command string (e.g., "CC 9/1/0") or None if no match
@@ -61,6 +69,25 @@ def get_camera_command_for_item(title: str, camera_config: Dict[str, Any]) -> Op
     title_normalized = title.strip().lower()
     
     for mapping in mappings:
+        match_type = mapping.get("match_type", "exact")
+        
+        # Handle "any_song" match type
+        if match_type == "any_song":
+            # Only match if this is actually a song
+            if not is_song:
+                continue
+            
+            # Check if service_type_id matches (if specified)
+            mapping_service_ids = mapping.get("service_type_ids", [])
+            if mapping_service_ids and service_type_id:
+                if service_type_id in mapping_service_ids:
+                    return mapping.get("command")
+            elif not mapping_service_ids:
+                # No service restriction, matches all songs
+                return mapping.get("command")
+            continue
+        
+        # Handle exact title matching (default)
         titles = mapping.get("titles", [])
         for variant in titles:
             if variant.strip().lower() == title_normalized:
