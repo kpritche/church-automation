@@ -15,8 +15,8 @@ The shared package provides the foundational infrastructure used by all other to
 * Planning Center API credential management.
 
 ### Announcements (packages/announcements)
-The announcements package automates the transition from weekly announcement emails to ProPresenter slides. It performs the following functions:
-* Fetches weekly announcement emails from Gmail using the Gmail API.
+The announcements package automates the transition from church website announcements to ProPresenter slides. It performs the following functions:
+* Fetches the latest weekly events page from the church website.
 * Parses HTML content to extract individual announcement items.
 * Utilizes Google Vertex AI to generate concise summaries for each announcement.
 * Generates ProPresenter .probundle files containing formatted slides and QR codes for linked content.
@@ -37,7 +37,35 @@ The bulletins package generates printable PDF bulletins based on Planning Center
 
 ## Getting Started
 
-For detailed setup instructions, including prerequisite installation, API configuration, and environment setup, please refer to the [INSTALL.md](INSTALL.md) file.
+The easiest way to get started is using [uv](https://astral.sh/uv/), a high-performance Python package manager.
+
+1. **Install uv**:
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Setup the workspace**:
+   ```bash
+   uv sync
+   ```
+   This will create a shared virtual environment and install all packages in editable mode.
+
+3. **Configure the environment**:
+   See [INSTALL.md](INSTALL.md) for detailed configuration steps (PCO credentials, Gmail setup, etc.).
+
+## Usage
+
+You can run the tools from the root directory using `uv run`:
+
+```bash
+# Run all standard weekly tasks
+uv run run_all.py
+
+# Run individual tools
+uv run make-announcements
+uv run make-slides
+uv run make-bulletins
+```
 
 ## Technical Implementation
 

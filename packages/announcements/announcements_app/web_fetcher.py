@@ -2,10 +2,26 @@
 from __future__ import annotations
 
 import re
+import socket
 from datetime import datetime
 from typing import Optional
 import requests
 from bs4 import BeautifulSoup
+
+# --- DNS Patch for conta.cc ---
+# Some environments fail to resolve the shortened Constant Contact domain (conta.cc).
+# We patch socket.getaddrinfo to provide stable IPs for this host if system DNS fails.
+_orig_getaddrinfo = socket.getaddrinfo
+
+def _patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if host == "conta.cc":
+        # Known stable IPs for conta.cc (Constant Contact)
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('67.199.248.13', port)),
+                (socket.AF_INET, socket.SOCK_STREAM, 6, '', ('67.199.248.12', port))]
+    return _orig_getaddrinfo(host, port, family, type, proto, flags)
+
+socket.getaddrinfo = _patched_getaddrinfo
+# ------------------------------
 
 
 def fetch_latest_announcement_html(website_url: str = "https://www.fumcwl.org/weekly-events/") -> str:
