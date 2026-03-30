@@ -40,7 +40,6 @@ async function triggerJob(jobType) {
         }
 
         const data = await response.json();
-        console.log(`Job started: ${data.job_id}`);
 
         // Start polling for status
         pollJobStatus(data.job_id, jobType);
@@ -80,7 +79,6 @@ function pollJobStatus(jobId, jobType) {
             }
 
             const job = await response.json();
-            console.log(`Job ${jobId} status:`, job.status);
 
             // Update status badge
             statusBadge.textContent = capitalizeFirst(job.status);
@@ -396,25 +394,27 @@ async function showServiceSelector(jobType) {
         const response = await fetch(`${API_BASE}/api/future-services`);
         
         if (!response.ok) {
-            throw new Error('Failed to fetch services');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
         availableServices = data.plans || [];
         
         if (availableServices.length === 0) {
-            list.innerHTML = '<p class="no-jobs">No future services found.</p>';
-        } else {
-            renderServiceSelector(availableServices, jobType);
+            loading.style.display = 'none';
+            errorDiv.textContent = 'No future services found. Please check your Planning Center configuration.';
+            errorDiv.style.display = 'block';
+            return;
         }
         
+        renderServiceSelector(availableServices, jobType);
         loading.style.display = 'none';
         list.style.display = 'block';
         
     } catch (error) {
-        console.error('Error loading services:', error);
+        console.error('Error fetching services:', error);
         loading.style.display = 'none';
-        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.textContent = `Failed to load services: ${error.message}. Please try again.`;
         errorDiv.style.display = 'block';
     }
 }
@@ -481,20 +481,20 @@ function deselectAllServices() {
 }
 
 async function generateSelectedServices() {
-    const checkboxes = document.querySelectorAll('.service-checkbox:checked');
-    
-    if (checkboxes.length === 0) {
-        alert('Please select at least one service.');
-        return;
-    }
-    
     // Read the job type from the selector
     const selector = document.getElementById('service-selector');
     const jobType = selector.getAttribute('data-job-type');
     
     if (!jobType) {
         console.error('Job type not set on service selector');
-        alert('Error: Job type not specified');
+        alert('Error: Job type not set. Please try again.');
+        return;
+    }
+    
+    const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        alert(`Please select at least one service to generate ${jobType}.`);
         return;
     }
     
@@ -540,7 +540,6 @@ async function generateSelectedServices() {
         }
         
         const data = await response.json();
-        console.log(`${jobType} job started: ${data.job_id} for ${selectedPlans.length} services`);
         
         // Start polling for status
         pollJobStatus(data.job_id, jobType);
@@ -548,7 +547,7 @@ async function generateSelectedServices() {
     } catch (error) {
         console.error(`Error triggering ${jobType} job:`, error);
         progress.style.display = 'none';
-        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.textContent = `Failed to start ${jobType} generation: ${error.message}`;
         errorDiv.style.display = 'block';
         statusBadge.textContent = 'Failed';
         statusBadge.className = 'status-badge failed';
