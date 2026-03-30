@@ -78,102 +78,112 @@ PRELUDE_POSTLUDE_TITLES = {
 }
 
 
-def _is_red_style(style: str) -> bool:
-    """Check if a style string contains red color definition.
+def _is_red_style(style: str, color_attr: str = "") -> bool:
+    """Check if a style string or color attribute contains red color definition.
     
     Detects various red color formats:
     - Named: 'red'
-    - Hex short: '#f00'
-    - Hex long: '#ff0000', '#ff0000ff'
-    - RGB: 'rgb(255, 0, 0)'
+    - Hex: '#f00', '#ff0000', '#cc0000', '#d0021b', etc.
+    - RGB: 'rgb(255, 0, 0)', 'rgb(204, 0, 0)', etc.
     - RGBA: 'rgba(255, 0, 0, ...)'
+    
+    Uses RGB threshold: R > 200 and G,B < 50 to catch red-ish colors.
     """
+    # Check color attribute (e.g., color="red")
+    if color_attr and color_attr.lower() == "red":
+        return True
+    
     if not style:
         return False
     
-    # Check for named color 'red'
-    if re.search(r"\bred\b", style, re.IGNORECASE):
+    # Extract color value from style attribute
+    color_match = re.search(r'color:\s*([^;]+)', style, re.IGNORECASE)
+    if not color_match:
+        return False
+    
+    color_value = color_match.group(1).strip()
+    
+    # Check named red
+    if color_value.lower() == "red":
         return True
     
-    # Check for hex colors: #f00, #ff0000, #ff0000ff, #FF0000
-    if re.search(r"#(?:f00|ff0000|ff0000ff)\b", style, re.IGNORECASE):
-        return True
+    # Check hex colors (match 6 digits first, then 3)
+    hex_match = re.match(r'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})', color_value)
+    if hex_match:
+        hex_val = hex_match.group(1)
+        # Convert 3-digit to 6-digit
+        if len(hex_val) == 3:
+            hex_val = ''.join([c*2 for c in hex_val])
+        
+        # Convert to RGB
+        r = int(hex_val[0:2], 16)
+        g = int(hex_val[2:4], 16)
+        b = int(hex_val[4:6], 16)
+        
+        # Red-ish if R > 200 and G,B < 50
+        return r > 200 and g < 50 and b < 50
     
-    # Check for rgb/rgba formats: rgb(255,0,0) or rgba(255,0,0,x)
-    if re.search(r"rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\)", style, re.IGNORECASE):
-        return True
+    # Check rgb() format
+    rgb_match = re.match(r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', color_value)
+    if rgb_match:
+        r = int(rgb_match.group(1))
+        g = int(rgb_match.group(2))
+        b = int(rgb_match.group(3))
+        
+        # Red-ish if R > 200 and G,B < 50
+        return r > 200 and g < 50 and b < 50
     
     return False
 
 
 def _strip_highlight_and_red_text(html_content: str) -> str:
-    """Remove highlighted and red-colored text regions from HTML content."""
+    """Remove highlighted and red-colored text regions from HTML content.
+    
+    Uses BeautifulSoup for robust HTML parsing and handles:
+    - <mark> tags
+    - Spans with background/highlight styling
+    - Any tags with red color (including nested tags)
+    - Supports various red color formats (named, hex, rgb)
+    """
     if not html_content:
         return ""
 
-    if BeautifulSoup is not None:
-        soup = BeautifulSoup(html_content, "html.parser")
+    if BeautifulSoup is None:
+        raise ImportError("BeautifulSoup is required for red text filtering. Install: pip install beautifulsoup4")
+    
+    soup = BeautifulSoup(html_content, "html.parser")
 
-        for tag in soup.find_all(["mark"]):
-            tag.decompose()
+    # Remove all <mark> tags
+    for tag in soup.find_all(["mark"]):
+        tag.decompose()
 
-        for span in soup.find_all("span"):
-            attrs = getattr(span, "attrs", None)
-            if not isinstance(attrs, dict):
-                continue
-            style = (span.get("style") or "").lower()
-            cls = " ".join(span.get("class") or []).lower()
-            if "background" in style or "highlight" in style or "marker" in cls:
-                span.decompose()
+    # Remove spans with background/highlight styling
+    for span in soup.find_all("span"):
+        attrs = getattr(span, "attrs", None)
+        if not isinstance(attrs, dict):
+            continue
+        style = (span.get("style") or "").lower()
+        cls = " ".join(span.get("class") or []).lower()
+        if "background" in style or "highlight" in style or "marker" in cls:
+            span.decompose()
 
-        for tag in list(soup.find_all(True)):
+    # Remove tags with red text color (loop until no more found to handle nesting)
+    removed_something = True
+    while removed_something:
+        removed_something = False
+        for tag in soup.find_all(True):  # All tags
             attrs = getattr(tag, "attrs", None)
             if not isinstance(attrs, dict):
                 continue
-            style = (attrs.get("style") or "")
-            color_attr = (attrs.get("color") or "")
-            # Remove any tag with red color styling or color attribute
-            if _is_red_style(style) or re.search(r"^red$", color_attr, re.IGNORECASE):
+            style = attrs.get("style", "")
+            color_attr = attrs.get("color", "")
+            
+            if _is_red_style(style, color_attr):
                 tag.decompose()
+                removed_something = True
+                break  # Start over with fresh find_all
 
-        return str(soup)
-
-    # Fallback when bs4 is unavailable
-    # Remove highlighted/marked text
-    cleaned = re.sub(r'<mark[^>]*>.*?</mark>', '', html_content, flags=re.IGNORECASE | re.DOTALL)
-    cleaned = re.sub(
-        r'<span[^>]*style="[^"]*(?:background|highlight|marker)[^"]*"[^>]*>.*?</span>',
-        '',
-        cleaned,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    
-    # Remove red text with various formats:
-    # Style attribute with color:red or hex variants
-    cleaned = re.sub(
-        r'<[^>]*style="[^"]*color\s*:\s*(?:red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))[^"]*"[^>]*>.*?</[^>]+>',
-        '',
-        cleaned,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    
-    # Remove red named color attribute
-    cleaned = re.sub(
-        r'<font[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</font>',
-        '',
-        cleaned,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    
-    # Remove any tags with color="red" attribute
-    cleaned = re.sub(
-        r'<[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</[^>]+>',
-        '',
-        cleaned,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    
-    return cleaned
+    return str(soup)
 
 
 def _parse_html_details(html_content: str) -> List[dict]:
@@ -311,6 +321,7 @@ def _parse_html_details(html_content: str) -> List[dict]:
                     chunks.append({"text": text, "is_bold": is_bold})
 
     # Merge very short chunks with the previous one when possible
+    # Fixed: Don't insert comma after terminal punctuation
     merged: List[dict] = []
     for chunk in chunks:
         if (
@@ -318,7 +329,16 @@ def _parse_html_details(html_content: str) -> List[dict]:
             and len(chunk["text"].split()) <= 3
             and merged[-1]["is_bold"] == chunk["is_bold"]
         ):
-            merged[-1]["text"] = (merged[-1]["text"] + ", " + chunk["text"]).strip(', ')
+            # Check if previous chunk ends with terminal punctuation
+            prev_text = merged[-1]["text"]
+            prev_stripped = prev_text.rstrip()
+            
+            if prev_stripped and prev_stripped[-1] in '.?!;:,':
+                # Use space-only joiner when there's terminal punctuation
+                merged[-1]["text"] = (prev_text + " " + chunk["text"]).strip()
+            else:
+                # Use comma joiner when there's no terminal punctuation
+                merged[-1]["text"] = (prev_text + ", " + chunk["text"]).strip(', ')
         else:
             merged.append(chunk)
 
@@ -626,6 +646,56 @@ def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
         
         # Remove text in square brackets [like this]
         all_text = re.sub(r'\[.*?\]', '', all_text)
+        
+        # Filter out song part indicators (Verse 1, Chorus, Bridge, etc.)
+        # This must happen before the line-by-line cleaning to catch section labels
+        lines = all_text.split("\n")
+        filtered_lines = []
+        
+        # Pattern for standalone parenthetical instructions like (BRIDGE), (REPEAT 4X)
+        parenthetical_pattern = re.compile(r'^\s*\([^)]*\)\s*$')
+        
+        # Pattern for inline section labels (e.g., "Verse 1: lyrics...")
+        inline_label_pattern = re.compile(
+            r'^\s*(Verse|Chorus|Bridge|Refrain|Intro|Outro|Ending|Interlude|Tag|Pre-Chorus|Instrumental|Misc)\s*\d*\s*[:\-]\s*(.+)',
+            re.IGNORECASE
+        )
+        
+        # List of section label keywords for quick checking
+        section_keywords = [
+            'verse', 'chorus', 'bridge', 'refrain', 'intro', 'outro',
+            'ending', 'interlude', 'tag', 'pre-chorus', 'instrumental', 'misc'
+        ]
+        
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                filtered_lines.append(line)
+                continue
+            
+            # Check if it's a standalone parenthetical instruction
+            if parenthetical_pattern.match(stripped):
+                continue
+            
+            # Check if it's an inline label with lyrics (keep the lyrics part)
+            inline_match = inline_label_pattern.match(stripped)
+            if inline_match:
+                # Keep only the lyrics part after the label
+                filtered_lines.append(inline_match.group(2))
+                continue
+            
+            # Check if it's a standalone section label
+            # Section labels are typically short (<30 chars) and start with a section keyword
+            words = stripped.split()
+            if len(words) <= 3 and words and words[0].lower() in section_keywords:
+                # This line is likely a section label, skip it
+                continue
+            
+            # Keep the line
+            filtered_lines.append(line)
+        
+        # Rejoin the filtered lines
+        all_text = '\n'.join(filtered_lines)
         
         # Clean up the text
         lines = all_text.split("\n")

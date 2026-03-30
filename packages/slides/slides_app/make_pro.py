@@ -149,6 +149,49 @@ def load_config(path: str) -> dict:
         raise FileNotFoundError(f"Config file not found: {p} or {fallback}")
     with open(p, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def should_skip_song(title: str, item_id: str, pco, stid: str, plan_id: str, 
+                     included: list, config: dict) -> tuple[bool, str]:
+    """
+    Determine if a song should be skipped based on configuration.
+    
+    Returns:
+        (should_skip, reason) where reason explains why the song was skipped
+    """
+    import re
+    
+    song_config = config.get("song_handling", {})
+    
+    # Check always_generate list first (overrides everything)
+    if title in song_config.get("always_generate_titles", []):
+        return (False, "")
+    
+    # Check exact title skip list
+    if title in song_config.get("skip_exact_titles", []):
+        return (True, f"title in skip_exact_titles list")
+    
+    # Check regex pattern skip list
+    for pattern in song_config.get("skip_title_patterns", []):
+        if re.search(pattern, title):
+            return (True, f"title matches pattern: {pattern}")
+    
+    # Check for SongSelect attachments
+    if song_config.get("skip_songselect_songs", True):
+        # Fetch attachments for this item
+        lyrics_items = [{"item_obj": {"id": item_id}, "title": title}]
+        lyrics_attachments = fetch_lyrics_attachments(
+            pco, lyrics_items, stid, plan_id, included
+        )
+        
+        # Check if any attachment filename contains "songselect" (case-insensitive)
+        for att_info in lyrics_attachments:
+            att_obj = att_info.get("attachment_obj", {})
+            filename = att_obj.get("attributes", {}).get("filename", "")
+            if "songselect" in filename.lower():
+                return (True, f"SongSelect detected in attachment: {filename}")
+    
+    return (False, "")
     
 def upload_pro_to_media(file_path: str) -> str:
     """
@@ -384,6 +427,21 @@ def main():
                 if has_pro_attachment(pco, stid, plan_id, parsed['item_id']):
                     print(f"[SKIP] Item already has .pro file attached: {parsed['title']}")
                     continue
+
+                # Check if song should be skipped (SongSelect, config, etc.)
+                if parsed.get("is_song"):
+                    should_skip, skip_reason = should_skip_song(
+                        parsed['title'],
+                        parsed['item_id'],
+                        pco,
+                        stid,
+                        plan_id,
+                        included,
+                        cfg
+                    )
+                    if should_skip:
+                        print(f"⊘ Skipping song '{parsed['title']}' ({skip_reason})")
+                        continue
 
                 # Build raw and bold-aware slides
                 print(f"Generating slides for item: {parsed['title']} on {plan_date}")
