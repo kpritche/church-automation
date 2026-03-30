@@ -13,11 +13,8 @@ uv sync
 Alternatively, to install manually:
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install bulletins package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup
@@ -123,7 +120,7 @@ Required fonts: Source Sans Pro (Regular, Bold, Italic, Bold Italic)
 - `pypco` - Planning Center Online API
 - `reportlab` - PDF generation
 - `pillow` - Image processing
-- `pypdf` - PDF manipulation
+- `PyPDF2` - PDF manipulation
 - `beautifulsoup4` - HTML parsing
 - `requests` - HTTP client
 - `church-automation-shared` - Common utilities

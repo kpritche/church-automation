@@ -1,62 +1,90 @@
-# Gemini Context: Church Automation Suite
+# Church Automation Suite - Gemini Context
 
-A modular Python monorepo for automating church presentation and bulletin workflows.
+This document provides essential context and instructions for AI agents working on the Church Automation Suite.
 
-## 🏗️ Project Architecture
+## Project Overview
 
-This is a **multi-package monorepo** using `setuptools` and `pyproject.toml` for each package. Packages are designed to be independent but share common utilities via the `shared` package.
+The **Church Automation Suite** is a modular Python monorepo designed to automate workflows for church presentations, bulletins, and announcements. It integrates with **Planning Center Online (PCO)**, **Gmail**, and **Google Vertex AI** to streamline media production.
 
-### Core Packages (`/packages`)
-- **`shared`**: Common utilities for path management (`paths.py`), configuration (`config.py`), and Planning Center API handling.
-- **`announcements`**: Fetches weekly emails from Gmail, parses HTML, uses Google Vertex AI for summarization, and generates ProPresenter `.probundle` files with QR codes.
-- **`slides`**: Fetches liturgy items from Planning Center Online (PCO), parses content (HTML/PDF), and generates ProPresenter `.pro` files using Protocol Buffers.
-- **`bulletins`**: Generates PDF bulletins from PCO service plans using ReportLab.
+### Main Technologies
+- **Language:** Python 3.9+
+- **Dependency Management:** `uv` (with workspaces)
+- **APIs:** Planning Center (pypco), Gmail API, Google GenAI (Vertex AI)
+- **Output Formats:**
+    - **ProPresenter 7:** Native `.pro` and `.probundle` files via Protocol Buffers.
+    - **PDF:** Bulletins generated via `ReportLab`.
+    - **PowerPoint:** Announcements optionally generated via `python-pptx`.
+- **Web UI:** FastAPI with Jinja2 templates.
 
-## 🚀 Development Workflow
+---
+
+## Project Structure
+
+The project is organized as a monorepo under the `packages/` directory:
+
+- `packages/shared/`: Core infrastructure, path management (`paths.py`), and configuration loading.
+- `packages/announcements/`: Fetches weekly announcements from Gmail, summarizes them using AI, and generates ProPresenter/PowerPoint files.
+- `packages/slides/`: Converts Planning Center service plans into ProPresenter 7 presentations using Protobuf definitions located in `ProPresenter7_Proto/`.
+- `packages/bulletins/`: Generates professionally formatted PDF bulletins from Planning Center data.
+- `packages/web_ui/`: A FastAPI-based dashboard to trigger and monitor automation jobs.
+- `assets/`: Shared resources like fonts (Source Sans Pro) and logos.
+- `utils/`: Maintenance and debugging scripts for analyzing ProPresenter files and bundle structures.
+
+---
+
+## Building and Running
 
 ### Installation
-Install all packages in editable mode to enable cross-package development:
+The project uses `uv` for fast, reliable dependency management.
 ```bash
-pip install -e ./packages/shared
-pip install -e ./packages/announcements
-pip install -e ./packages/bulletins
-pip install -e ./packages/slides
+# Install all packages in the workspace
+uv sync --all-extras
 ```
 
-### Configuration
-1. **Environment Variables**: Managed via a `.env` file in the root.
-   - `PCO_CLIENT_ID`, `PCO_SECRET`: Planning Center API credentials.
-   - `GMAIL_ANNOUNCEMENTS_QUERY`: Filter for Gmail fetching.
-   - `CHURCH_AUTOMATION_SECRETS_DIR`: Path to secrets (defaults to `~/.church-automation`).
-2. **Secrets Directory (`~/.church-automation`)**:
-   - `credentials.json`: Gmail OAuth client secrets.
-   - `gcp-credentials.json`: Google Cloud Service Account for Vertex AI.
-   - `announcements_token.pickle`: Generated Gmail OAuth token.
-3. **Slides Config**: `packages/slides/slides_config.json` defines target `service_type_ids`.
+### Running Workflows
+- **Unified Runner:** Execute the standard weekly workflow (announcements then slides).
+  ```bash
+  python run_all.py
+  ```
+- **Web UI:** Start the dashboard.
+  ```bash
+  python packages/web_ui/web_ui_app/main.py
+  ```
+- **Individual Commands:**
+    - Announcements: `make-announcements`
+    - Slides: `make-slides`
+    - Bulletins: `python packages/bulletins/bulletins_app/make_bulletins.py`
 
-### Running Tools
-- **Unified Runner**: `python run_all.py` (Runs announcements and slides).
-- **Individual Commands**:
-  - `make-announcements` (or `python -m announcements_app.main_probundle`)
-  - `make-slides` (or `python -m slides_app.make_pro`)
-  - `make-bulletins` (or `python -m bulletins_app.make_bulletins`)
+---
 
-## 🛠️ Technical Details
+## Development Conventions
 
-- **ProPresenter Integration**: Uses Google Protocol Buffers to generate `.pro` files. Definitions are located in `packages/slides/ProPresenter7_Proto/`.
-- **PCO Integration**: Uses `pypco` for API interactions.
-- **AI Summarization**: Uses `google-genai` (Vertex AI) to summarize announcement emails.
-- **PDF Generation**: Uses `reportlab` with embedded fonts in `assets/fonts/`.
+### Coding Standards
+- **Formatting:** Use `black`.
+- **Type Checking:** Use `mypy`.
+- **Testing:** Use `pytest`.
+- **Imports:** Prefer absolute imports from the package name (e.g., `from church_automation_shared import paths`). Many scripts include fallbacks for local execution without installation.
 
-## 📏 Development Conventions
+### ProPresenter Protobuf
+When modifying slide generation logic, refer to `packages/slides/ProPresenter7_Proto/`. This contains the generated Python code from ProPresenter 7's `.proto` definitions.
 
-- **Path Management**: Always use `church_automation_shared.paths` for locating repo-relative files or output directories.
-- **Imports**: Prefer absolute imports within packages. Use `add_repo_root_to_sys_path()` if executing scripts outside of the installed environment.
-- **ProPresenter Templates**: Slide generation relies on template cloning (`white_template_mac.pro`, etc.). Do not modify these templates unless you intend to change the global slide style.
-- **Security**: Never commit `.env`, `.pro`, `.probundle`, or `.pickle` files. Secrets must remain in the configured secrets directory.
+### Path Management
+Always use `church_automation_shared.paths` for locating directories like `assets/`, `output/`, or `templates/` to ensure cross-platform and monorepo compatibility.
 
-## 📂 Key File Map
-- `run_all.py`: Orchestrates the full weekly workflow.
-- `packages/shared/church_automation_shared/paths.py`: Central authority for all filesystem paths.
-- `packages/slides/slides_app/make_pro.py`: Complex logic for PCO-to-ProPresenter conversion.
-- `packages/announcements/announcements_app/main_probundle.py`: Main logic for Gmail-to-ProPresenter conversion.
+---
+
+## Security & Credentials
+
+- **Environment Variables:** Secrets are managed via a `.env` file at the root.
+- **Sensitive Data:** Never commit `.env`, `.git`, or the `~/.church-automation/` directory.
+- **OAuth:** Gmail OAuth tokens and Planning Center credentials should be stored in the configured secrets directory (defaults to `~/.church-automation/`).
+
+---
+
+## Key Files for Investigation
+- `pyproject.toml`: Workspace configuration and dependencies.
+- `run_all.py`: Orchestration logic.
+- `packages/shared/church_automation_shared/paths.py`: Centralized path management.
+- `packages/slides/slides_app/make_pro.py`: Core ProPresenter generation logic.
+- `packages/announcements/announcements_app/main.py`: Announcement processing pipeline.
+- `packages/bulletins/bulletins_app/make_bulletins.py`: PDF generation logic.

@@ -1,0 +1,30 @@
+services:
+  church-automation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: church-automation
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./secrets:/secrets:ro
+      - ./output:/app/output
+      # DEVELOPMENT: Mount source code for live updates (comment out for production)
+      - ./packages:/app/packages
+      - ./assets:/app/assets
+      - church-automation-cache:/root/.cache
+    env_file:
+      - .env
+    environment:
+      - CHURCH_AUTOMATION_SECRETS_DIR=/secrets
+      - PYTHONUNBUFFERED=1
+      - BULLETIN_DEBUG=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  church-automation-cache:

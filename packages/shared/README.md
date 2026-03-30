@@ -7,14 +7,11 @@ Common utilities and configuration management for all church automation tools.
 It is recommended to use `uv` from the root directory to manage all packages:
 
 ```bash
+# From repository root
 uv sync
 ```
 
-Alternatively, to install just this package:
-
-```bash
-pip install -e .
-```
+This package is installed automatically as part of the workspace.
 
 ## What's Included
 

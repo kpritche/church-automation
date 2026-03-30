@@ -13,11 +13,8 @@ uv sync
 Alternatively, to install manually:
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install slides package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup

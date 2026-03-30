@@ -15,6 +15,10 @@ fetching lyrics from a lyrics.txt attachment first, then fallback to html_detail
 import re
 import html as html_mod
 from typing import Any, Dict, List, Optional
+try:  # pragma: no cover - optional dependency
+    from bs4 import BeautifulSoup  # type: ignore
+except Exception:  # pragma: no cover
+    BeautifulSoup = None  # type: ignore
 # Optional imports only needed for attachment/PDF features. Make them lazy-safe
 # so ad-hoc tests can run without installing extras.
 try:  # pragma: no cover - optional dependency
@@ -22,15 +26,17 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover
     requests = None  # type: ignore
 try:  # pragma: no cover - optional dependency
-    import pypdf
-    from pypdf import PdfReader
-    from io import BytesIO
-    import io
-except ImportError:  # pragma: no cover
-    pypdf = None
-    PdfReader = None
-    BytesIO = None
-    io = None
+    import PyPDF2  # type: ignore
+    from io import BytesIO  # type: ignore
+except Exception:  # pragma: no cover
+    PyPDF2 = None  # type: ignore
+    BytesIO = None  # type: ignore
+try:  # pragma: no cover - optional dependency
+    from PyPDF2 import PdfReader  # type: ignore
+    import io  # type: ignore
+except Exception:  # pragma: no cover
+    PdfReader = None  # type: ignore
+    io = None  # type: ignore
 
 # Titles to ignore entirely (various name variants)
 SKIP_TITLES = {
@@ -70,6 +76,104 @@ PRELUDE_POSTLUDE_TITLES = {
     "Postlude",
     "The Postlude"
 }
+
+
+def _is_red_style(style: str) -> bool:
+    """Check if a style string contains red color definition.
+    
+    Detects various red color formats:
+    - Named: 'red'
+    - Hex short: '#f00'
+    - Hex long: '#ff0000', '#ff0000ff'
+    - RGB: 'rgb(255, 0, 0)'
+    - RGBA: 'rgba(255, 0, 0, ...)'
+    """
+    if not style:
+        return False
+    
+    # Check for named color 'red'
+    if re.search(r"\bred\b", style, re.IGNORECASE):
+        return True
+    
+    # Check for hex colors: #f00, #ff0000, #ff0000ff, #FF0000
+    if re.search(r"#(?:f00|ff0000|ff0000ff)\b", style, re.IGNORECASE):
+        return True
+    
+    # Check for rgb/rgba formats: rgb(255,0,0) or rgba(255,0,0,x)
+    if re.search(r"rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\)", style, re.IGNORECASE):
+        return True
+    
+    return False
+
+
+def _strip_highlight_and_red_text(html_content: str) -> str:
+    """Remove highlighted and red-colored text regions from HTML content."""
+    if not html_content:
+        return ""
+
+    if BeautifulSoup is not None:
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        for tag in soup.find_all(["mark"]):
+            tag.decompose()
+
+        for span in soup.find_all("span"):
+            attrs = getattr(span, "attrs", None)
+            if not isinstance(attrs, dict):
+                continue
+            style = (span.get("style") or "").lower()
+            cls = " ".join(span.get("class") or []).lower()
+            if "background" in style or "highlight" in style or "marker" in cls:
+                span.decompose()
+
+        for tag in list(soup.find_all(True)):
+            attrs = getattr(tag, "attrs", None)
+            if not isinstance(attrs, dict):
+                continue
+            style = (attrs.get("style") or "")
+            color_attr = (attrs.get("color") or "")
+            # Remove any tag with red color styling or color attribute
+            if _is_red_style(style) or re.search(r"^red$", color_attr, re.IGNORECASE):
+                tag.decompose()
+
+        return str(soup)
+
+    # Fallback when bs4 is unavailable
+    # Remove highlighted/marked text
+    cleaned = re.sub(r'<mark[^>]*>.*?</mark>', '', html_content, flags=re.IGNORECASE | re.DOTALL)
+    cleaned = re.sub(
+        r'<span[^>]*style="[^"]*(?:background|highlight|marker)[^"]*"[^>]*>.*?</span>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    
+    # Remove red text with various formats:
+    # Style attribute with color:red or hex variants
+    cleaned = re.sub(
+        r'<[^>]*style="[^"]*color\s*:\s*(?:red|#f00\b|#ff0000\b|#ff0000ff\b|rgba?\s*\(\s*255\s*,\s*0\s*,\s*0(?:\s*,\s*[0-9.]+)?\s*\))[^"]*"[^>]*>.*?</[^>]+>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    
+    # Remove red named color attribute
+    cleaned = re.sub(
+        r'<font[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</font>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    
+    # Remove any tags with color="red" attribute
+    cleaned = re.sub(
+        r'<[^>]*color\s*=\s*["\']?red["\']?[^>]*>.*?</[^>]+>',
+        '',
+        cleaned,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    
+    return cleaned
 
 
 def _parse_html_details(html_content: str) -> List[dict]:
@@ -183,11 +287,7 @@ def _parse_html_details(html_content: str) -> List[dict]:
 
     # 1) Basic cleanup and normalisation
     content = html_mod.unescape(html_content or "")
-    content = re.sub(
-        r'<span[^>]*style="[^"]*(?:color\s*:\s*red|background-color)[^"]*"[^>]*>.*?</span>',
-        '', content, flags=re.IGNORECASE | re.DOTALL
-    )
-    content = re.sub(r'<mark[^>]*>.*?</mark>', '', content, flags=re.IGNORECASE | re.DOTALL)
+    content = _strip_highlight_and_red_text(content)
     content = re.sub(r'<br\s*/?>', '</p>', content, flags=re.IGNORECASE)
 
     chunks: List[dict] = []
@@ -366,6 +466,35 @@ def extract_items_from_pypco(
     }
 
 
+def has_pro_attachment(
+    pco,
+    service_type_id: int,
+    plan_id: str,
+    item_id: str,
+) -> bool:
+    """Check if an item already has a .pro file attached.
+    
+    Returns True if a .pro file is already attached to the item, False otherwise.
+    """
+    try:
+        attachments_url = (
+            f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{item_id}/attachments"
+        )
+        resp = pco.get(attachments_url)
+        attachments = resp.get("data") or []
+        
+        # Check if any attachment is a .pro file
+        for att in attachments:
+            att_attrs = att.get("attributes") or {}
+            filename = (att_attrs.get("filename") or "").lower()
+            if filename.endswith(".pro"):
+                return True
+    except Exception as exc:
+        print(f"[warn] Unable to check attachments for item {item_id}: {exc}")
+    
+    return False
+
+
 def fetch_lyrics_attachments(
     pco,
     lyrics_items: List[Dict[str, object]],
@@ -478,7 +607,7 @@ def extract_lyrics_text(pdf_bytes: bytes, song_title: str) -> Optional[str]:
     Returns cleaned lyrics text or None if extraction fails.
     """
     if PdfReader is None or io is None:
-        print("[WARN] pypdf module not available; cannot extract lyrics from PDF")
+        print("[WARN] PyPDF2 module not available; cannot extract lyrics from PDF")
         return None
     
     try:

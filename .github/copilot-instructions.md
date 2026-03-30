@@ -15,13 +15,13 @@ All workflows use **ProPresenter 7 Protocol Buffers** - an undocumented binary f
 
 ### Package Structure (Monorepo)
 
-Each package is independently installable via `pip install -e ./packages/<name>` with its own `pyproject.toml`. Packages define console scripts for easy execution:
+Each package is independently installable via `uv sync` with its own `pyproject.toml`. Packages define console scripts for easy execution:
 
 - `make-announcements` → `announcements_app.main_probundle:main`
 - `make-slides` → `slides_app.make_pro:main`
 - `make-bulletins` → `bulletins_app.make_bulletins:main`
 
-**Critical:** Always install `packages/shared` first - all other packages depend on `church-automation-shared`.
+**Critical:** Use `uv sync --all-extras` from repository root to install all packages with their dependencies.
 
 ### Key Modules
 
@@ -225,56 +225,55 @@ pco = PCO(application_id=config.client_id, secret=config.secret)
 
 ### Installation
 
-```powershell
-# Install packages in order (shared first)
-pip install -e ./packages/shared
-pip install -e ./packages/announcements
-pip install -e ./packages/bulletins
-pip install -e ./packages/slides
+```bash
+# From repository root - install all packages
+uv sync --all-extras
 ```
+
+This installs all packages in editable mode with a single `.venv` at the repository root.
 
 ### Debugging ProPresenter Files
 
-Utility scripts in `utils/` for inspecting generated files:
+Utility scripts in `utils/` for inspecting generated files. Use `uv run` or activate venv:
 
-```powershell
-# Decode .pro file to JSON
-python decode_pro_file.py path/to/file.pro
+```bash
+# Decode .pro file to JSON (primary debugging tool - kept in root)
+uv run python decode_pro_file.py path/to/file.pro
 
 # Analyze .probundle structure and media references
-python utils/analyze_bundle.py
+uv run python utils/analyze_bundle.py
 
 # Compare two bundles
-python utils/compare_bundles.py bundle1.probundle bundle2.probundle
+uv run python utils/compare_bundles.py bundle1.probundle bundle2.probundle
 
 # Check template element structure
-python packages/announcements/inspect_template_elements.py
+uv run python packages/announcements/inspect_template_elements.py
 ```
 
 These scripts are **essential for development** - they reveal the actual protobuf structure, help debug media path issues, and verify element configurations.
 
 ### Running Announcements Pipeline
 
-```powershell
+```bash
 # Using console script (recommended)
-make-announcements
+uv run make-announcements
 
 # Or module syntax
 cd packages/announcements
-python -m announcements_app.main_probundle
+uv run python -m announcements_app.main_probundle
 
 # Output: packages/announcements/output/YYYY-MM-DD/weekly_announcements_YYYY-MM-DD.probundle
 ```
 
 ### Running Service Slides Pipeline
 
-```powershell
+```bash
 # Using console script (recommended)
-make-slides
+uv run make-slides
 
 # Or module syntax
 cd packages/slides
-python -m slides_app.make_pro
+uv run python -m slides_app.make_pro
 
 # Output: packages/slides/output/YYYY-MM-DD/*-*.pro files
 # Uploads to Planning Center if configured
@@ -282,9 +281,9 @@ python -m slides_app.make_pro
 
 ### Unified Execution
 
-```powershell
+```bash
 # From repo root - runs both pipelines sequentially
-python run_all.py
+uv run python run_all.py
 ```
 
 ## Important Conventions

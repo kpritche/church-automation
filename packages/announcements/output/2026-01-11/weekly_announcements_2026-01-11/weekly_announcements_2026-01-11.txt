@@ -1,0 +1,6417 @@
+application_info {
+  platform: PLATFORM_MACOS
+  platform_version {
+    major_version: 15
+    minor_version: 6
+  }
+  application: APPLICATION_PROPRESENTER
+  application_version {
+    major_version: 19
+    patch_version: 1
+    build: "318767361"
+  }
+}
+uuid {
+  string: "4DA62B9C-01A7-4F00-803C-E26D1EA6B92F"
+}
+name: "weekly_announcements_2026-01-11"
+background {
+  color {
+    red: 1.0
+    green: 1.0
+    blue: 1.0
+  }
+}
+chord_chart {
+  platform: PLATFORM_MACOS
+}
+cue_groups {
+  group {
+    uuid {
+      string: "0E1C614B-5919-41E3-A9AB-3007230B83A9"
+    }
+    hotKey {
+    }
+  }
+  cue_identifiers {
+    string: "0ACEB6BA-4612-4927-AD24-1EA3DF094A32"
+  }
+  cue_identifiers {
+    string: "12ABB5DF-1CD5-4C1D-8072-42C09C9C52B7"
+  }
+  cue_identifiers {
+    string: "489A41B1-2BDC-4168-B27C-1F0535670360"
+  }
+  cue_identifiers {
+    string: "5322F3FB-8746-4D0F-A701-2059113F0700"
+  }
+  cue_identifiers {
+    string: "99DFA131-7A5C-451F-8CB9-2611AE7DE32B"
+  }
+  cue_identifiers {
+    string: "3DC70F8C-5479-42A7-8A5D-D540D8DF78FD"
+  }
+  cue_identifiers {
+    string: "0F9BD12D-6587-4D5D-B43A-90AAE2F0B286"
+  }
+  cue_identifiers {
+    string: "CDD19BE6-6E80-4B4E-BDB1-2D7ADE3F7756"
+  }
+  cue_identifiers {
+    string: "1EFE4726-4208-44D4-8E8E-0787F12DF21F"
+  }
+}
+cues {
+  uuid {
+    string: "0ACEB6BA-4612-4927-AD24-1EA3DF094A32"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "F1334566-6D08-4FA7-BC93-46E83BAD94EF"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "B09AADE4-DDFD-439E-A6EA-D47BAE591642"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 No Kings Workshop: Skills for Fighting Fascism \342\200\223 January 10}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "3A77C266-7B6A-46C7-B462-3BCD40396261"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us for a No Kings Workshop: Skills for Fighting Fascism on Saturday, January 10 from 1:00-5:00 PM at First Church. This training will empower us to build lasting democratic power together. Register here:}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "0DB72E69-B538-47F3-B81A-0C0AD155C9AC"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "89F205DD-2343-41D0-A9FC-3FED545A027C"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "C9865444-127B-483E-A459-8421D45ADA87"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "F4F2CC21-4EAA-44C5-859E-6E93386DF309"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_1_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_1_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 946.0
+                        height: 485.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "830B9F0E-E83B-465B-AC88-1AEBF5EDCE0A"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "12ABB5DF-1CD5-4C1D-8072-42C09C9C52B7"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "FDB762B2-43CE-4F4B-8DE4-D7A3E181694A"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "69595530-2512-4843-A07F-100BC195F53E"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Inclement Weather Policy}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "2F278F2C-75BA-4874-98B7-78941F91FACD"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Worship services are held Sundays with weather updates posted on Facebook, WLFI, and via email. Weekday church activities follow Tippecanoe County Schools\' closure decisions for safety. Stay connected with us!}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "DEDDBBBD-E268-43AA-BC47-B1AC90A7E77D"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "F617B5BA-775D-44B7-9F21-38A57B969B60"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "9C07F887-7DEA-4CB9-860A-C7E41D7D26A9"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "3BEFF544-21C2-45F8-9021-8396E8F626A3"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_2_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_2_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1080.0
+                        height: 1080.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "3D0BAE3C-1C37-4A68-A243-232E86BCBD38"
+              }
+              name: "qr_code"
+              bounds {
+                origin {
+                  x: 781.32
+                  y: 619.2
+                }
+                size {
+                  width: 395.0
+                  height: 395.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "7CDE08FF-08D5-41A0-B068-8531B14ED144"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_2_qr.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_2_qr.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 710.0
+                        height: 710.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "3B3DDF42-CDAC-40CB-9627-9AD8EBDBBFDD"
+              }
+              name: "qr_text"
+              bounds {
+                origin {
+                  x: 710.02
+                  y: 1014.2
+                }
+                size {
+                  width: 537.6
+                  height: 39.04
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-It"
+                    size: 32.0
+                    italic: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-It;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\\f0\\i\\fs64 \\cf2 \\up0 WLFI website}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "F1D3AFF4-3CBD-41C3-A56C-7CB70D7B814D"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "489A41B1-2BDC-4168-B27C-1F0535670360"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "27EA3CC6-FB01-44BA-804A-C86411C542EE"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "D832C37E-B244-4675-9696-16686D7C2588"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Be an Equalization Member at Annual Conference!}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "E6EEF737-D201-4361-8592-98846A784F10"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 We invite you to serve as an Equalization Member at the 2026 Annual Conference Session! Please fill out the Willingness to Serve form by February 2 at 11:59 PM to express your interest. Find more information and the form at [link].}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "13FF637D-02F9-4398-99C4-759A7D7FF440"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "51F23FC9-7979-45A6-9079-EC067042468D"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "47645CAA-096C-4D7C-9149-4D09EC2F3B57"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "0D5369AA-17A2-4813-85A9-80FADBD79D6E"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_3_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_3_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1080.0
+                        height: 1080.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "9D2B9605-68A7-4601-A405-429FD1F169FE"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "5322F3FB-8746-4D0F-A701-2059113F0700"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "3E23DADB-26DD-4A0E-A442-A552027F19F5"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "77655D14-4EF8-4DA2-95CB-7C506FDF7B16"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Texting Jesus? Discernment in the Age of AI Faith Tools \342\200\223 January 11}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "D2E3A6CA-D44B-4311-BB23-18C423080590"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us on Sunday, January 11 from 10:00-10:45 AM in the First Church Activity Center for a discussion on the \"Text With Jesus\" app. We\'ll explore faith and prayer in the age of AI. Contact Jane Frankenberger at janefrankenberger1@gmail.com with questions.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "C850407A-748B-4AA0-9588-0C871C0B06FA"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "74D5889D-4DDE-4F87-85D4-A22A2E63328F"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "79F89498-B382-4B4C-8E54-173A95B82E0F"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "E1980CC5-1FCC-45D2-8EA9-7E940D1FBF3F"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_4_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_4_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 282.0
+                        height: 364.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "E10B3653-34EA-42FA-8D24-2088DD3EBF08"
+              }
+              name: "qr_code"
+              bounds {
+                origin {
+                  x: 781.32
+                  y: 619.2
+                }
+                size {
+                  width: 395.0
+                  height: 395.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "10AAB378-4E6F-4923-8D47-82338C12AD40"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_4_qr.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_4_qr.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 310.0
+                        height: 310.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "232272E1-2C41-4C97-8F6F-D1631BE3E0AD"
+              }
+              name: "qr_text"
+              bounds {
+                origin {
+                  x: 710.02
+                  y: 1014.2
+                }
+                size {
+                  width: 537.6
+                  height: 39.04
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-It"
+                    size: 32.0
+                    italic: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-It;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\\f0\\i\\fs64 \\cf2 \\up0 janefrankenberger1@gmail.com}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "3DB48979-F559-4A63-A943-31C288E6903F"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "99DFA131-7A5C-451F-8CB9-2611AE7DE32B"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "E1A44A3B-5D6D-4DC8-B0A5-868305CED925"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "3734ABD5-A6B9-4943-AAAF-60ED633D9BD5"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Monthly Euchre Fellowship \342\200\223 January 14}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "0A438768-658B-4178-891F-9DA7E917C518"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us for Monthly Euchre Fellowship on the second Wednesday of each month from 6:00-8:30 PM in the First Church Narthex. Our next event is Wednesday, January 14. Please contact Jeanne Norberg at jnorberg@purdue.edu to RSVP and be added to the e-vite list.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "C3C8AD84-4035-45E2-AFDD-D3A5097CC9B6"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "84EC233B-60D7-4275-A7C1-76625FFC7BDB"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "2F8596FB-9A06-4B3B-B5A8-853B2733A33B"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "8319040C-7A8E-4707-ABA8-7FFD9EA673CA"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_5_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_5_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 900.0
+                        height: 900.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "421B0A47-A6F0-4B38-9DCE-366405BD8F22"
+              }
+              name: "qr_code"
+              bounds {
+                origin {
+                  x: 781.32
+                  y: 619.2
+                }
+                size {
+                  width: 395.0
+                  height: 395.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "3E932018-7301-4956-9638-9826969AD5BB"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_5_qr.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_5_qr.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 270.0
+                        height: 270.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "AAE2F3C5-AA73-4B29-9471-AA632F62FCE3"
+              }
+              name: "qr_text"
+              bounds {
+                origin {
+                  x: 710.02
+                  y: 1014.2
+                }
+                size {
+                  width: 537.6
+                  height: 39.04
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-It"
+                    size: 32.0
+                    italic: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-It;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\\f0\\i\\fs64 \\cf2 \\up0 jnorberg@purdue.edu}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "CF643484-1C5B-49BB-B45E-326D87E073DE"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "3DC70F8C-5479-42A7-8A5D-D540D8DF78FD"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "A4F8E0DE-4882-4B73-ABBC-148BA45FEF2C"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "E07395D8-6AEC-4A90-B95C-B331D712EE45"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Storytelling as Sacred Work \342\200\223 January 18, 25 and February 8,15}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "8A55D7AE-8D8C-4AA1-8893-58CD873A901E"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us in the Activity Center for a video and discussion on storytelling as sacred work, Sundays, January 18, 25 and February 8, 15, from 10:00-10:45 AM. Contact Diana Hoke at hokediana@gmail.com for more information.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "53F91D07-28A0-42A4-848E-78D3C49AC71D"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "6EEFBEE3-4627-43A8-9709-C428EDB9EE43"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "604D0772-6B19-4D74-B6FC-BFEBB54BA043"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "66CB9A81-BBC9-46C5-A056-4958F5A2C9F3"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_6_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_6_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 494.0
+                        height: 494.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "EC06DFAC-2195-433E-A5FE-6CA215F16C68"
+              }
+              name: "qr_code"
+              bounds {
+                origin {
+                  x: 781.32
+                  y: 619.2
+                }
+                size {
+                  width: 395.0
+                  height: 395.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "12B6DF49-AE87-4B37-B47D-5C146586E6F8"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_6_qr.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_6_qr.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 270.0
+                        height: 270.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "36CBD716-7ACD-4ECE-A0E8-ECA2E5682A0D"
+              }
+              name: "qr_text"
+              bounds {
+                origin {
+                  x: 710.02
+                  y: 1014.2
+                }
+                size {
+                  width: 537.6
+                  height: 39.04
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-It"
+                    size: 32.0
+                    italic: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-It;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\\f0\\i\\fs64 \\cf2 \\up0 hokediana@gmail.com}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "3B30AFC0-1A95-4180-9814-D44FD714A5BF"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "0F9BD12D-6587-4D5D-B43A-90AAE2F0B286"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "707FDC6D-E2D8-4BBD-B0C7-658666F40B33"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "E7CD1EB8-EB26-4FFA-B69B-84C978D54A7B"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Chair Yoga \342\200\223 January 20}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "15EFA3FB-1DA4-42DD-8F14-61B5CAD538E1"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us for Chair Yoga with Diane Dahlgren on the 1st and 3rd Tuesdays from January-March, 2026, 5:45-6:30 PM in the First Church Activity Center. All are welcome for a gentle practice, no mat required. Contact dmdahlgren13@gmail.com for details.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "708AC3B7-AC5B-4403-BED1-AD26E5FDBD28"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "D26D9854-8C48-4B35-AB9A-B17197A585C5"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "ED7811C3-A1A8-4147-8742-FB8036CCDCBE"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "A96A414A-2555-4D77-AC8F-0B59BC69AD2D"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_7_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_7_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 268.0
+                        height: 304.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "051B576C-7AC8-4FFB-A7AF-18A741E46C8B"
+              }
+              name: "qr_code"
+              bounds {
+                origin {
+                  x: 781.32
+                  y: 619.2
+                }
+                size {
+                  width: 395.0
+                  height: 395.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "C703257E-72E8-4566-9BA9-AD482C91B52C"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_7_qr.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_7_qr.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 310.0
+                        height: 310.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "2329DA07-D286-40D9-BA4D-560D690F91E2"
+              }
+              name: "qr_text"
+              bounds {
+                origin {
+                  x: 710.02
+                  y: 1014.2
+                }
+                size {
+                  width: 537.6
+                  height: 39.04
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-It"
+                    size: 32.0
+                    italic: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    alignment: ALIGNMENT_CENTER
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-It;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\qc\\partightenfactor0\\f0\\i\\fs64 \\cf2 \\up0 dmdahlgren13@gmail.com}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "993EDB07-C0ED-4D51-86BD-66403CF41318"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "CDD19BE6-6E80-4B4E-BDB1-2D7ADE3F7756"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "A1376FC5-4A9E-4F52-800E-F3D1E81EE3FC"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "5261062E-D998-4BF0-87C3-764C56E599C7"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Feed the Kids}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "C319E4E8-9AE7-4B98-91BD-C08E7C4A5BE8"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Join us for our Feed the Kids program! Volunteers pack and deliver food for children in need every Thursday. Help us provide weekend meals for $7 per week by donating online or at church.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "C273F6D0-920A-422C-B0C1-B57205D612DC"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "0D13B889-1CCE-462A-8A48-25A49ECAAC92"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "FF2D85C8-825A-4B83-868C-0FDF1BD1E3FB"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "87EBF368-D951-4579-8E94-ED93D7F03ABF"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_8_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_8_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1200.0
+                        height: 1175.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "EFE2DDE7-69DB-4625-9704-CAB89B223226"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+cues {
+  uuid {
+    string: "1EFE4726-4208-44D4-8E8E-0787F12DF21F"
+  }
+  completion_target_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  completion_action_type: COMPLETION_ACTION_TYPE_LAST
+  completion_action_uuid {
+    string: "00000000-0000-0000-0000-000000000000"
+  }
+  hot_key {
+  }
+  actions {
+    uuid {
+      string: "62B7D481-5224-42D0-B39D-6D1C809CB5F4"
+    }
+    isEnabled: true
+    type: ACTION_TYPE_PRESENTATION_SLIDE
+    slide {
+      presentation {
+        base_slide {
+          elements {
+            element {
+              uuid {
+                string: "6EFFF4E4-86E0-43CB-8E1C-07BBBEB02BE4"
+              }
+              name: "title_text"
+              bounds {
+                origin {
+                  x: 50.0
+                }
+                size {
+                  width: 1820.0
+                  height: 275.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.11764706
+                  green: 0.5647059
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 0.08627451
+                  green: 0.27450982
+                  blue: 0.24313726
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 84.0
+                    bold: true
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    red: 0.08627451
+                    green: 0.27450982
+                    blue: 0.24313726
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red22\\green70\\blue62;}{\\*\\expandedcolortbl;;\\cssrgb\\c8627\\c27450\\c24313}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\b\\fs168 \\cf2 \\up0 Volunteer to Tutor Klondike Kids}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 3
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "759DEECD-F263-431D-A314-CEF4A14052AF"
+              }
+              name: "body_text"
+              bounds {
+                origin {
+                  x: 50.0
+                  y: 265.0
+                }
+                size {
+                  width: 1150.0
+                  height: 375.0
+                }
+              }
+              opacity: 1.0
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                color {
+                  red: 0.13
+                  green: 0.59
+                  blue: 0.95
+                  alpha: 1.0
+                }
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+              text {
+                attributes {
+                  font {
+                    name: "SourceSansPro-Black"
+                    size: 50.0
+                    family: "Source Sans Pro"
+                  }
+                  text_solid_fill {
+                    alpha: 1.0
+                  }
+                  paragraph_style {
+                    line_height_multiple: 1.0
+                    default_tab_interval: 84.0
+                  }
+                }
+                shadow {
+                  angle: 315.0
+                  offset: 5.0
+                  radius: 5.0
+                  color {
+                    alpha: 1.0
+                  }
+                  opacity: 0.75
+                }
+                rtf_data: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fnil\\fcharset0 SourceSansPro-Black;}{\\colortbl;\\red255\\green255\\blue255;\\red0\\green0\\blue0;}{\\*\\expandedcolortbl;;\\cssrgb\\c0\\c0\\c0;}\\deftab1680\\pard\\pardeftab1680\\pardirnatural\\ql\\partightenfactor0\\f0\\fs100 \\cf2 \\up0 Purdue education students need your help tutoring Klondike Elementary kids Mondays & Wednesdays (K-3) and Tuesdays & Thursdays (4-5) from 4:30-6:00 PM in the Point West Community Room.}"
+                vertical_alignment: VERTICAL_ALIGNMENT_MIDDLE
+                is_superscript_standardized: true
+              }
+              text_line_mask {
+              }
+            }
+            info: 2
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "69589DC6-4B05-4329-959F-55E447EEF12F"
+              }
+              name: "logo"
+              bounds {
+                origin {
+                  y: 863.98
+                }
+                size {
+                  width: 728.84
+                  height: 216.02
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "671F64B5-5676-4BCD-8632-6CF1BA99CFAD"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/logo.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/logo.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 1967.0
+                        height: 583.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          elements {
+            element {
+              uuid {
+                string: "D69A55D1-6C49-49D4-BB03-CC0B91ADD4E3"
+              }
+              name: "image"
+              bounds {
+                origin {
+                  x: 1250.0
+                  y: 275.0
+                }
+                size {
+                  width: 620.0
+                  height: 755.0
+                }
+              }
+              opacity: 1.0
+              aspect_ratio_locked: true
+              path {
+                closed: true
+                points {
+                  point {
+                  }
+                  q0 {
+                  }
+                  q1 {
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                  }
+                }
+                points {
+                  point {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q0 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                  q1 {
+                    x: 1.0
+                    y: 1.0
+                  }
+                }
+                points {
+                  point {
+                    y: 1.0
+                  }
+                  q0 {
+                    y: 1.0
+                  }
+                  q1 {
+                    y: 1.0
+                  }
+                }
+                shape {
+                  type: TYPE_RECTANGLE
+                }
+              }
+              fill {
+                media {
+                  uuid {
+                    string: "43EA2B6A-BEA2-4336-AB11-7E6FACEB4AD7"
+                  }
+                  url {
+                    absolute_string: "file:///Users/fcproduction/Documents/ProPresenter/Media/Assets/announcement_9_image.png"
+                    platform: PLATFORM_MACOS
+                    local {
+                      root: ROOT_SHOW
+                      path: "Media/Assets/announcement_9_image.png"
+                    }
+                  }
+                  metadata {
+                    format: "png"
+                  }
+                  image {
+                    drawing {
+                      natural_size {
+                        width: 480.0
+                        height: 480.0
+                      }
+                    }
+                  }
+                }
+                enable: true
+              }
+              stroke {
+                width: 3.0
+                color {
+                  red: 1.0
+                  green: 1.0
+                  blue: 1.0
+                  alpha: 1.0
+                }
+              }
+              shadow {
+                angle: 315.0
+                offset: 5.0
+                radius: 5.0
+                color {
+                  alpha: 1.0
+                }
+                opacity: 0.75
+              }
+              feather {
+                radius: 0.05
+              }
+            }
+            info: 1
+            text_scroller {
+              scroll_rate: 0.5
+              should_repeat: true
+              repeat_distance: 0.054945054945054944
+            }
+          }
+          draws_background_color: true
+          background_color {
+            red: 1.0
+            green: 1.0
+            blue: 1.0
+            alpha: 1.0
+          }
+          size {
+            width: 1920.0
+            height: 1080.0
+          }
+          uuid {
+            string: "6633BA10-207D-47B0-A528-36C3CE05CC3D"
+          }
+        }
+        chord_chart {
+        }
+      }
+    }
+  }
+}
+ccli {
+}
+timeline {
+  duration: 300.0
+}

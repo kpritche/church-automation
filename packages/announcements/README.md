@@ -1,6 +1,6 @@
 # Church Automation - Announcements Generator
 
-Generate ProPresenter announcement slides from church website content.
+Generate ProPresenter announcement slides from your church's website.
 
 ## Installation
 
@@ -13,11 +13,8 @@ uv sync
 Alternatively, to install manually:
 
 ```bash
-# Install shared utilities first
-pip install -e ../shared
-
-# Install announcements package
-pip install -e .
+# From repository root
+uv sync --all-extras
 ```
 
 ## Setup
@@ -63,22 +60,24 @@ The `.probundle` files are automatically uploaded to Planning Center "Announceme
 
 ## Features
 
-- **Website Fetching** - Automatically identifies and retrieves the most recent announcement page from the church website.
-- **HTML Parsing** - Extracts titles, body text, links, and images from announcement HTML.
-- **AI Summarization** - Condenses long text using Google Vertex AI.
-- **QR Code Generation** - Creates QR codes for links and buttons.
-- **ProPresenter Generation** - Builds `.probundle` files using protobuf serialization.
-- **Planning Center Upload** - Automatically attaches generated files to service plans.
+- **Website Scraping** - Automatically fetches the most recent announcement from your church website
+- **HTML Parsing** - Extracts titles, body text, links, and images from announcement pages
+- **AI Summarization** - Condenses long text using Google Vertex AI
+- **QR Code Generation** - Creates QR codes for links and buttons
+- **ProPresenter Generation** - Builds `.probundle` files using protobuf serialization
+- **Planning Center Upload** - Automatically attaches generated files to service plans
 
 ## Configuration
 
 ### Website URL
 
-Customize the source URL in your `.env` file:
+Configure the URL of your church's weekly events page:
 
 ```bash
-ANNOUNCEMENTS_WEBSITE_URL=https://yourchurch.org/announcements
+ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 ```
+
+The tool will automatically find and fetch the most recent "View Weekly Events" link.
 
 ### Text Limits
 

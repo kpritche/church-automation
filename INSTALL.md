@@ -5,7 +5,7 @@ Complete step-by-step instructions for setting up the Church Automation Suite.
 ## Prerequisites
 
 - Python 3.9 or higher
-- pip (Python package installer)
+- [uv](https://docs.astral.sh/uv/) (recommended Python package installer)
 - Git (for cloning the repository)
 
 ## Step 1: Clone the Repository
@@ -24,8 +24,6 @@ cd church-automation
 1. **Install uv**:
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
-   # or
-   pip install uv
    ```
 
 2. **Sync dependencies**:
@@ -34,26 +32,6 @@ cd church-automation
    uv sync
    ```
    This will create a single `.venv` in the root and install all packages in editable mode.
-
-### Alternative: Using pip
-
-Install packages in the correct order (shared first, then others):
-
-```bash
-# Install shared utilities (required by all)
-pip install -e ./packages/shared
-
-# Install the tools you need (or all of them)
-pip install -e ./packages/announcements
-pip install -e ./packages/bulletins
-pip install -e ./packages/slides
-
-# Optional: Install with development dependencies
-pip install -e "./packages/shared[dev]"
-pip install -e "./packages/announcements[dev]"
-pip install -e "./packages/bulletins[dev]"
-pip install -e "./packages/slides[dev]"
-```
 
 ## Step 3: Configure Environment Variables
 
@@ -183,11 +161,8 @@ python run_all.py
 
 If you see `ModuleNotFoundError`:
 ```bash
-# Reinstall packages in editable mode
-pip install -e ./packages/shared
-pip install -e ./packages/announcements
-pip install -e ./packages/bulletins
-pip install -e ./packages/slides
+# Re-sync all packages
+uv sync --all-extras
 ```
 
 ### Missing Credentials
@@ -209,7 +184,7 @@ If Gmail authentication fails:
 
 If `.pro` file generation fails:
 1. Check that templates exist in `packages/slides/templates/`
-2. Verify protobuf is installed: `pip install protobuf`
+2. Verify protobuf is installed: `uv sync` (protobuf is a dependency)
 3. Check that `ProPresenter7_Proto` directory exists in `packages/slides/`
 
 ### Path Issues

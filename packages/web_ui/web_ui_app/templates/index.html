@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Church Automation - Media Generation</title>
+    <link rel="stylesheet" href="/static/style.css?v=20260326d">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>First Church Automation</h1>
+            <p class="subtitle">Generate media for worship services</p>
+        </header>
+
+        <main>
+            <div class="cards-grid">
+                <!-- Announcements Card -->
+                <div class="card" id="announcements-card">
+                    <div class="card-header">
+                        <h2>📢 Announcements</h2>
+                        <span class="status-badge" id="announcements-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate PowerPoint slides from weekly email announcements.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('announcements')">
+                                Generate Announcements
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('announcements')">
+                                View Existing Files
+                            </button>
+                        </div>
+                        <div class="progress-container" id="announcements-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="announcements-error" style="display: none;"></div>
+                        <div class="success-message" id="announcements-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('announcements'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slides Card -->
+                <div class="card" id="slides-card">
+                    <div class="card-header">
+                        <h2>🖥️ Service Slides</h2>
+                        <span class="status-badge" id="slides-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate ProPresenter slides from Planning Center liturgy.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('slides')">
+                                Generate Slides
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('slides')">
+                                View Existing Files
+                            </button>
+                        </div>
+                        <div class="progress-container" id="slides-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="slides-error" style="display: none;"></div>
+                        <div class="success-message" id="slides-success" style="display: none;">
+                            ✓ Slides uploaded to Planning Center!
+                            <div id="slides-uploaded-files" style="margin-top: 8px; font-size: 0.9em;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulletins Card -->
+                <div class="card" id="bulletins-card">
+                    <div class="card-header">
+                        <h2>📄 Bulletins</h2>
+                        <span class="status-badge" id="bulletins-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate PDF bulletins from Planning Center service plans.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="showBulletinServiceSelector()">
+                                <span class="btn-icon">🎯</span> Select Services
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('bulletins')">
+                                View Existing Files
+                            </button>
+                        </div>
+                        <div class="progress-container" id="bulletins-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="bulletins-error" style="display: none;"></div>
+                        <div class="success-message" id="bulletins-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('bulletins'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leader Guides Card -->
+                <div class="card" id="leader_guide-card">
+                    <div class="card-header">
+                        <h2>📋 Leader Guides</h2>
+                        <span class="status-badge" id="leader_guide-status">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <p>Generate PDF leader guides with service items and attachments from Planning Center.</p>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="triggerJob('leader_guide')">
+                                Generate Leader Guides
+                            </button>
+                            <button class="btn btn-secondary" onclick="showFiles('leader_guide')">
+                                View Existing Files
+                            </button>
+                        </div>
+                        <div class="progress-container" id="leader_guide-progress" style="display: none;">
+                            <div class="spinner"></div>
+                            <span class="progress-text">Processing...</span>
+                        </div>
+                        <div class="error-message" id="leader_guide-error" style="display: none;"></div>
+                        <div class="success-message" id="leader_guide-success" style="display: none;">
+                            ✓ Completed! 
+                            <a href="#" onclick="showFiles('leader_guide'); return false;">View Files</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulletin Service Selector -->
+            <div class="service-selector-section" id="bulletin-service-selector" style="display: none;">
+                <div class="section-header">
+                    <h2>Select Services for Bulletins</h2>
+                    <button class="btn btn-secondary" onclick="hideBulletinServiceSelector()">Close</button>
+                </div>
+                <div class="service-selector-actions">
+                    <button class="btn btn-secondary btn-small" onclick="selectAllServices()">Select All</button>
+                    <button class="btn btn-secondary btn-small" onclick="deselectAllServices()">Deselect All</button>
+                    <button class="btn btn-primary" onclick="generateSelectedBulletins()">Generate Selected Bulletins</button>
+                </div>
+                <div id="service-selector-loading" class="text-center" style="padding: 20px;">
+                    <div class="spinner"></div>
+                    <p>Loading services from Planning Center...</p>
+                </div>
+                <div id="service-selector-list" class="service-selector-list" style="display: none;">
+                    <!-- Services will be populated here -->
+                </div>
+                <div id="service-selector-error" class="error-message" style="display: none;"></div>
+            </div>
+
+            <!-- Files Section -->
+            <div class="files-section" id="files-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Generated Files</h2>
+                    <button class="btn btn-secondary" onclick="hideFiles()">Close</button>
+                </div>
+                <div id="files-list" class="files-list">
+                    <!-- Files will be populated here -->
+                </div>
+            </div>
+
+            <!-- Recent Jobs -->
+            <div class="jobs-section">
+                <div class="section-header">
+                    <h2>Recent Jobs</h2>
+                    <button class="btn btn-secondary" onclick="refreshJobs()">Refresh</button>
+                </div>
+                <div id="jobs-list" class="jobs-list">
+                    <p class="no-jobs">No recent jobs</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Church Automation v0.1.0</p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js?v=20260326d"></script>
+</body>
+</html>

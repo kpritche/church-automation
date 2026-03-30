@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+church_automation_shared/__init__.py
+church_automation_shared/paths.py
+church_automation_shared.egg-info/PKG-INFO
+church_automation_shared.egg-info/SOURCES.txt
+church_automation_shared.egg-info/dependency_links.txt
+church_automation_shared.egg-info/requires.txt
+church_automation_shared.egg-info/top_level.txt
