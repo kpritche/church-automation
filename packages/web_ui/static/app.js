@@ -369,6 +369,177 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Bulletin Service Selector Functions
+
+let availableServices = [];
+
+async function showBulletinServiceSelector() {
+    const selector = document.getElementById('bulletin-service-selector');
+    const loading = document.getElementById('service-selector-loading');
+    const list = document.getElementById('service-selector-list');
+    const errorDiv = document.getElementById('service-selector-error');
+    
+    selector.style.display = 'block';
+    loading.style.display = 'block';
+    list.style.display = 'none';
+    errorDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/bulletins/future-services`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch services');
+        }
+        
+        const data = await response.json();
+        availableServices = data.plans || [];
+        
+        if (availableServices.length === 0) {
+            list.innerHTML = '<p class="no-jobs">No future services found.</p>';
+        } else {
+            renderServiceSelector(availableServices);
+        }
+        
+        loading.style.display = 'none';
+        list.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading services:', error);
+        loading.style.display = 'none';
+        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.style.display = 'block';
+    }
+}
+
+function renderServiceSelector(services) {
+    const list = document.getElementById('service-selector-list');
+    
+    // Group by service name
+    const grouped = {};
+    services.forEach(service => {
+        const key = service.service_name;
+        if (!grouped[key]) {
+            grouped[key] = [];
+        }
+        grouped[key].push(service);
+    });
+    
+    let html = '';
+    for (const [serviceName, plans] of Object.entries(grouped)) {
+        html += `<div class="service-group">
+            <h3 class="service-group-title">${escapeHtml(serviceName)}</h3>
+            <div class="service-group-plans">`;
+        
+        plans.forEach(plan => {
+            const checkboxId = `plan-${plan.service_type_id}-${plan.plan_id}`;
+            const displayDate = formatDateShort(plan.plan_date);
+            const displayTitle = plan.title ? ` - ${escapeHtml(plan.title)}` : '';
+            
+            html += `
+                <label class="service-checkbox-item" for="${checkboxId}">
+                    <input type="checkbox" 
+                           id="${checkboxId}" 
+                           class="service-checkbox" 
+                           data-service-type-id="${plan.service_type_id}"
+                           data-plan-id="${plan.plan_id}"
+                           data-plan-date="${plan.plan_date}"
+                           data-service-name="${escapeHtml(plan.service_name)}">
+                    <span>${displayDate}${displayTitle}</span>
+                </label>`;
+        });
+        
+        html += `</div></div>`;
+    }
+    
+    list.innerHTML = html;
+}
+
+function hideBulletinServiceSelector() {
+    document.getElementById('bulletin-service-selector').style.display = 'none';
+}
+
+function selectAllServices() {
+    document.querySelectorAll('.service-checkbox').forEach(cb => cb.checked = true);
+}
+
+function deselectAllServices() {
+    document.querySelectorAll('.service-checkbox').forEach(cb => cb.checked = false);
+}
+
+async function generateSelectedBulletins() {
+    const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        alert('Please select at least one service.');
+        return;
+    }
+    
+    const selectedPlans = Array.from(checkboxes).map(cb => ({
+        service_type_id: parseInt(cb.dataset.serviceTypeId, 10),  // Convert to integer!
+        plan_id: cb.dataset.planId,
+        plan_date: cb.dataset.planDate,
+        service_name: cb.dataset.serviceName
+    }));
+    
+    // Hide the selector
+    hideBulletinServiceSelector();
+    
+    // Trigger the job with selected plans
+    const card = document.getElementById('bulletins-card');
+    const progress = document.getElementById('bulletins-progress');
+    const errorDiv = document.getElementById('bulletins-error');
+    const successDiv = document.getElementById('bulletins-success');
+    const statusBadge = document.getElementById('bulletins-status');
+    
+    // Reset UI
+    progress.style.display = 'flex';
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    statusBadge.textContent = 'Queued';
+    statusBadge.className = 'status-badge running';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/jobs`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                job_type: 'bulletins',
+                selected_plans: selectedPlans
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to start job');
+        }
+        
+        const data = await response.json();
+        console.log(`Bulletin job started: ${data.job_id} for ${selectedPlans.length} services`);
+        
+        // Start polling for status
+        pollJobStatus(data.job_id, 'bulletins');
+        
+    } catch (error) {
+        console.error('Error triggering bulletin job:', error);
+        progress.style.display = 'none';
+        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.style.display = 'block';
+        statusBadge.textContent = 'Failed';
+        statusBadge.className = 'status-badge failed';
+    }
+}
+
+function formatDateShort(dateString) {
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Church Automation Web UI loaded');

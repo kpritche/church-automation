@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Church Automation - Media Generation</title>
-    <link rel="stylesheet" href="/static/style.css?v=20260319b">
+    <link rel="stylesheet" href="/static/style.css?v=20260326d">
 </head>
 <body>
     <div class="container">
@@ -80,8 +80,8 @@
                     <div class="card-body">
                         <p>Generate PDF bulletins from Planning Center service plans.</p>
                         <div class="card-actions">
-                            <button class="btn btn-primary" onclick="triggerJob('bulletins')">
-                                Generate Bulletins
+                            <button class="btn btn-primary" onclick="showBulletinServiceSelector()">
+                                <span class="btn-icon">🎯</span> Select Services
                             </button>
                             <button class="btn btn-secondary" onclick="showFiles('bulletins')">
                                 View Existing Files
@@ -128,6 +128,27 @@
                 </div>
             </div>
 
+            <!-- Bulletin Service Selector -->
+            <div class="service-selector-section" id="bulletin-service-selector" style="display: none;">
+                <div class="section-header">
+                    <h2>Select Services for Bulletins</h2>
+                    <button class="btn btn-secondary" onclick="hideBulletinServiceSelector()">Close</button>
+                </div>
+                <div class="service-selector-actions">
+                    <button class="btn btn-secondary btn-small" onclick="selectAllServices()">Select All</button>
+                    <button class="btn btn-secondary btn-small" onclick="deselectAllServices()">Deselect All</button>
+                    <button class="btn btn-primary" onclick="generateSelectedBulletins()">Generate Selected Bulletins</button>
+                </div>
+                <div id="service-selector-loading" class="text-center" style="padding: 20px;">
+                    <div class="spinner"></div>
+                    <p>Loading services from Planning Center...</p>
+                </div>
+                <div id="service-selector-list" class="service-selector-list" style="display: none;">
+                    <!-- Services will be populated here -->
+                </div>
+                <div id="service-selector-error" class="error-message" style="display: none;"></div>
+            </div>
+
             <!-- Files Section -->
             <div class="files-section" id="files-section" style="display: none;">
                 <div class="section-header">
@@ -156,6 +177,6 @@
         </footer>
     </div>
 
-    <script src="/static/app.js?v=20260319b"></script>
+    <script src="/static/app.js?v=20260326d"></script>
 </body>
 </html>

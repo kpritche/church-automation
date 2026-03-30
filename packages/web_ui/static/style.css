@@ -444,3 +444,80 @@ footer {
 .mb-1 { margin-bottom: 8px; }
 .mb-2 { margin-bottom: 16px; }
 .mb-3 { margin-bottom: 24px; }
+
+/* Service Selector Section */
+.service-selector-section {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 40px;
+}
+
+.service-selector-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.service-selector-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 16px;
+}
+
+.service-group {
+    margin-bottom: 24px;
+}
+
+.service-group:last-child {
+    margin-bottom: 0;
+}
+
+.service-group-title {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.service-group-plans {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.service-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.service-checkbox-item:hover {
+    background-color: var(--accent-color);
+}
+
+.service-checkbox {
+    margin-right: 12px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.service-checkbox-item span {
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.btn-small {
+    font-size: 0.9rem;
+    padding: 6px 14px;
+}
+

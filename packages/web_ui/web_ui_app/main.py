@@ -61,6 +61,7 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 class JobRequest(BaseModel):
     """Request to trigger a new job"""
     job_type: str  # "announcements", "slides", "bulletins"
+    selected_plans: list[dict] | None = None  # For bulletins: list of {service_type_id, plan_id, plan_date, service_name}
 
 
 class JobResponse(BaseModel):
@@ -84,8 +85,9 @@ class JobStatusResponse(BaseModel):
 async def root(request: Request):
     """Serve main UI page"""
     return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
+        request=request,
+        name="index.html",
+        context={"request": request},
     )
 
 
@@ -116,7 +118,10 @@ async def trigger_job(request: JobRequest) -> JobResponse:
         )
     
     job_id = str(uuid.uuid4())
-    run_job_async(job_id, request.job_type)
+    params = {}
+    if request.selected_plans:
+        params["selected_plans"] = request.selected_plans
+    run_job_async(job_id, request.job_type, params)
     
     print(f"✓ Job {job_id} queued: {request.job_type}")
     
@@ -169,6 +174,87 @@ async def clear_jobs():
     """
     count = clear_completed_jobs()
     return {"cleared": count}
+
+
+@app.get("/api/bulletins/future-services")
+async def get_future_services():
+    """
+    Get all future service plans from Planning Center.
+    
+    Returns:
+        List of service plans with metadata
+    """
+    try:
+        from church_automation_shared.paths import SLIDES_SLIDES_CONFIG
+        from church_automation_shared import config
+        from pypco.pco import PCO
+        from datetime import date, timedelta
+        import json
+        
+        # Load config to get service type IDs
+        config_path = str(SLIDES_SLIDES_CONFIG)
+        if not os.path.exists(config_path):
+            raise HTTPException(status_code=500, detail="Config file not found")
+        
+        with open(config_path, "r") as f:
+            cfg = json.load(f)
+        
+        service_type_ids = cfg.get("service_type_ids", [])
+        if not service_type_ids:
+            raise HTTPException(status_code=500, detail="No service_type_ids configured")
+        
+        # Initialize PCO client
+        pco = PCO(application_id=config.client_id, secret=config.secret)
+        
+        # Get all future plans (next 365 days)
+        today = date.today()
+        end_date = today + timedelta(days=365)
+        
+        all_plans = []
+        
+        for service_type_id in service_type_ids:
+            # Get service type name
+            try:
+                st_resp = pco.get(f"/services/v2/service_types/{service_type_id}")
+                service_name = st_resp["data"]["attributes"]["name"]
+            except:
+                service_name = f"Service {service_type_id}"
+            
+            # Get plans for this service type using 'future' filter
+            try:
+                plans_iter = pco.iterate(
+                    f"/services/v2/service_types/{service_type_id}/plans",
+                    filter="future"
+                )
+                
+                for plan_obj in plans_iter:
+                    attrs = plan_obj["data"]["attributes"]
+                    sort_date = attrs.get("sort_date", "")
+                    plan_date = sort_date[:10] if sort_date else ""  # YYYY-MM-DD
+                    
+                    # Only include plans within the next year
+                    if plan_date and plan_date <= end_date.isoformat():
+                        title = attrs.get("title", "")
+                        
+                        all_plans.append({
+                            "service_type_id": service_type_id,
+                            "plan_id": plan_obj["data"]["id"],
+                            "plan_date": plan_date,
+                            "service_name": service_name,
+                            "title": title
+                        })
+            except Exception as e:
+                print(f"Error fetching plans for service type {service_type_id}: {e}")
+                continue
+        
+        # Sort by date
+        all_plans.sort(key=lambda p: p["plan_date"])
+        
+        return {"plans": all_plans}
+        
+    except Exception as e:
+        print(f"Error fetching future services: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/files/{job_type}")

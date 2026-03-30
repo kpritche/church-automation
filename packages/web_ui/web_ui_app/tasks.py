@@ -33,7 +33,8 @@ def run_job_async(job_id: str, job_type: str, params: dict = None) -> str:
             "completed_at": None
         }
         
-        print(f"✓ Starting job {job_id}: {job_type}")
+        print(f"✓ Starting job {job_id}: {job_type}", flush=True)
+        sys.stdout.flush()
         
         try:
             if job_type == "announcements":
@@ -50,8 +51,21 @@ def run_job_async(job_id: str, job_type: str, params: dict = None) -> str:
                 print(f"✓ Job {job_id} completed: slides")
             
             elif job_type == "bulletins":
-                from bulletins_app.make_bulletins import main as gen_bulletins
-                gen_bulletins()
+                from bulletins_app.make_bulletins import main as gen_bulletins, generate_selected_bulletins
+                
+                print(f"[WEB-UI] Bulletins job started")
+                print(f"[WEB-UI] Thread: {threading.current_thread().name}")
+                print(f"[WEB-UI] Params: {params}")
+                
+                # Check if specific plans were selected
+                if params and params.get("selected_plans"):
+                    print(f"[WEB-UI] Calling generate_selected_bulletins with {len(params['selected_plans'])} plans")
+                    generate_selected_bulletins(params["selected_plans"])
+                else:
+                    print(f"[WEB-UI] Calling main bulletins generation")
+                    gen_bulletins()
+                
+                print(f"[WEB-UI] Bulletins generation completed")
                 _JOB_STATUS[job_id]["status"] = "completed"
                 print(f"✓ Job {job_id} completed: bulletins")
             
