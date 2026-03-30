@@ -4,6 +4,8 @@ Common utilities and configuration management for all church automation tools.
 
 ## Installation
 
+It is recommended to use `uv` from the root directory to manage all packages:
+
 ```bash
 # From repository root
 uv sync

@@ -4,6 +4,14 @@ Generate ProPresenter announcement slides from your church's website.
 
 ## Installation
 
+It is recommended to use `uv` from the root directory to manage all packages:
+
+```bash
+uv sync
+```
+
+Alternatively, to install manually:
+
 ```bash
 # From repository root
 uv sync --all-extras
@@ -11,13 +19,7 @@ uv sync --all-extras
 
 ## Setup
 
-### 1. GCP Service Account (Optional - for AI summarization)
-
-1. Create a service account in Google Cloud Console
-2. Grant Vertex AI permissions
-3. Download JSON key to `~/.church-automation/gcp-credentials.json`
-
-### 2. Configure Environment
+### 1. Configure Environment
 
 Add to your `.env` file:
 ```bash
@@ -25,16 +27,29 @@ ANNOUNCEMENTS_WEBSITE_URL=https://www.fumcwl.org/weekly-events/
 GCP_CREDENTIALS_FILENAME=gcp-credentials.json
 ```
 
+### 2. GCP Service Account (Optional - for AI summarization)
+
+1. Create a service account in [Google Cloud Console](https://console.cloud.google.com/)
+2. Grant Vertex AI permissions
+3. Download JSON key to `~/.church-automation/gcp-credentials.json`
+
 ## Usage
 
 ### Command Line
 
+From the root directory using `uv`:
+
 ```bash
-# Run the generator
+uv run make-announcements
+```
+
+Or from within this directory if installed in your environment:
+
+```bash
 make-announcements
 
 # Or use module syntax
-python -m announcements_app.main_probundle
+python -m announcements_app.main
 ```
 
 ### Output
@@ -72,10 +87,12 @@ Configured in `announcements_app/settings.py`:
 
 ## Dependencies
 
-- `requests` - HTTP requests for web scraping
-- `google-genai` - Vertex AI text generation (optional)
+- `google-api-python-client` - Google API access
+- `google-genai` - Vertex AI text generation
 - `beautifulsoup4` - HTML parsing
 - `qrcode[pil]` - QR code generation
 - `pillow` - Image processing
 - `protobuf` - ProPresenter file generation
+- `python-pptx` - PowerPoint backup generation
+- `py7zr` - Archive handling
 - `church-automation-shared` - Common utilities
