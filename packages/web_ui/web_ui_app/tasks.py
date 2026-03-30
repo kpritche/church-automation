@@ -44,8 +44,21 @@ def run_job_async(job_id: str, job_type: str, params: dict = None) -> str:
                 print(f"✓ Job {job_id} completed: announcements")
             
             elif job_type == "slides":
-                from slides_app.make_pro import main as gen_slides
-                uploaded_files = gen_slides()
+                from slides_app.make_pro import main as gen_slides, generate_selected_slides
+                
+                print(f"[WEB-UI] Slides job started")
+                print(f"[WEB-UI] Thread: {threading.current_thread().name}")
+                print(f"[WEB-UI] Params: {params}")
+                
+                # Check if specific plans were selected
+                if params and params.get("selected_plans"):
+                    print(f"[WEB-UI] Calling generate_selected_slides with {len(params['selected_plans'])} plans")
+                    uploaded_files = generate_selected_slides(params["selected_plans"])
+                else:
+                    print(f"[WEB-UI] Calling main slides generation (7-day window)")
+                    uploaded_files = gen_slides()
+                
+                print(f"[WEB-UI] Slides generation completed")
                 _JOB_STATUS[job_id]["uploaded_files"] = uploaded_files or []
                 _JOB_STATUS[job_id]["status"] = "completed"
                 print(f"✓ Job {job_id} completed: slides")

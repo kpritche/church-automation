@@ -12,9 +12,10 @@ The **Church Automation Suite** is a modular Python monorepo designed to automat
 - **APIs:** Planning Center (pypco), Gmail API, Google GenAI (Vertex AI)
 - **Output Formats:**
     - **ProPresenter 7:** Native `.pro` and `.probundle` files via Protocol Buffers.
-    - **PDF:** Bulletins generated via `ReportLab`.
+    - **PDF:** Bulletins and Service Leader Guides generated via `ReportLab`.
     - **PowerPoint:** Announcements optionally generated via `python-pptx`.
-- **Web UI:** FastAPI with Jinja2 templates.
+- **Web UI:** FastAPI with Jinja2 templates and asynchronous background tasks.
+- **Infrastructure:** Docker and Docker Compose for deployment.
 
 ---
 
@@ -25,8 +26,8 @@ The project is organized as a monorepo under the `packages/` directory:
 - `packages/shared/`: Core infrastructure, path management (`paths.py`), and configuration loading.
 - `packages/announcements/`: Fetches weekly announcements from Gmail, summarizes them using AI, and generates ProPresenter/PowerPoint files.
 - `packages/slides/`: Converts Planning Center service plans into ProPresenter 7 presentations using Protobuf definitions located in `ProPresenter7_Proto/`.
-- `packages/bulletins/`: Generates professionally formatted PDF bulletins from Planning Center data.
-- `packages/web_ui/`: A FastAPI-based dashboard to trigger and monitor automation jobs.
+- `packages/bulletins/`: Generates professionally formatted PDF bulletins and service leader guides from Planning Center data.
+- `packages/web_ui/`: A FastAPI-based dashboard to trigger and monitor automation jobs in the background (`tasks.py`).
 - `assets/`: Shared resources like fonts (Source Sans Pro) and logos.
 - `utils/`: Maintenance and debugging scripts for analyzing ProPresenter files and bundle structures.
 
@@ -54,6 +55,14 @@ uv sync --all-extras
     - Announcements: `make-announcements`
     - Slides: `make-slides`
     - Bulletins: `python packages/bulletins/bulletins_app/make_bulletins.py`
+    - Leader Guides: `python packages/bulletins/bulletins_app/make_service_leader_guide.py`
+
+### Docker Deployment
+The application can be containerized for deployment.
+```bash
+# Build and start with Docker Compose
+docker-compose up -d --build
+```
 
 ---
 
@@ -83,8 +92,11 @@ Always use `church_automation_shared.paths` for locating directories like `asset
 
 ## Key Files for Investigation
 - `pyproject.toml`: Workspace configuration and dependencies.
-- `run_all.py`: Orchestration logic.
+- `run_all.py`: Orchestration logic for weekly tasks.
 - `packages/shared/church_automation_shared/paths.py`: Centralized path management.
 - `packages/slides/slides_app/make_pro.py`: Core ProPresenter generation logic.
 - `packages/announcements/announcements_app/main.py`: Announcement processing pipeline.
-- `packages/bulletins/bulletins_app/make_bulletins.py`: PDF generation logic.
+- `packages/bulletins/bulletins_app/make_bulletins.py`: PDF bulletin generation logic.
+- `packages/bulletins/bulletins_app/make_service_leader_guide.py`: PDF leader guide generation logic.
+- `packages/web_ui/web_ui_app/tasks.py`: Background job execution system.
+- `docker-compose.yml`: Container orchestration setup.

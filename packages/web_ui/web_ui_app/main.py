@@ -176,10 +176,13 @@ async def clear_jobs():
     return {"cleared": count}
 
 
-@app.get("/api/bulletins/future-services")
+@app.get("/api/future-services")
 async def get_future_services():
     """
     Get all future service plans from Planning Center.
+    
+    This endpoint is used by both bulletins and slides workflows to fetch
+    available service plans for selection.
     
     Returns:
         List of service plans with metadata
@@ -255,6 +258,17 @@ async def get_future_services():
     except Exception as e:
         print(f"Error fetching future services: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Backward compatibility alias for bulletins
+@app.get("/api/bulletins/future-services")
+async def get_future_services_bulletins_alias():
+    """
+    Backward compatibility endpoint - redirects to /api/future-services
+    
+    This alias maintains compatibility with existing bulletin UI code.
+    """
+    return await get_future_services()
 
 
 @app.get("/api/files/{job_type}")

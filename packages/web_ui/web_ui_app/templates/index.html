@@ -52,8 +52,8 @@
                     <div class="card-body">
                         <p>Generate ProPresenter slides from Planning Center liturgy.</p>
                         <div class="card-actions">
-                            <button class="btn btn-primary" onclick="triggerJob('slides')">
-                                Generate Slides
+                            <button class="btn btn-primary" onclick="showServiceSelector('slides')">
+                                <span class="btn-icon"></span> Select Services
                             </button>
                             <button class="btn btn-secondary" onclick="showFiles('slides')">
                                 View Existing Files
@@ -80,8 +80,8 @@
                     <div class="card-body">
                         <p>Generate PDF bulletins from Planning Center service plans.</p>
                         <div class="card-actions">
-                            <button class="btn btn-primary" onclick="showBulletinServiceSelector()">
-                                <span class="btn-icon">🎯</span> Select Services
+                            <button class="btn btn-primary" onclick="showServiceSelector('bulletins')">
+                                <span class="btn-icon"></span> Select Services
                             </button>
                             <button class="btn btn-secondary" onclick="showFiles('bulletins')">
                                 View Existing Files
@@ -128,16 +128,16 @@
                 </div>
             </div>
 
-            <!-- Bulletin Service Selector -->
-            <div class="service-selector-section" id="bulletin-service-selector" style="display: none;">
+            <!-- Reusable Service Selector -->
+            <div class="service-selector-section" id="service-selector" data-job-type="" style="display: none;">
                 <div class="section-header">
-                    <h2>Select Services for Bulletins</h2>
-                    <button class="btn btn-secondary" onclick="hideBulletinServiceSelector()">Close</button>
+                    <h2 id="service-selector-title">Select Services</h2>
+                    <button class="btn btn-secondary" onclick="hideServiceSelector()">Close</button>
                 </div>
                 <div class="service-selector-actions">
                     <button class="btn btn-secondary btn-small" onclick="selectAllServices()">Select All</button>
                     <button class="btn btn-secondary btn-small" onclick="deselectAllServices()">Deselect All</button>
-                    <button class="btn btn-primary" onclick="generateSelectedBulletins()">Generate Selected Bulletins</button>
+                    <button class="btn btn-primary" onclick="generateSelectedServices()">Generate Selected</button>
                 </div>
                 <div id="service-selector-loading" class="text-center" style="padding: 20px;">
                     <div class="spinner"></div>

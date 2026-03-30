@@ -55,6 +55,7 @@ from .content_parser import (
     has_pro_attachment,
 )
 from .slide_utils import slice_into_slides
+from . import communication_actions
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -149,6 +150,49 @@ def load_config(path: str) -> dict:
         raise FileNotFoundError(f"Config file not found: {p} or {fallback}")
     with open(p, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def should_skip_song(title: str, item_id: str, pco, stid: str, plan_id: str, 
+                     included: list, config: dict) -> tuple[bool, str]:
+    """
+    Determine if a song should be skipped based on configuration.
+    
+    Returns:
+        (should_skip, reason) where reason explains why the song was skipped
+    """
+    import re
+    
+    song_config = config.get("song_handling", {})
+    
+    # Check always_generate list first (overrides everything)
+    if title in song_config.get("always_generate_titles", []):
+        return (False, "")
+    
+    # Check exact title skip list
+    if title in song_config.get("skip_exact_titles", []):
+        return (True, f"title in skip_exact_titles list")
+    
+    # Check regex pattern skip list
+    for pattern in song_config.get("skip_title_patterns", []):
+        if re.search(pattern, title):
+            return (True, f"title matches pattern: {pattern}")
+    
+    # Check for SongSelect attachments
+    if song_config.get("skip_songselect_songs", True):
+        # Fetch attachments for this item
+        lyrics_items = [{"item_obj": {"id": item_id}, "title": title}]
+        lyrics_attachments = fetch_lyrics_attachments(
+            pco, lyrics_items, stid, plan_id, included
+        )
+        
+        # Check if any attachment filename contains "songselect" (case-insensitive)
+        for att_info in lyrics_attachments:
+            att_obj = att_info.get("attachment_obj", {})
+            filename = att_obj.get("attributes", {}).get("filename", "")
+            if "songselect" in filename.lower():
+                return (True, f"SongSelect detected in attachment: {filename}")
+    
+    return (False, "")
     
 def upload_pro_to_media(file_path: str) -> str:
     """
@@ -194,7 +238,9 @@ def make_pro_for_items(
     parsed: Dict[str, object],
     filename: str = "service_slides.pro",
     scripture_reference: Optional[str] = None,
-    plan_date: Optional[str] = None
+    plan_date: Optional[str] = None,
+    camera_config: Optional[Dict] = None,
+    service_type_id: Optional[int] = None
 ) -> None:
 
     wpres = load_template(WHITE_TEMPLATE)
@@ -203,6 +249,23 @@ def make_pro_for_items(
 
     final_pres = deepcopy(bpres)  # Start with the blank template
     final_pres.cue_groups[0].group.uuid.string = str(uuid.uuid4())  # Generate a new UUID for the cue group
+    
+    # Check if we should add a camera control action
+    camera_command = None
+    if camera_config and camera_config.get("enabled", False):
+        item_title = parsed.get("title", "")
+        is_song = parsed.get("is_song", False)
+        camera_command = communication_actions.get_camera_command_for_item(
+            item_title, 
+            camera_config,
+            service_type_id=service_type_id,
+            is_song=is_song
+        )
+        if camera_command:
+            song_indicator = " (song)" if is_song else ""
+            print(f"  [CAMERA] Mapped '{item_title}'{song_indicator} -> {camera_command}")
+        else:
+            print(f"  [CAMERA] No mapping found for '{item_title}'")
 
     # Map bold flags by chunk text
     bold_map = {}
@@ -275,6 +338,16 @@ def make_pro_for_items(
         new_cue_id = final_pres.cue_groups[0].cue_identifiers.add()
         new_cue_id.string = new_cue.uuid.string
     
+    # Insert camera control action as first action in first cue (if applicable)
+    if camera_command and camera_config and len(final_pres.cues) > 0:
+        camera_action = communication_actions.create_communication_action(
+            camera_command, camera_config
+        )
+        # Insert at the beginning of the actions list
+        first_cue = final_pres.cues[0]
+        first_cue.actions.insert(0, camera_action)
+        print(f"  [CAMERA] Inserted communication action for {camera_command}")
+    
     if scripture_reference:
         # Add scripture reference slide
         add_text_slide(scripture_reference, "white")
@@ -318,11 +391,311 @@ def _generate_content_hash(text_chunks: List[str], title: str) -> str:
     return hashlib.sha256(content_str.encode()).hexdigest()[:8]
 
 
+def process_single_plan(
+    pco,
+    service_type_id: str,
+    plan_id: str,
+    plan_date: str,
+    service_name: str,
+    cfg: dict,
+    camera_config: Optional[dict] = None,
+    content_cache: Optional[Dict[str, tuple]] = None
+) -> List[str]:
+    """Process a single plan and generate slides for all its items.
+    
+    Args:
+        pco: PCO client instance
+        service_type_id: Service type ID
+        plan_id: Plan ID
+        plan_date: Plan date in YYYY-MM-DD format
+        service_name: Service name (for display)
+        cfg: Configuration dict from slides_config.json
+        camera_config: Camera control configuration (optional)
+        content_cache: Cache dict mapping content hash -> (file_path, plan_date, parsed_data)
+                      Used to deduplicate content across multiple plans (optional)
+    
+    Returns:
+        List of uploaded file names
+    """
+    if content_cache is None:
+        content_cache = {}
+    
+    uploaded_files = []
+    
+    # Fetch items for this plan
+    items_resp = pco.get(
+        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items",
+        include="arrangement,attachments"
+    )
+    items = items_resp.get("data", [])
+    included = items_resp.get("included", [])
+    
+    # Process each item
+    for item_obj in items:
+        parsed = None  # Initialize to avoid undefined reference in error handler
+        try:
+            parsed = extract_items_from_pypco(item_obj, included, pco)
+
+            # Skip if no HTML content, unless it's a song (which we'll try to fetch lyrics for)
+            if not parsed["html_present"] and not parsed.get("is_song"):
+                continue
+
+            # Check if a .pro file is already attached to this item
+            if has_pro_attachment(pco, service_type_id, plan_id, parsed['item_id']):
+                print(f"[SKIP] Item already has .pro file attached: {parsed['title']}")
+                continue
+
+            # Check if song should be skipped (SongSelect, config, etc.)
+            if parsed.get("is_song"):
+                should_skip, skip_reason = should_skip_song(
+                    parsed['title'],
+                    parsed['item_id'],
+                    pco,
+                    service_type_id,
+                    plan_id,
+                    included,
+                    cfg
+                )
+                if should_skip:
+                    print(f"⊘ Skipping song '{parsed['title']}' ({skip_reason})")
+                    continue
+
+            # Build raw and bold-aware slides
+            print(f"Generating slides for item: {parsed['title']} on {plan_date}")
+
+            # For songs, try to fetch and use lyrics from PDF attachment
+            chunks = parsed["text_chunks"]
+            if parsed.get("is_song"):
+                print(f"  > Song detected: {parsed['title']}")
+                # Fetch lyrics attachments
+                lyrics_items = [{"item_obj": item_obj, "title": parsed['title']}]
+                lyrics_attachments = fetch_lyrics_attachments(
+                    pco,
+                    lyrics_items,
+                    service_type_id,
+                    plan_id,
+                    included,
+                )
+                
+                if lyrics_attachments:
+                    # Download and extract lyrics from the first attachment
+                    att_info = lyrics_attachments[0]
+                    attachment_obj = att_info["attachment_obj"]
+                    item_id = att_info["item_id"]
+                    
+                    pdf_bytes = download_lyrics_pdf(
+                        attachment_obj,
+                        pco,
+                        service_type_id,
+                        plan_id,
+                        item_id,
+                    )
+                    
+                    if pdf_bytes:
+                        lyrics_text = extract_lyrics_text(pdf_bytes, parsed['title'])
+                        if lyrics_text:
+                            print(f"  [OK] Extracted lyrics from PDF")
+                            # Split lyrics into lines for processing
+                            chunks = [line.strip() for line in lyrics_text.split('\n') if line.strip()]
+                        else:
+                            print(f"  [WARN] Failed to extract text from lyrics PDF, using fallback HTML")
+                    else:
+                        print(f"  [WARN] Failed to download lyrics PDF, using fallback HTML")
+                else:
+                    print(f"  [INFO] No lyrics.pdf attachment found, using fallback HTML")
+                
+                # Group every two lines into one chunk for song display
+                if chunks:
+                    grouped_chunks = []
+                    for i in range(0, len(chunks), 2):
+                        pair = chunks[i:i+2]
+                        grouped_chunks.append("\n".join(pair))
+                    chunks = grouped_chunks
+
+            # Slice into slides with call/response prefixes respected
+            slides = slice_into_slides(
+                chunks,
+                max_chars=33,
+                max_lines=2,
+                force_new_slide_prefixes=list(CALL_MARKERS) + list(RESPONSE_MARKERS),
+            )
+
+            # Build a lookup of which chunks were bold in your HTML
+            bold_map = {}
+            for c in parsed.get('parsed_chunks', []):
+                if isinstance(c, dict):
+                    key = c.get("text", "")
+                    bold_map[key] = bool(c.get("is_bold", False))
+                elif isinstance(c, str):
+                    bold_map[c] = False
+
+            # Annotate each slide dict with its bold‐flag
+            for slide in slides:
+                slide["is_bold"] = bold_map.get(slide["text"], False)
+
+            slides.append({'text': '', 'style': 'blank', 'is_bold': False})
+
+            # Generate a content hash for caching
+            content_hash = _generate_content_hash(parsed.get("text_chunks", []), parsed["title"])
+            
+            safe_title = parsed["title"].strip().replace(" ", "_").replace("/", "_")
+            
+            # Check if we've already generated this content
+            if content_hash in content_cache:
+                cached_file, cached_date, _ = content_cache[content_hash]
+                print(f"[CACHE HIT] Reusing {cached_file.name} (first generated on {cached_date})")
+                out_dir = SLIDES_OUTPUTS_DIR / plan_date
+                out_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Verify cached file still exists
+                if cached_file.exists():
+                    # Upload the existing cached file to this item
+                    upload_resp = pco.upload(str(cached_file))
+                    upload_id = upload_resp["data"][0]["id"]
+                    attach_payload = {
+                        "data": {
+                            "attributes": {
+                                "file_upload_identifier": upload_id,
+                                "filename": cached_file.name
+                            }
+                        }
+                    }
+                    pco.post(
+                        f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+                        payload=attach_payload
+                    )
+                    print(f"  > Uploaded cached file; upload_id={upload_id}")
+                    uploaded_files.append(cached_file.name)
+                else:
+                    print(f"  [WARN] Cached file not found, regenerating...")
+                    content_cache.pop(content_hash, None)
+            else:
+                # Generate new file
+                # Use a generic filename without service name for shared items
+                filename = f"{plan_date}-{safe_title}-{content_hash}.pro"
+                out_dir = SLIDES_OUTPUTS_DIR / plan_date
+                out_dir.mkdir(parents=True, exist_ok=True)
+
+                make_pro_for_items(
+                    slides,
+                    parsed,
+                    filename,
+                    scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
+                    plan_date=plan_date,
+                    camera_config=camera_config,
+                    service_type_id=service_type_id
+                )
+                print(f"Generated slides for service type ID {service_type_id} into {filename}")
+                
+                out_path = out_dir / filename
+                
+                # Cache this file
+                content_cache[content_hash] = (out_path, plan_date, parsed)
+
+                # Upload the generated .pro file to its item
+                upload_resp = pco.upload(str(out_path))
+                upload_id = upload_resp["data"][0]["id"]
+                attach_payload = {
+                    "data": {
+                        "attributes": {
+                            "file_upload_identifier": upload_id,
+                            "filename": filename
+                        }
+                    }
+                }
+                pco.post(
+                    f"/services/v2/service_types/{service_type_id}/plans/{plan_id}/items/{parsed['item_id']}/attachments",
+                    payload=attach_payload
+                )
+                print(f"  > Uploaded file; upload_id={upload_id}")
+                uploaded_files.append(filename)
+        
+        except Exception as e:
+            item_title = parsed.get('title', 'unknown') if parsed else 'unknown'
+            print(f"[ERROR] Failed to process item '{item_title}': {e}")
+            continue
+    
+    return uploaded_files
+
+
+def generate_selected_slides(selected_plans: List[Dict]) -> List[str]:
+    """Generate slides for specific selected plans.
+    
+    Args:
+        selected_plans: List of dicts with keys: service_type_id, plan_id, plan_date, service_name
+    
+    Returns:
+        List of uploaded file names
+    
+    Example:
+        selected_plans = [
+            {
+                "service_type_id": "123456",
+                "plan_id": "789012",
+                "plan_date": "2026-04-05",
+                "service_name": "SundayService"
+            }
+        ]
+        uploaded_files = generate_selected_slides(selected_plans)
+    """
+    print(f"[INFO] Generating slides for {len(selected_plans)} selected plan(s)")
+    
+    # Load config
+    cfg = load_config(CONFIG_PATH)
+    
+    # Load camera control configuration
+    camera_config = communication_actions.load_camera_control_config(cfg)
+    if camera_config:
+        print(f"[CAMERA] Camera control enabled with {len(camera_config.get('mappings', []))} mappings")
+    
+    # Initialize PCO client
+    pco = PCO(application_id=config.client_id, secret=config.secret)
+    
+    # Shared content cache to deduplicate across plans
+    content_cache: Dict[str, tuple] = {}
+    
+    all_uploaded_files = []
+    
+    for plan_info in selected_plans:
+        service_type_id = plan_info["service_type_id"]
+        plan_id = plan_info["plan_id"]
+        plan_date = plan_info["plan_date"]
+        service_name = plan_info["service_name"]
+        
+        print(f"[INFO] Processing selected plan {plan_id} ({service_name}) on {plan_date}")
+        
+        try:
+            uploaded_files = process_single_plan(
+                pco,
+                service_type_id,
+                plan_id,
+                plan_date,
+                service_name,
+                cfg,
+                camera_config,
+                content_cache
+            )
+            all_uploaded_files.extend(uploaded_files)
+        except Exception as e:
+            print(f"[ERROR] Failed to process plan {plan_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+    
+    print(f"[INFO] Completed generating slides: {len(all_uploaded_files)} files uploaded")
+    return all_uploaded_files
+
+
 def main():
     cfg = load_config(CONFIG_PATH)
     service_ids = cfg.get("service_type_ids", [])
     if not service_ids:
         raise ValueError(f"No service_type_ids in config: {CONFIG_PATH}")
+    
+    # Load camera control configuration
+    camera_config = communication_actions.load_camera_control_config(cfg)
+    if camera_config:
+        print(f"[CAMERA] Camera control enabled with {len(camera_config.get('mappings', []))} mappings")
     
     target_date = os.getenv("SLIDES_TARGET_DATE")
     start_date, end_date = get_next_seven_day_window(target_date)
@@ -384,6 +757,21 @@ def main():
                 if has_pro_attachment(pco, stid, plan_id, parsed['item_id']):
                     print(f"[SKIP] Item already has .pro file attached: {parsed['title']}")
                     continue
+
+                # Check if song should be skipped (SongSelect, config, etc.)
+                if parsed.get("is_song"):
+                    should_skip, skip_reason = should_skip_song(
+                        parsed['title'],
+                        parsed['item_id'],
+                        pco,
+                        stid,
+                        plan_id,
+                        included,
+                        cfg
+                    )
+                    if should_skip:
+                        print(f"⊘ Skipping song '{parsed['title']}' ({skip_reason})")
+                        continue
 
                 # Build raw and bold-aware slides
                 print(f"Generating slides for item: {parsed['title']} on {plan_date}")
@@ -507,7 +895,9 @@ def main():
                         parsed,
                         filename,
                         scripture_reference=(parsed.get("scripture_reference") if parsed.get("is_scripture") else None),
-                        plan_date=plan_date
+                        plan_date=plan_date,
+                        camera_config=camera_config,
+                        service_type_id=stid
                     )
                     print(f"Generated slides for service type ID {stid} into {filename}")
                     

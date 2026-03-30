@@ -40,7 +40,6 @@ async function triggerJob(jobType) {
         }
 
         const data = await response.json();
-        console.log(`Job started: ${data.job_id}`);
 
         // Start polling for status
         pollJobStatus(data.job_id, jobType);
@@ -80,7 +79,6 @@ function pollJobStatus(jobId, jobType) {
             }
 
             const job = await response.json();
-            console.log(`Job ${jobId} status:`, job.status);
 
             // Update status badge
             statusBadge.textContent = capitalizeFirst(job.status);
@@ -369,15 +367,23 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// Bulletin Service Selector Functions
+// Generic Service Selector Functions
 
 let availableServices = [];
 
-async function showBulletinServiceSelector() {
-    const selector = document.getElementById('bulletin-service-selector');
+async function showServiceSelector(jobType) {
+    const selector = document.getElementById('service-selector');
     const loading = document.getElementById('service-selector-loading');
     const list = document.getElementById('service-selector-list');
     const errorDiv = document.getElementById('service-selector-error');
+    const title = selector.querySelector('h2');
+    
+    // Set job type on selector
+    selector.setAttribute('data-job-type', jobType);
+    
+    // Update title dynamically
+    const jobTypeLabel = jobType.charAt(0).toUpperCase() + jobType.slice(1);
+    title.textContent = `Select Services for ${jobTypeLabel}`;
     
     selector.style.display = 'block';
     loading.style.display = 'block';
@@ -385,33 +391,35 @@ async function showBulletinServiceSelector() {
     errorDiv.style.display = 'none';
     
     try {
-        const response = await fetch(`${API_BASE}/api/bulletins/future-services`);
+        const response = await fetch(`${API_BASE}/api/future-services`);
         
         if (!response.ok) {
-            throw new Error('Failed to fetch services');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
         availableServices = data.plans || [];
         
         if (availableServices.length === 0) {
-            list.innerHTML = '<p class="no-jobs">No future services found.</p>';
-        } else {
-            renderServiceSelector(availableServices);
+            loading.style.display = 'none';
+            errorDiv.textContent = 'No future services found. Please check your Planning Center configuration.';
+            errorDiv.style.display = 'block';
+            return;
         }
         
+        renderServiceSelector(availableServices, jobType);
         loading.style.display = 'none';
         list.style.display = 'block';
         
     } catch (error) {
-        console.error('Error loading services:', error);
+        console.error('Error fetching services:', error);
         loading.style.display = 'none';
-        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.textContent = `Failed to load services: ${error.message}. Please try again.`;
         errorDiv.style.display = 'block';
     }
 }
 
-function renderServiceSelector(services) {
+function renderServiceSelector(services, jobType) {
     const list = document.getElementById('service-selector-list');
     
     // Group by service name
@@ -440,6 +448,7 @@ function renderServiceSelector(services) {
                     <input type="checkbox" 
                            id="${checkboxId}" 
                            class="service-checkbox" 
+                           data-job-type="${jobType}"
                            data-service-type-id="${plan.service_type_id}"
                            data-plan-id="${plan.plan_id}"
                            data-plan-date="${plan.plan_date}"
@@ -454,8 +463,13 @@ function renderServiceSelector(services) {
     list.innerHTML = html;
 }
 
-function hideBulletinServiceSelector() {
-    document.getElementById('bulletin-service-selector').style.display = 'none';
+function hideServiceSelector() {
+    const selector = document.getElementById('service-selector');
+    selector.style.display = 'none';
+    const errorDiv = document.getElementById('service-selector-error');
+    errorDiv.style.display = 'none';
+    errorDiv.textContent = '';
+    selector.removeAttribute('data-job-type');
 }
 
 function selectAllServices() {
@@ -466,11 +480,21 @@ function deselectAllServices() {
     document.querySelectorAll('.service-checkbox').forEach(cb => cb.checked = false);
 }
 
-async function generateSelectedBulletins() {
+async function generateSelectedServices() {
+    // Read the job type from the selector
+    const selector = document.getElementById('service-selector');
+    const jobType = selector.getAttribute('data-job-type');
+    
+    if (!jobType) {
+        console.error('Job type not set on service selector');
+        alert('Error: Job type not set. Please try again.');
+        return;
+    }
+    
     const checkboxes = document.querySelectorAll('.service-checkbox:checked');
     
     if (checkboxes.length === 0) {
-        alert('Please select at least one service.');
+        alert(`Please select at least one service to generate ${jobType}.`);
         return;
     }
     
@@ -482,14 +506,14 @@ async function generateSelectedBulletins() {
     }));
     
     // Hide the selector
-    hideBulletinServiceSelector();
+    hideServiceSelector();
     
     // Trigger the job with selected plans
-    const card = document.getElementById('bulletins-card');
-    const progress = document.getElementById('bulletins-progress');
-    const errorDiv = document.getElementById('bulletins-error');
-    const successDiv = document.getElementById('bulletins-success');
-    const statusBadge = document.getElementById('bulletins-status');
+    const card = document.getElementById(`${jobType}-card`);
+    const progress = document.getElementById(`${jobType}-progress`);
+    const errorDiv = document.getElementById(`${jobType}-error`);
+    const successDiv = document.getElementById(`${jobType}-success`);
+    const statusBadge = document.getElementById(`${jobType}-status`);
     
     // Reset UI
     progress.style.display = 'flex';
@@ -505,7 +529,7 @@ async function generateSelectedBulletins() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ 
-                job_type: 'bulletins',
+                job_type: jobType,
                 selected_plans: selectedPlans
             })
         });
@@ -516,15 +540,14 @@ async function generateSelectedBulletins() {
         }
         
         const data = await response.json();
-        console.log(`Bulletin job started: ${data.job_id} for ${selectedPlans.length} services`);
         
         // Start polling for status
-        pollJobStatus(data.job_id, 'bulletins');
+        pollJobStatus(data.job_id, jobType);
         
     } catch (error) {
-        console.error('Error triggering bulletin job:', error);
+        console.error(`Error triggering ${jobType} job:`, error);
         progress.style.display = 'none';
-        errorDiv.textContent = `Error: ${error.message}`;
+        errorDiv.textContent = `Failed to start ${jobType} generation: ${error.message}`;
         errorDiv.style.display = 'block';
         statusBadge.textContent = 'Failed';
         statusBadge.className = 'status-badge failed';

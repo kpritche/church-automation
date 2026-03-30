@@ -9,5 +9,46 @@
     "concerns": {"id":4688551, "name": "Prayer List" },
     "memory_care": {"id":4742895, "name": "Memory Care" },
     "military": {"id":4742806, "name": "Active Military" }
+  },
+  "song_handling": {
+    "skip_songselect_songs": true,
+    "skip_exact_titles": [],
+    "skip_title_patterns": [],
+    "always_generate_titles": []
+  },
+  "camera_control": {
+    "enabled": true,
+    "device": {
+      "uuid": "DA2125C2-2809-4822-85BE-A614022530BC",
+      "name": "Companion"
+    },
+    "command": {
+      "format": "CC x",
+      "replacement_range": {"start": 3, "end": 4}
+    },
+    "mappings": [
+      {"titles": ["Countdown"], "command": "CC 9/1/0"},
+      {"titles": ["Welcome"], "command": "CC 9/2/0"},
+      {"titles": ["Prayer", "Prayers", "Prayer of Confession", "Prayer of Illumination", "Opening Prayer"], "command": "CC 9/3/0"},
+      {
+        "match_type": "any_song",
+        "service_type_ids": [1041663],
+        "command": "CC 9/4/0"
+      },
+      {
+        "match_type": "any_song",
+        "service_type_ids": [78127, 1145553],
+        "command": "CC 9/5/0"
+      },
+      {"titles": ["Passing Peace", "Passing of the Peace", "Greeting Each Other"], "command": "CC 9/6/0"},
+      {"titles": ["Children's Moment", "Children's Time", "Children's Message"], "command": "CC 9/7/0"},
+      {"titles": ["The Message", "Message", "Sermon"], "command": "CC 9/1/1"},
+      {"titles": ["Scripture Reading", "Scripture", "The Gospel Lesson", "Gospel Reading"], "command": "CC 9/2/1"},
+      {"titles": ["MiM Bells"], "command": "CC 9/3/1"},
+      {"titles": ["MiM Piano"], "command": "CC 9/4/1"},
+      {"titles": ["MiM Choir+Keys"], "command": "CC 9/5/1"},
+      {"titles": ["MiM Choir"], "command": "CC 9/6/1"},
+      {"titles": ["Benediction", "Blessing"], "command": "CC 9/7/1"}
+    ]
   }
 }
