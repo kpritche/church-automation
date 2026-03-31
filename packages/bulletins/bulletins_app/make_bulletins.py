@@ -1285,9 +1285,6 @@ class BulletinRenderer:
             if title:
                 h += self._line_height(self.fonts.subheading_size, leading=1.15)
                 h += self.HEADING_GAP
-            if is_song and title:
-                h += self._line_height(self.fonts.description_size, leading=DESCRIPTION_LEADING)
-                h += self.HEADING_GAP
             if description:
                 h += self._line_height(self.fonts.description_size, leading=DESCRIPTION_LEADING)
                 h += self.DESCRIPTION_GAP
@@ -1310,23 +1307,11 @@ class BulletinRenderer:
 
         if title:
             self.current_item = title or "(untitled)"
-            heading_text = "Song" if is_song else str(title)
             self.draw_wrapped_block(
-                heading_text,
+                str(title),
                 self.fonts.subheading_name,
                 self.fonts.subheading_size,
                 COLOR_ACCENT,
-                align="center",
-                leading=1.15,
-            )
-            self._bump_cursor(self.HEADING_GAP)
-
-        if is_song and title:
-            self.draw_wrapped_block(
-                f"\"{title}\"",
-                self.fonts.description_name,
-                self.fonts.description_size,
-                COLOR_PRIMARY,
                 align="center",
                 leading=1.15,
             )
