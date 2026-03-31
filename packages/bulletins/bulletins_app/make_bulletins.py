@@ -1010,8 +1010,9 @@ def build_sections(
             continue
 
         if title == "Invitation to Generosity":
+            # Keep track of this item for optional Get Involved attachment pages.
+            # Do not skip here; render inline when no attachment PDF is available.
             get_involved_item = item_obj
-            continue
 
         if item_type == "header":
             current_section = {"title": title, "items": []}
