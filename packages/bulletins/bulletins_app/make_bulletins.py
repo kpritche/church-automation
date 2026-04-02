@@ -1466,6 +1466,71 @@ class BulletinRenderer:
                 return (2, position)
         return sorted(positions, key=sort_key)
 
+    def _compute_team_height(self, positions: List[str], worship_team: Dict[str, List[str]], col_width: float) -> float:
+        """Calculate the total vertical space a team block will occupy at the given column width."""
+        lh_body = self._line_height(self.fonts.body_size, leading=1.2)
+        lh_small = self._line_height(self.fonts.body_small_size, leading=1.2)
+        h = lh_body + 4  # team name header + post-header gap
+        for position in positions:
+            members = worship_team.get(position, [])
+            if not members:
+                continue
+            pos_lines = self._wrap(position + ":", self.fonts.body_bold_name, self.fonts.body_small_size, col_width)
+            h += len(pos_lines) * lh_small
+            for member in members:
+                mem_lines = self._wrap(member, self.fonts.body_small_name, self.fonts.body_small_size, col_width - 10)
+                h += len(mem_lines) * lh_small
+            h += 4  # gap between positions
+        return h
+
+    def _draw_team_column(
+        self,
+        x_offset: float,
+        start_cursor_y: float,
+        team_name: str,
+        positions: List[str],
+        worship_team: Dict[str, List[str]],
+        col_width: float,
+    ) -> float:
+        """Draw a single team column at the given x/y position with text wrapping. Returns the cursor_y after drawing."""
+        lh_body = self._line_height(self.fonts.body_size, leading=1.2)
+        lh_small = self._line_height(self.fonts.body_small_size, leading=1.2)
+        saved_cursor = self.cursor_y
+        self.cursor_y = start_cursor_y
+
+        # Team name header
+        self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_size)
+        self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_PRIMARY))
+        self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_size, team_name)
+        self._bump_cursor(lh_body + 4)
+
+        for position in positions:
+            members = worship_team.get(position, [])
+            if not members:
+                continue
+
+            # Position label, wrapped to fit column
+            pos_lines = self._wrap(position + ":", self.fonts.body_bold_name, self.fonts.body_small_size, col_width)
+            self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_small_size)
+            self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_BLACK))
+            for line in pos_lines:
+                self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, line)
+                self._bump_cursor(lh_small)
+
+            # Member names, wrapped to fit column
+            self.canvas.setFont(self.fonts.body_small_name, self.fonts.body_small_size)
+            for member in members:
+                mem_lines = self._wrap(member, self.fonts.body_small_name, self.fonts.body_small_size, col_width - 10)
+                for line in mem_lines:
+                    self.canvas.drawString(x_offset + 10, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, line)
+                    self._bump_cursor(lh_small)
+
+            self._bump_cursor(4)  # gap between positions
+
+        end_cursor = self.cursor_y
+        self.cursor_y = saved_cursor
+        return end_cursor
+
     def draw_prayers_and_worship_page(
         self,
         qr_codes: Dict[str, Optional[Image.Image]],
@@ -1508,136 +1573,73 @@ class BulletinRenderer:
             
         # Worship Team Section
         self.draw_section_header("Worship Team")
-        
-        # Organize worship team by team from Planning Center
-        if position_to_team_map:
-            # Group positions by team from Planning Center
-            team_groups: Dict[str, List[str]] = {}
-            for position in worship_team.keys():
-                team_name = position_to_team_map.get(position, "Other")
-                if team_name not in team_groups:
-                    team_groups[team_name] = []
-                team_groups[team_name].append(position)
-            
-            # Sort teams for consistent display
-            sorted_teams = sorted(team_groups.keys())
-            num_teams = len(sorted_teams)
-            
-            if num_teams == 0:
-                self._bump_cursor(20)
+
+        # Build team groups: use Planning Center team map if available, else fall back to position name
+        team_groups: Dict[str, List[str]] = {}
+        for position in worship_team.keys():
+            if position_to_team_map:
+                group = position_to_team_map.get(position, "Other")
             else:
-                # Draw teams in columns
-                col_width = BODY_WIDTH / num_teams
-                original_cursor_y = self.cursor_y
-                max_cursor_y = self.cursor_y
-                
-                for col_idx, team_name in enumerate(sorted_teams):
-                    # Reset cursor for each column
-                    self.cursor_y = original_cursor_y
-                    x_offset = MARGIN_X + (col_idx * col_width)
-                    positions = self._sort_positions(team_groups[team_name])
-                    
-                    # Draw team name
-                    self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_size)
-                    self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_PRIMARY))
-                    self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_size, team_name)
-                    self._bump_cursor(self._line_height(self.fonts.body_size, leading=1.2))
-                    self._bump_cursor(4)
-                    
-                    # Draw each position and its members
-                    for position in positions:
-                        members = worship_team.get(position, [])
-                        if not members:
-                            continue
-                        
-                        # Draw position as a small title
-                        self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_small_size)
-                        self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_BLACK))
-                        self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, position + ":")
-                        self._bump_cursor(self._line_height(self.fonts.body_small_size, leading=1.2))
-                        
-                        # Draw member names
-                        self.canvas.setFont(self.fonts.body_small_name, self.fonts.body_small_size)
-                        for member in members:
-                            self.canvas.drawString(x_offset + 10, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, member)
-                            self._bump_cursor(self._line_height(self.fonts.body_small_size, leading=1.2))
-                        
-                        self._bump_cursor(4)  # spacing between positions
-                    
-                    # Track the tallest column
-                    max_cursor_y = max(max_cursor_y, self.cursor_y)
-                
-                # Set cursor to the bottom of the tallest column
-                self._set_cursor(max_cursor_y)
-                self._bump_cursor(6)  # spacing after teams section
+                group = position  # each position becomes its own "team" for fallback
+            team_groups.setdefault(group, []).append(position)
+
+        # Sort positions within each team and remove teams with no members
+        for group in list(team_groups.keys()):
+            team_groups[group] = [
+                p for p in self._sort_positions(team_groups[group])
+                if worship_team.get(p)
+            ]
+            if not team_groups[group]:
+                del team_groups[group]
+
+        sorted_team_names = sorted(team_groups.keys())
+        n = len(sorted_team_names)
+
+        if n == 0:
+            self._bump_cursor(20)
         else:
-            # Fallback to hardcoded grouping if team info not available
-            team_groups = {
-                "Band": ["Drums", "Bass", "Guitar", "Keys", "Acoustic Guitar"],
-                "Vocals": ["Vocals", "Worship Leader"],
-                "Tech": ["Sound", "Lights", "Video", "Slides"],
-                "Production": ["Production Director", "Stage Manager"],
-            }
-            
-            # Filter to only teams that have members
-            active_teams = {
-                team_name: positions
-                for team_name, positions in team_groups.items()
-                if any(position in worship_team for position in positions)
-            }
-            
-            num_teams = len(active_teams)
-            if num_teams == 0:
-                self._bump_cursor(20)
-            else:
-                # Draw teams in columns
-                col_width = BODY_WIDTH / num_teams
-                original_cursor_y = self.cursor_y
-                max_cursor_y = self.cursor_y
-                
-                for col_idx, (team_name, positions) in enumerate(sorted(active_teams.items())):
-                    # Reset cursor for each column
-                    self.cursor_y = original_cursor_y
-                    x_offset = MARGIN_X + (col_idx * col_width)
-                    positions = self._sort_positions(positions)
-                    
-                    # Draw team name
-                    self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_size)
-                    self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_PRIMARY))
-                    self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_size, team_name)
-                    self._bump_cursor(self._line_height(self.fonts.body_size, leading=1.2))
-                    self._bump_cursor(4)
-                    
-                    # Draw each position and its members
-                    for position in positions:
-                        if position not in worship_team:
-                            continue
-                        
-                        members = worship_team[position]
-                        if not members:
-                            continue
-                        
-                        # Draw position as a small title
-                        self.canvas.setFont(self.fonts.body_bold_name, self.fonts.body_small_size)
-                        self.canvas.setFillColorRGB(*(c / 255 for c in COLOR_BLACK))
-                        self.canvas.drawString(x_offset, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, position + ":")
-                        self._bump_cursor(self._line_height(self.fonts.body_small_size, leading=1.2))
-                        
-                        # Draw member names
-                        self.canvas.setFont(self.fonts.body_small_name, self.fonts.body_small_size)
-                        for member in members:
-                            self.canvas.drawString(x_offset + 10, PAGE_HEIGHT - self.cursor_y - self.fonts.body_small_size, member)
-                            self._bump_cursor(self._line_height(self.fonts.body_small_size, leading=1.2))
-                        
-                        self._bump_cursor(4)  # spacing between positions
-                    
-                    # Track the tallest column
-                    max_cursor_y = max(max_cursor_y, self.cursor_y)
-                
-                # Set cursor to the bottom of the tallest column
-                self._set_cursor(max_cursor_y)
-                self._bump_cursor(6)  # spacing after teams section
-        
+            available_height = (PAGE_HEIGHT - MARGIN_Y) - self.cursor_y
+            ROW_GAP = 14  # vertical gap between rows of teams
+
+            # Find the minimum number of rows where content fits vertically.
+            # Increase rows (reducing columns per row) until the tallest row fits.
+            chosen_rows: List[List[str]] = [sorted_team_names]
+            chosen_col_width = BODY_WIDTH / n
+
+            for num_rows in range(1, n + 1):
+                cols_per_row = (n + num_rows - 1) // num_rows  # ceil(n / num_rows)
+                col_width = BODY_WIDTH / cols_per_row
+                rows = [
+                    sorted_team_names[i * cols_per_row:(i + 1) * cols_per_row]
+                    for i in range(num_rows)
+                ]
+                row_heights = [
+                    max(self._compute_team_height(team_groups[t], worship_team, col_width) for t in row)
+                    for row in rows
+                ]
+                total_height = sum(row_heights) + (num_rows - 1) * ROW_GAP
+                if total_height <= available_height or num_rows == n:
+                    chosen_rows = rows
+                    chosen_col_width = col_width
+                    break
+
+            # Draw all rows
+            for row_idx, row_teams in enumerate(chosen_rows):
+                row_start_y = self.cursor_y
+                max_end_y = row_start_y
+                for col_idx, team_name in enumerate(row_teams):
+                    x_offset = MARGIN_X + col_idx * chosen_col_width
+                    end_y = self._draw_team_column(
+                        x_offset, row_start_y, team_name,
+                        team_groups[team_name], worship_team, chosen_col_width
+                    )
+                    max_end_y = max(max_end_y, end_y)
+                self._set_cursor(max_end_y)
+                if row_idx < len(chosen_rows) - 1:
+                    self._bump_cursor(ROW_GAP)
+
+            self._bump_cursor(6)
+
         self._bump_cursor(20)
 
         # QR Codes Section
