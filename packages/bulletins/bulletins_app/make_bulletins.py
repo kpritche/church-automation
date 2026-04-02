@@ -1580,7 +1580,7 @@ class BulletinRenderer:
             if position_to_team_map:
                 group = position_to_team_map.get(position, "Other")
             else:
-                group = position  # each position becomes its own "team" for fallback
+                group = position
             team_groups.setdefault(group, []).append(position)
 
         # Sort positions within each team and remove teams with no members
@@ -1598,46 +1598,84 @@ class BulletinRenderer:
         if n == 0:
             self._bump_cursor(20)
         else:
-            available_height = (PAGE_HEIGHT - MARGIN_Y) - self.cursor_y
-            ROW_GAP = 14  # vertical gap between rows of teams
+            # Reserve space for QR section + footer that follow on the same page:
+            # section header (~30), bump(20), QR images (130 + 30 stagger + 17 label = 177),
+            # footer (~47), plus a small buffer.
+            POST_WORSHIP_RESERVE = 300
+            TEAM_GAP = 8  # vertical gap between stacked teams within a column
 
-            # Find the minimum number of rows where content fits vertically.
-            # Increase rows (reducing columns per row) until the tallest row fits.
-            chosen_rows: List[List[str]] = [sorted_team_names]
+            available_height = (PAGE_HEIGHT - MARGIN_Y) - self.cursor_y - POST_WORSHIP_RESERVE
+            # Guarantee at least a minimal workable height in case the prayer section ran long
+            available_height = max(available_height, 150.0)
+
+            # Find the minimum number of columns where bin-packing fits.
+            # For each candidate num_cols we use LPT (Longest Processing Time) greedy:
+            # sort teams by height descending, assign each to the least-loaded column.
+            # Multiple teams stack vertically within a column (separated by TEAM_GAP).
+            chosen_num_cols = n
             chosen_col_width = BODY_WIDTH / n
+            chosen_col_assignments: List[List[str]] = [[t] for t in sorted_team_names]
 
-            for num_rows in range(1, n + 1):
-                cols_per_row = (n + num_rows - 1) // num_rows  # ceil(n / num_rows)
-                col_width = BODY_WIDTH / cols_per_row
-                rows = [
-                    sorted_team_names[i * cols_per_row:(i + 1) * cols_per_row]
-                    for i in range(num_rows)
-                ]
-                row_heights = [
-                    max(self._compute_team_height(team_groups[t], worship_team, col_width) for t in row)
-                    for row in rows
-                ]
-                total_height = sum(row_heights) + (num_rows - 1) * ROW_GAP
-                if total_height <= available_height or num_rows == n:
-                    chosen_rows = rows
+            for num_cols in range(2, n + 1):
+                col_width = BODY_WIDTH / num_cols
+
+                # Measure each team's height at this column width
+                heights = {
+                    t: self._compute_team_height(team_groups[t], worship_team, col_width)
+                    for t in sorted_team_names
+                }
+
+                # LPT bin-pack: sort tallest teams first, assign to least-loaded column
+                col_loads = [0.0] * num_cols
+                col_assignments: List[List[str]] = [[] for _ in range(num_cols)]
+                for team in sorted(sorted_team_names, key=lambda t: heights[t], reverse=True):
+                    lightest = min(range(num_cols), key=lambda c: col_loads[c])
+                    if col_assignments[lightest]:
+                        col_loads[lightest] += TEAM_GAP
+                    col_assignments[lightest].append(team)
+                    col_loads[lightest] += heights[team]
+
+                if max(col_loads) <= available_height:
+                    chosen_num_cols = num_cols
                     chosen_col_width = col_width
+                    chosen_col_assignments = col_assignments
                     break
+            else:
+                # Even n columns didn't fit — use n columns anyway (best effort)
+                chosen_num_cols = n
+                chosen_col_width = BODY_WIDTH / n
+                col_heights = {t: self._compute_team_height(team_groups[t], worship_team, chosen_col_width)
+                               for t in sorted_team_names}
+                col_loads = [0.0] * n
+                col_assignments = [[] for _ in range(n)]
+                for team in sorted(sorted_team_names, key=lambda t: col_heights[t], reverse=True):
+                    lightest = min(range(n), key=lambda c: col_loads[c])
+                    if col_assignments[lightest]:
+                        col_loads[lightest] += TEAM_GAP
+                    col_assignments[lightest].append(team)
+                    col_loads[lightest] += col_heights[team]
+                chosen_col_assignments = col_assignments
 
-            # Draw all rows
-            for row_idx, row_teams in enumerate(chosen_rows):
-                row_start_y = self.cursor_y
-                max_end_y = row_start_y
-                for col_idx, team_name in enumerate(row_teams):
-                    x_offset = MARGIN_X + col_idx * chosen_col_width
+            # Sort teams within each column alphabetically for consistent display
+            for col in chosen_col_assignments:
+                col.sort()
+
+            # Draw all columns — multiple teams stack top-to-bottom within each column
+            section_start_y = self.cursor_y
+            max_end_y = section_start_y
+
+            for col_idx, teams_in_col in enumerate(chosen_col_assignments):
+                x_offset = MARGIN_X + col_idx * chosen_col_width
+                col_cursor_y = section_start_y
+                for team_name in teams_in_col:
                     end_y = self._draw_team_column(
-                        x_offset, row_start_y, team_name,
+                        x_offset, col_cursor_y, team_name,
                         team_groups[team_name], worship_team, chosen_col_width
                     )
+                    col_cursor_y = end_y + TEAM_GAP
                     max_end_y = max(max_end_y, end_y)
-                self._set_cursor(max_end_y)
-                if row_idx < len(chosen_rows) - 1:
-                    self._bump_cursor(ROW_GAP)
 
+            self._set_cursor(max_end_y)
             self._bump_cursor(6)
 
         self._bump_cursor(20)
