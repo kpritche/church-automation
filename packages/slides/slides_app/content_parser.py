@@ -385,7 +385,7 @@ def extract_items_from_pypco(
     is_scripture = stripped_title in SCRIPTURE_TITLES
     # Check both title (for "Song"/"Hymn") and item_type from Planning Center
     is_song = stripped_title in SONG_TITLES or item_type.lower() == "song"
-    is_prelude_postlude = stripped_title in PRELUDE_POSTLUDE_TITLES
+    is_prelude_postlude = "Prelude" in stripped_title or "Postlude" in stripped_title
     scripture_reference: Optional[str] = None
     text_chunks: List[str] = []
 
@@ -397,14 +397,10 @@ def extract_items_from_pypco(
             parsed_chunks = _parse_html_details(html_detail)
             text_chunks = [c["text"] for c in parsed_chunks]
 
-    elif is_prelude_postlude and html_detail.strip():
-        # Prelude/Postlude: ignore line breaks and keep all text on one slide
-        content = html_mod.unescape(html_detail)
-        content = re.sub(r'<br\s*/?>', ' ', content, flags=re.IGNORECASE)
-        text = re.sub(r'<[^>]+>', '', content)
-        text = re.sub(r'\s+', ' ', text).strip()
-        is_bold = bool(re.search(r'<(?:b|strong)[^>]*>', html_detail, flags=re.IGNORECASE))
-        parsed_chunks = [{"text": text, "is_bold": is_bold}]
+    elif is_prelude_postlude and description.strip():
+        # Prelude/Postlude: put all description text on a single slide
+        text = description.strip()
+        parsed_chunks = [{"text": text, "is_bold": False}]
         text_chunks = [text]
 
     # # Song: look in attachments first, then html_details fallback

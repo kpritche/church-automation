@@ -2397,9 +2397,7 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
         print("[INFO] Using cached 'Get Involved' PDF")
 
     fonts = FontBundle()
-    # Build role replacement map from worship team assignments
-    role_replacement_map = build_role_replacement_map(worship_team)
-    renderer = BulletinRenderer(fonts, role_replacement_map)
+    renderer = BulletinRenderer(fonts)
     log_progress("renderer created")
 
     renderer.add_cover(cover_img, cover_pdf_bytes)

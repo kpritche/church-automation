@@ -28,8 +28,7 @@
     },
     "mappings": [
       {"titles": ["Countdown"], "command": "CC 9/1/0"},
-      {"titles": ["Welcome"], "command": "CC 9/2/0"},
-      {"titles": ["Prayer", "Prayers", "Prayer of Confession", "Prayer of Illumination", "Opening Prayer"], "command": "CC 9/3/0"},
+      {"titles": ["Prayer", "Prayers", "Prayer of Confession", "Prayer of Illumination", "Opening Prayer", "The Pastoral Prayer", "Invitation to Generosity", "The Great Thanksgiving"], "command": "CC 9/3/0"},
       {
         "match_type": "any_song",
         "service_type_ids": [1041663],
@@ -40,10 +39,10 @@
         "service_type_ids": [78127, 1145553],
         "command": "CC 9/5/0"
       },
-      {"titles": ["Passing Peace", "Passing of the Peace", "Greeting Each Other"], "command": "CC 9/6/0"},
-      {"titles": ["Children's Moment", "Children's Time", "Children's Message"], "command": "CC 9/7/0"},
+      {"titles": ["Passing Peace", "Passing of the Peace", "Greeting Each Other", "Sharing the Peace of Christ"], "command": "CC 9/6/0"},
+      {"titles": ["Children's Moment", "Children's Time", "Children's Message", "The Message to Young Disciples"], "command": "CC 9/7/0"},
       {"titles": ["The Message", "Message", "Sermon"], "command": "CC 9/1/1"},
-      {"titles": ["Scripture Reading", "Scripture", "The Gospel Lesson", "Gospel Reading"], "command": "CC 9/2/1"},
+      {"titles": ["Scripture Reading", "Scripture", "The Gospel Lesson", "Gospel Reading", "The New Testament Lesson"], "command": "CC 9/2/1"},
       {"titles": ["MiM Bells"], "command": "CC 9/3/1"},
       {"titles": ["MiM Piano"], "command": "CC 9/4/1"},
       {"titles": ["MiM Choir+Keys"], "command": "CC 9/5/1"},
