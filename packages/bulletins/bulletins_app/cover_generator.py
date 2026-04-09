@@ -340,13 +340,13 @@ def generate_branded_cover_pdf(
     """
     # Import paths
     try:
-        from church_automation_shared.paths import FONTS_DIR, REPO_ROOT
-        logo_path = REPO_ROOT / "packages" / "announcements" / "logo.png"
+        from church_automation_shared.paths import FONTS_DIR, BULLETINS_DIR
+        logo_path = BULLETINS_DIR / "bulletins_app" / "firstchurch_white_logo.png"
     except ImportError:
         # Fallback for running tests without full package installation
-        repo_root = Path(__file__).resolve().parents[4]
-        logo_path = repo_root / "packages" / "announcements" / "logo.png"
-        fonts_dir = repo_root / "assets" / "fonts"
+        bulletins_dir = Path(__file__).resolve().parent.parent
+        logo_path = bulletins_dir / "bulletins_app" / "firstchurch_white_logo.png"
+        fonts_dir = Path(__file__).resolve().parents[4] / "assets" / "fonts"
         FONTS_DIR = fonts_dir
     
     # Page constants
