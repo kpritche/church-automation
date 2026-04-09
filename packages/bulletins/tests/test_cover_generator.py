@@ -9,6 +9,9 @@ from bulletins_app.cover_generator import (
     CoverWeekInfo,
     scrape_week_info,
     download_bulletin_image,
+    extract_fill_color,
+    wcag_contrast_ratio,
+    is_full_bleed,
 )
 
 
@@ -196,3 +199,75 @@ def test_download_bulletin_image_returns_pil_image():
         
         assert isinstance(result, Image.Image)
         assert result.size == (100, 100)
+
+
+# Phase 2: Color Analysis Tests
+
+
+def test_full_bleed_detection_portrait():
+    """Test that a portrait image matching page proportions is detected as full bleed."""
+    # Letter size: 612 x 792 points (aspect ratio ~0.773)
+    # Create an image with matching aspect ratio
+    img = Image.new('RGB', (612, 792), color='blue')
+    
+    assert is_full_bleed(img, 612, 792) is True
+
+
+def test_full_bleed_detection_square():
+    """Test that a square image is not detected as full bleed."""
+    img = Image.new('RGB', (1000, 1000), color='green')
+    
+    assert is_full_bleed(img, 612, 792) is False
+
+
+def test_extract_fill_color_prefers_dark_palette_color():
+    """Test that extract_fill_color selects a dark color with good contrast."""
+    # Create an image with dark and light colors
+    # Use a gradient to ensure multiple colors in palette
+    img = Image.new('RGB', (100, 100))
+    pixels = img.load()
+    
+    # Fill with mostly dark blue-green (good contrast with white)
+    for x in range(100):
+        for y in range(100):
+            if y < 80:
+                pixels[x, y] = (20, 60, 50)  # Dark teal (similar to church brand)
+            else:
+                pixels[x, y] = (200, 220, 240)  # Light blue
+    
+    color = extract_fill_color(img)
+    
+    # Should return the dark color, not the light one
+    assert color[0] < 100 and color[1] < 150 and color[2] < 150
+    # Verify it has reasonable contrast
+    assert wcag_contrast_ratio(color) >= 4.5
+
+
+def test_extract_fill_color_falls_back_when_all_colors_light():
+    """Test that extract_fill_color falls back to church primary color when no dark colors have good contrast."""
+    # Create an image with only very light colors
+    img = Image.new('RGB', (100, 100), color=(240, 245, 250))
+    
+    color = extract_fill_color(img)
+    
+    # Should fall back to church primary color #16463E (22, 70, 62)
+    assert color == (22, 70, 62)
+
+
+def test_wcag_contrast_ratio_white():
+    """Test WCAG contrast ratio calculation for white text on various backgrounds."""
+    # Black background should have high contrast (21:1)
+    black_contrast = wcag_contrast_ratio((0, 0, 0))
+    assert black_contrast >= 21.0
+    
+    # Dark teal (church brand color) should have good contrast (>4.5:1)
+    teal_contrast = wcag_contrast_ratio((22, 70, 62))
+    assert teal_contrast >= 4.5
+    
+    # Light gray should have poor contrast (<3:1)
+    light_gray_contrast = wcag_contrast_ratio((200, 200, 200))
+    assert light_gray_contrast < 3.0
+    
+    # White background should have minimal contrast (1:1)
+    white_contrast = wcag_contrast_ratio((255, 255, 255))
+    assert 0.9 <= white_contrast <= 1.1

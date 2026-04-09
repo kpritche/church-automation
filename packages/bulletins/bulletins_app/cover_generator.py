@@ -1,7 +1,7 @@
 """Automated bulletin cover generation from UMC Discipleship resources."""
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import Optional, Tuple
 import re
 import io
 
@@ -178,3 +178,132 @@ def download_bulletin_image(image_url: str) -> Image.Image:
     print(f"[cover_generator] Image downloaded: {img.size[0]}x{img.size[1]}px")
     
     return img
+
+
+# Phase 2: Color Analysis Functions
+
+
+def wcag_contrast_ratio(color: Tuple[int, int, int]) -> float:
+    """
+    Calculate the WCAG contrast ratio of a color against white text.
+    
+    Args:
+        color: RGB color tuple (0-255 for each channel)
+        
+    Returns:
+        Contrast ratio value (1.0 = no contrast, 21.0 = maximum contrast)
+    """
+    # Calculate relative luminance using WCAG formula
+    def relative_luminance(rgb: Tuple[int, int, int]) -> float:
+        # Convert to 0-1 range
+        r, g, b = [c / 255.0 for c in rgb]
+        
+        # Apply gamma correction
+        def adjust(channel: float) -> float:
+            if channel <= 0.03928:
+                return channel / 12.92
+            else:
+                return ((channel + 0.055) / 1.055) ** 2.4
+        
+        r_adj = adjust(r)
+        g_adj = adjust(g)
+        b_adj = adjust(b)
+        
+        # Calculate luminance (formula from WCAG 2.0)
+        return 0.2126 * r_adj + 0.7152 * g_adj + 0.0722 * b_adj
+    
+    # Calculate contrast ratio against white (luminance = 1.0)
+    color_luminance = relative_luminance(color)
+    white_luminance = 1.0
+    
+    # WCAG contrast ratio formula
+    if white_luminance > color_luminance:
+        ratio = (white_luminance + 0.05) / (color_luminance + 0.05)
+    else:
+        ratio = (color_luminance + 0.05) / (white_luminance + 0.05)
+    
+    return ratio
+
+
+def is_full_bleed(image: Image.Image, page_w: float, page_h: float) -> bool:
+    """
+    Determine if an image aspect ratio matches the page aspect ratio (full bleed).
+    
+    Args:
+        image: PIL Image to check
+        page_w: Page width in points
+        page_h: Page height in points
+        
+    Returns:
+        True if image aspect ratio matches page within 5% tolerance
+    """
+    img_w, img_h = image.size
+    img_aspect = img_w / img_h
+    page_aspect = page_w / page_h
+    
+    # Allow 5% tolerance
+    tolerance = 0.05
+    return abs(img_aspect - page_aspect) < tolerance
+
+
+def extract_fill_color(image: Image.Image) -> Tuple[int, int, int]:
+    """
+    Extract a suitable background fill color from the image palette.
+    
+    Selects a color that:
+    - Is present in the image's color palette
+    - Provides good contrast (WCAG AA: ≥4.5:1) with white text
+    - Prefers darker colors
+    
+    Falls back to church primary color (22, 70, 62) if no suitable color found.
+    
+    Args:
+        image: PIL Image to analyze
+        
+    Returns:
+        RGB color tuple (0-255 for each channel)
+    """
+    CHURCH_PRIMARY_COLOR = (22, 70, 62)  # #16463E
+    MIN_CONTRAST = 4.5  # WCAG AA standard
+    
+    try:
+        # Quantize image to extract dominant colors
+        quantized = image.quantize(colors=10)
+        palette = quantized.getpalette()
+        
+        if not palette:
+            return CHURCH_PRIMARY_COLOR
+        
+        # Extract RGB colors from palette
+        colors = []
+        for i in range(0, min(30, len(palette)), 3):
+            if i + 2 < len(palette):
+                color = (palette[i], palette[i + 1], palette[i + 2])
+                colors.append(color)
+        
+        # Find the darkest color with sufficient contrast
+        best_color = None
+        best_luminance = 1.0  # Start with maximum (lightest)
+        
+        for color in colors:
+            contrast = wcag_contrast_ratio(color)
+            
+            if contrast >= MIN_CONTRAST:
+                # Calculate perceived luminance (simple approximation)
+                luminance = (0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]) / 255.0
+                
+                # Prefer darker colors (lower luminance)
+                if luminance < best_luminance:
+                    best_luminance = luminance
+                    best_color = color
+        
+        if best_color:
+            print(f"[cover_generator] Selected fill color: RGB{best_color} (contrast: {wcag_contrast_ratio(best_color):.1f}:1)")
+            return best_color
+        else:
+            print(f"[cover_generator] No suitable palette color found, using church primary color")
+            return CHURCH_PRIMARY_COLOR
+    
+    except Exception as exc:
+        print(f"[cover_generator] Error extracting fill color: {exc}, using church primary color")
+        return CHURCH_PRIMARY_COLOR
