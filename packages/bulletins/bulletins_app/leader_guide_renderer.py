@@ -8,7 +8,9 @@ embedded after their corresponding items with clear separators.
 from __future__ import annotations
 
 import io
+import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -428,9 +430,23 @@ class LeaderGuideRenderer:
             except Exception as e:
                 print(f"  ⚠ Failed to process section: {e}")
 
-        # Write to file
+        # Write to a temp file first, then atomically replace the destination.
+        # This avoids PermissionError when a previous run created a root-owned file
+        # in a writable output directory.
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, "wb") as f:
-            writer.write(f)
+        tmp_path = None
+        try:
+            fd, temp_name = tempfile.mkstemp(
+                prefix=f"{output_path.stem}.",
+                suffix=".tmp",
+                dir=output_path.parent,
+            )
+            tmp_path = Path(temp_name)
+            with os.fdopen(fd, "wb") as f:
+                writer.write(f)
+            os.replace(tmp_path, output_path)
+        finally:
+            if tmp_path and tmp_path.exists():
+                tmp_path.unlink()
 
         print(f"[OK] Saved leader guide to {output_path}")
