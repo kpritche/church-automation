@@ -486,3 +486,61 @@ def generate_branded_cover_pdf(
     buffer.close()
     
     return pdf_bytes
+
+
+# Phase 4: Pipeline Integration
+
+
+def generate_auto_cover(
+    service_date: date,
+    service_name: str
+) -> Optional[Tuple[bytes, str]]:
+    """
+    Automatically generate a bulletin cover for the given service.
+    
+    This is the main entry point that orchestrates the full workflow:
+    1. Scrape UMC Discipleship for the bulletin image and liturgical name
+    2. Download the image
+    3. Extract a fill color from the image palette
+    4. Render the branded cover PDF
+    
+    Args:
+        service_date: The date of the Sunday service
+        service_name: Name of the service (e.g., "Celebrate", "First Up")
+        
+    Returns:
+        Tuple of (pdf_bytes, liturgical_name) if successful, None if failed
+    """
+    try:
+        print(f"[cover_generator] Auto-generating cover for {service_name} on {service_date}")
+        
+        # Step 1: Scrape week info from UMC Discipleship
+        week_info = scrape_week_info(service_date)
+        liturgical_name = week_info.liturgical_name
+        
+        # Step 2: Download the bulletin image
+        image = download_bulletin_image(week_info.image_url)
+        
+        # Step 3: Extract fill color
+        fill_color = extract_fill_color(image)
+        
+        # Step 4: Format the service date for display
+        service_date_str = service_date.strftime("%B %d, %Y")
+        
+        # Step 5: Generate the branded cover PDF
+        pdf_bytes = generate_branded_cover_pdf(
+            image=image,
+            service_name=service_name,
+            liturgical_name=liturgical_name,
+            service_date_str=service_date_str,
+            fill_color=fill_color
+        )
+        
+        print(f"[cover_generator] Successfully generated auto cover ({len(pdf_bytes)} bytes)")
+        return (pdf_bytes, liturgical_name)
+        
+    except Exception as exc:
+        print(f"[cover_generator] Failed to auto-generate cover: {exc}")
+        import traceback
+        traceback.print_exc()
+        return None

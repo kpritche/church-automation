@@ -36,6 +36,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.pdfgen.canvas import Canvas
 
+# Import cover generator for auto-generated covers
+from bulletins_app.cover_generator import generate_auto_cover
+
 try:
     # Prefer installed package imports
     from church_automation_shared.paths import (
@@ -2368,7 +2371,20 @@ def process_plan(pco: PCO, service_type_id: int, plan_id: str, plan_date: str, s
             f"cover attachment processed: image={'yes' if cover_img else 'no'}, pdf={'yes' if cover_pdf_bytes else 'no'}"
         )
     else:
-        print(f"[warn] No cover attachment found for plan {plan_id}.")
+        print(f"[info] No cover attachment found for plan {plan_id}. Attempting auto-generation...")
+        # Try to auto-generate cover from UMC Discipleship resources
+        try:
+            # Parse plan_date (format: YYYY-MM-DD) to date object
+            service_date = datetime.strptime(plan_date, "%Y-%m-%d").date()
+            auto_cover_result = generate_auto_cover(service_date, service_name)
+            
+            if auto_cover_result:
+                cover_pdf_bytes, liturgical_name = auto_cover_result
+                print(f"[info] Successfully auto-generated cover for {liturgical_name}")
+            else:
+                print(f"[warn] Auto-generation failed, bulletin will have default cover")
+        except Exception as exc:
+            print(f"[warn] Auto-cover generation error: {exc}")
     
     # Fetch Get Involved PDF if item exists; otherwise fall back to cache
     get_involved_pdf_bytes: Optional[bytes] = None

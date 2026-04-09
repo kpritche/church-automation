@@ -13,6 +13,7 @@ from bulletins_app.cover_generator import (
     wcag_contrast_ratio,
     is_full_bleed,
     generate_branded_cover_pdf,
+    generate_auto_cover,
 )
 
 
@@ -327,3 +328,69 @@ def test_generate_branded_cover_pdf_non_fullbleed_image():
     
     assert pdf_bytes is not None
     assert pdf_bytes[:4] == b'%PDF'
+
+
+# Phase 4: Pipeline Integration Tests
+
+
+def test_generate_auto_cover_full_workflow():
+    """Test the full auto-cover generation workflow with mocked web requests."""
+    test_date = date(2026, 4, 12)
+    
+    # Mock lectionary page
+    mock_lectionary_html = """
+        <html><body>
+            <div>APRIL 12, 2026 SECOND SUNDAY OF EASTER, YEAR A
+            <a href="https://www.umcdiscipleship.org/worship-planning/stories/week-1">Week 1</a>
+            </div>
+        </body></html>
+    """
+    
+    # Mock graphics page
+    mock_graphics_html = """
+        <html><body>
+            BULLETIN <a href="https://s3.example.com/image.jpg">Download</a>
+        </body></html>
+    """
+    
+    # Create a test image
+    test_img = Image.new('RGB', (800, 600), color=(100, 150, 200))
+    img_bytes = io.BytesIO()
+    test_img.save(img_bytes, format='JPEG')
+    img_bytes.seek(0)
+    
+    with patch('bulletins_app.cover_generator.requests.get') as mock_get:
+        # Mock lectionary, graphics, and image download responses
+        mock_lectionary_resp = Mock()
+        mock_lectionary_resp.text = mock_lectionary_html
+        mock_lectionary_resp.raise_for_status = Mock()
+        
+        mock_graphics_resp = Mock()
+        mock_graphics_resp.text = mock_graphics_html
+        mock_graphics_resp.raise_for_status = Mock()
+        
+        mock_img_resp = Mock()
+        mock_img_resp.content = img_bytes.getvalue()
+        mock_img_resp.raise_for_status = Mock()
+        
+        mock_get.side_effect = [mock_lectionary_resp, mock_graphics_resp, mock_img_resp]
+        
+        result = generate_auto_cover(test_date, "Celebrate")
+        
+        assert result is not None
+        pdf_bytes, liturgical_name = result
+        assert pdf_bytes[:4] == b'%PDF'
+        assert "EASTER" in liturgical_name.upper()
+
+
+def test_generate_auto_cover_handles_scraping_failure():
+    """Test that generate_auto_cover returns None on scraping failure."""
+    test_date = date(2026, 12, 25)
+    
+    with patch('bulletins_app.cover_generator.requests.get') as mock_get:
+        # Mock a failed request
+        mock_get.side_effect = Exception("Network error")
+        
+        result = generate_auto_cover(test_date, "First Up")
+        
+        assert result is None
