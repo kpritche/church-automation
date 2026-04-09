@@ -2172,10 +2172,18 @@ def prefetch_get_involved_pdf(pco: PCO, service_type_ids: List[int], start_date:
 
 # ---------------------- Prayer Lists (PCO People) ----------------------
 _DEFAULT_PRAYER_LIST_NAMES = {
-    "concerns": "Bulletin - Concerns Shared",
-    "memory_care": "Bulletin - Memory Care",
-    "military": "Bulletin - Active Military",
+    "concerns": "Prayer List",
+    "memory_care": "Memory Care",
+    "military": "Active Military",
 }
+
+
+def _unwrap_pco_resource(resource: Dict[str, object]) -> Dict[str, object]:
+    """Return the JSON:API resource payload for direct and iterate() responses."""
+    data = resource.get("data")
+    if isinstance(data, dict):
+        return data
+    return resource
 
 
 def _get_people_lists_index(pco: PCO) -> Dict[str, Dict[str, str]]:
@@ -2184,8 +2192,11 @@ def _get_people_lists_index(pco: PCO) -> Dict[str, Dict[str, str]]:
     by_id: Dict[str, str] = {}
     try:
         for lst in pco.iterate("/people/v2/lists"):
-            lid = lst["id"]
-            name = lst.get("attributes", {}).get("name", "")
+            list_obj = _unwrap_pco_resource(lst)
+            lid = str(list_obj.get("id") or "")
+            name = str(list_obj.get("attributes", {}).get("name", "")).strip()
+            if not lid:
+                continue
             if name:
                 by_name[name] = lid
             by_id[lid] = name
@@ -2230,7 +2241,7 @@ def _fetch_people_names_from_list(pco: PCO, list_id: str) -> List[str]:
     names: List[str] = []
     try:
         for person in pco.iterate(f"/people/v2/lists/{list_id}/people"):
-            person_obj = person.get("data", person)
+            person_obj = _unwrap_pco_resource(person)
             attrs = person_obj.get("attributes", {})
             full = (attrs.get("name") or "").strip()
             if full:
@@ -2253,13 +2264,13 @@ def fetch_prayer_lists_from_pco(pco: PCO, cfg: Dict[str, object]) -> Dict[str, L
     Config structure (in slides_config.json):
     {
       "prayer_lists": {
-        "enabled": false,
+        "enabled": true,
         "refresh_before_fetch": true,
         "timeout_seconds": 10,
         "military_first_name_only": false,
-        "concerns": {"id": 12345, "name": "Bulletin - Concerns Shared"},
-        "memory_care": {"name": "Bulletin - Memory Care"},
-        "military": {"name": "Bulletin - Active Military"}
+        "concerns": {"id": 12345, "name": "Prayer List"},
+        "memory_care": {"name": "Memory Care"},
+        "military": {"name": "Active Military"}
       }
     }
     """
