@@ -12,6 +12,7 @@ from bulletins_app.cover_generator import (
     extract_fill_color,
     wcag_contrast_ratio,
     is_full_bleed,
+    generate_branded_cover_pdf,
 )
 
 
@@ -271,3 +272,58 @@ def test_wcag_contrast_ratio_white():
     # White background should have minimal contrast (1:1)
     white_contrast = wcag_contrast_ratio((255, 255, 255))
     assert 0.9 <= white_contrast <= 1.1
+
+
+# Phase 3: Cover Page Renderer Tests
+
+
+def test_generate_branded_cover_pdf_produces_valid_pdf():
+    """Test that generate_branded_cover_pdf returns valid PDF bytes."""
+    # Create a test image
+    test_img = Image.new('RGB', (612, 792), color=(50, 100, 150))
+    
+    pdf_bytes = generate_branded_cover_pdf(
+        image=test_img,
+        service_name="Celebrate",
+        liturgical_name="Second Sunday of Easter, Year A",
+        service_date_str="April 12, 2026",
+        fill_color=(22, 70, 62)
+    )
+    
+    assert pdf_bytes is not None
+    assert len(pdf_bytes) > 100
+    assert pdf_bytes[:4] == b'%PDF'
+
+
+def test_generate_branded_cover_pdf_fullbleed_image():
+    """Test cover generation with a full-bleed image."""
+    # Create a full-page image (matches letter size aspect ratio)
+    test_img = Image.new('RGB', (612, 792), color=(80, 120, 100))
+    
+    pdf_bytes = generate_branded_cover_pdf(
+        image=test_img,
+        service_name="First Up",
+        liturgical_name="Third Sunday of Easter, Year A",
+        service_date_str="April 19, 2026",
+        fill_color=(30, 60, 80)
+    )
+    
+    assert pdf_bytes is not None
+    assert pdf_bytes[:4] == b'%PDF'
+
+
+def test_generate_branded_cover_pdf_non_fullbleed_image():
+    """Test cover generation with a non-full-bleed square image."""
+    # Create a square image (will not fill the page)
+    test_img = Image.new('RGB', (800, 800), color=(100, 150, 200))
+    
+    pdf_bytes = generate_branded_cover_pdf(
+        image=test_img,
+        service_name="Celebrate",
+        liturgical_name="Fourth Sunday of Easter, Year A",
+        service_date_str="April 26, 2026",
+        fill_color=(40, 80, 70)
+    )
+    
+    assert pdf_bytes is not None
+    assert pdf_bytes[:4] == b'%PDF'

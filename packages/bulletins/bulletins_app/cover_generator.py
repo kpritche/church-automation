@@ -4,10 +4,16 @@ from datetime import date
 from typing import Optional, Tuple
 import re
 import io
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
 from PIL import Image
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 
 REQUEST_TIMEOUT = 30
@@ -307,3 +313,176 @@ def extract_fill_color(image: Image.Image) -> Tuple[int, int, int]:
     except Exception as exc:
         print(f"[cover_generator] Error extracting fill color: {exc}, using church primary color")
         return CHURCH_PRIMARY_COLOR
+
+
+# Phase 3: Cover Page Renderer
+
+
+def generate_branded_cover_pdf(
+    image: Image.Image,
+    service_name: str,
+    liturgical_name: str,
+    service_date_str: str,
+    fill_color: Tuple[int, int, int]
+) -> bytes:
+    """
+    Generate a branded bulletin cover page as a PDF.
+    
+    Args:
+        image: Background image for the cover
+        service_name: Name of the service (e.g., "Celebrate", "First Up")
+        liturgical_name: Liturgical calendar name (e.g., "Second Sunday of Easter, Year A")
+        service_date_str: Formatted date string (e.g., "April 12, 2026")
+        fill_color: RGB color for background fill (behind image if not full-bleed)
+        
+    Returns:
+        PDF bytes for the cover page
+    """
+    # Import paths
+    try:
+        from church_automation_shared.paths import FONTS_DIR, REPO_ROOT
+        logo_path = REPO_ROOT / "packages" / "announcements" / "logo.png"
+    except ImportError:
+        # Fallback for running tests without full package installation
+        repo_root = Path(__file__).resolve().parents[4]
+        logo_path = repo_root / "packages" / "announcements" / "logo.png"
+        fonts_dir = repo_root / "assets" / "fonts"
+        FONTS_DIR = fonts_dir
+    
+    # Page constants
+    PAGE_WIDTH, PAGE_HEIGHT = letter  # 612 x 792 points
+    
+    # Register fonts (Source Sans Pro)
+    fonts_available = True
+    try:
+        font_regular = FONTS_DIR / "SourceSansPro-Regular.ttf"
+        font_bold = FONTS_DIR / "SourceSansPro-Bold.ttf"
+        font_semibold = FONTS_DIR / "SourceSansPro-Semibold.ttf"  # Note: lowercase 'b'
+        
+        if 'SourceSansPro' not in pdfmetrics.getRegisteredFontNames():
+            if font_regular.exists():
+                pdfmetrics.registerFont(TTFont('SourceSansPro', str(font_regular)))
+        if 'SourceSansPro-Bold' not in pdfmetrics.getRegisteredFontNames():
+            if font_bold.exists():
+                pdfmetrics.registerFont(TTFont('SourceSansPro-Bold', str(font_bold)))
+        if 'SourceSansPro-Semibold' not in pdfmetrics.getRegisteredFontNames():
+            if font_semibold.exists():
+                pdfmetrics.registerFont(TTFont('SourceSansPro-Semibold', str(font_semibold)))
+    except Exception as exc:
+        print(f"[cover_generator] Warning: Could not register fonts: {exc}")
+        fonts_available = False
+    
+    # Create PDF canvas
+    buffer = io.BytesIO()
+    canvas = Canvas(buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
+    
+    # Fill background with fill_color
+    r, g, b = fill_color
+    canvas.setFillColorRGB(r / 255.0, g / 255.0, b / 255.0)
+    canvas.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, stroke=0, fill=1)
+    
+    # Draw image (centered, scaled to fit)
+    img_w, img_h = image.size
+    scale = min(PAGE_WIDTH / img_w, PAGE_HEIGHT / img_h)
+    draw_w = img_w * scale
+    draw_h = img_h * scale
+    x = (PAGE_WIDTH - draw_w) / 2
+    y = (PAGE_HEIGHT - draw_h) / 2
+    
+    canvas.drawImage(
+        ImageReader(image),
+        x, y,
+        width=draw_w,
+        height=draw_h,
+        preserveAspectRatio=True,
+        mask='auto'
+    )
+    
+    # Draw bottom text band (20% of page height)
+    band_height = PAGE_HEIGHT * 0.20
+    band_y = 0
+    
+    # Make the band slightly darker/more opaque for better text readability
+    band_r = max(0, int(r * 0.85))
+    band_g = max(0, int(g * 0.85))
+    band_b = max(0, int(b * 0.85))
+    canvas.setFillColorRGB(band_r / 255.0, band_g / 255.0, band_b / 255.0)
+    canvas.setStrokeColorRGB(band_r / 255.0, band_g / 255.0, band_b / 255.0)
+    canvas.rect(0, band_y, PAGE_WIDTH, band_height, stroke=0, fill=1)
+    
+    # Draw white text in the band
+    canvas.setFillColorRGB(1, 1, 1)  # White text
+    
+    # Use available fonts or fallback to Helvetica
+    if fonts_available:
+        font_regular = 'SourceSansPro'
+        font_bold = 'SourceSansPro-Bold'
+        font_semibold = 'SourceSansPro-Semibold'
+    else:
+        font_regular = 'Helvetica'
+        font_bold = 'Helvetica-Bold'
+        font_semibold = 'Helvetica-Bold'
+    
+    # Calculate vertical positions in the band
+    text_center_y = band_y + (band_height / 2)
+    
+    # Liturgical name (small, top of text area)
+    liturgical_font_size = 18
+    canvas.setFont(font_regular, liturgical_font_size)
+    liturgical_width = canvas.stringWidth(liturgical_name.upper(), font_regular, liturgical_font_size)
+    liturgical_x = (PAGE_WIDTH - liturgical_width) / 2
+    liturgical_y = text_center_y + 35
+    canvas.drawString(liturgical_x, liturgical_y, liturgical_name.upper())
+    
+    # Service name (large, middle)
+    service_font_size = 36
+    canvas.setFont(font_bold, service_font_size)
+    service_width = canvas.stringWidth(service_name, font_bold, service_font_size)
+    service_x = (PAGE_WIDTH - service_width) / 2
+    service_y = text_center_y
+    canvas.drawString(service_x, service_y, service_name)
+    
+    # Date (medium, bottom)
+    date_font_size = 22
+    canvas.setFont(font_semibold, date_font_size)
+    date_width = canvas.stringWidth(service_date_str, font_semibold, date_font_size)
+    date_x = (PAGE_WIDTH - date_width) / 2
+    date_y = text_center_y - 40
+    canvas.drawString(date_x, date_y, service_date_str)
+    
+    # Draw church logo in bottom right corner
+    if logo_path.exists():
+        try:
+            logo_img = Image.open(logo_path)
+            
+            # Scale logo to fit ~60 points tall
+            logo_height = 60
+            logo_aspect = logo_img.width / logo_img.height
+            logo_width = logo_height * logo_aspect
+            
+            # Position in bottom right corner of the band, with padding
+            logo_padding = 20
+            logo_x = PAGE_WIDTH - logo_width - logo_padding
+            logo_y = band_y + (band_height - logo_height) / 2
+            
+            canvas.drawImage(
+                ImageReader(logo_img),
+                logo_x, logo_y,
+                width=logo_width,
+                height=logo_height,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        except Exception as exc:
+            print(f"[cover_generator] Warning: Could not add logo: {exc}")
+    else:
+        print(f"[cover_generator] Warning: Logo not found at {logo_path}")
+    
+    # Finalize page
+    canvas.showPage()
+    canvas.save()
+    
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    
+    return pdf_bytes
