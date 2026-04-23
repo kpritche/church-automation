@@ -694,7 +694,7 @@ def generate_branded_cover_pdf(
             logo_img = Image.open(logo_path).convert("RGBA")
             
             # Scale logo to approximately half page width (~300 points)
-            logo_width = PAGE_WIDTH * 0.5  # Half page width
+            logo_width = PAGE_WIDTH * 0.6  # Half page width
             logo_aspect = logo_img.width / logo_img.height
             logo_height = logo_width / logo_aspect
             

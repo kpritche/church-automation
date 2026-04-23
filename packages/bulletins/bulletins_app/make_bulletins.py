@@ -616,8 +616,8 @@ def fetch_sheet_music_attachments(
     
     For each song, looks for PDFs that are NOT lyrics. If multiple non-lyrics PDFs exist,
     prioritizes:
-    1. PDFs with 'vocal' in filename (case-insensitive)
-    2. PDFs with 'lead' in filename (case-insensitive)
+    1. PDFs with 'lead' in filename (case-insensitive) 
+    2. PDFs with 'vocal' in filename (case-insensitive)
     3. First remaining PDF
     
     Returns list of dicts with 'title' and 'attachment_obj' for sheet music PDFs.
@@ -659,18 +659,18 @@ def fetch_sheet_music_attachments(
         if len(pdf_attachments) == 1:
             selected_attachment = pdf_attachments[0]
         else:
-            # Look for 'vocal' first
+            # Look for 'lead' first
             for att_obj in pdf_attachments:
                 filename = ((att_obj.get("attributes") or {}).get("filename") or "").lower()
-                if "vocal" in filename:
+                if "lead" in filename:
                     selected_attachment = att_obj
                     break
             
-            # If no 'vocal', look for 'lead'
+            # If no 'lead', look for 'vocal'
             if not selected_attachment:
                 for att_obj in pdf_attachments:
                     filename = ((att_obj.get("attributes") or {}).get("filename") or "").lower()
-                    if "lead" in filename:
+                    if "vocal" in filename:
                         selected_attachment = att_obj
                         break
             
